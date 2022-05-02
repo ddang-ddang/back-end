@@ -1,17 +1,9 @@
----
-name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
 
----
-
-## Description
+## Description (개요)
 
 > description
 
-## Progress
+## Progress (작업사항)
 
 - [ ] todo1
 - [ ] todo2
