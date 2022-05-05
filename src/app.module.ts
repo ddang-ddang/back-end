@@ -8,11 +8,18 @@ import { LikesModule } from './likes/likes.module';
 import { AchievementsService } from './achievements/achievements.service';
 import { AchievementsController } from './achievements/achievements.controller';
 import { QuestsModule } from './quests/quests.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [UsersModule, FeedsModule, CommentsModule, LikesModule, QuestsModule],
+  imports: [
+    ConfigModule.forRoot({ envFilePath: '.env' }),
+    UsersModule,
+    FeedsModule,
+    CommentsModule,
+    LikesModule,
+    QuestsModule,
+  ],
   controllers: [AppController, AchievementsController],
   providers: [AppService, AchievementsService],
 })
-
 export class AppModule {}
