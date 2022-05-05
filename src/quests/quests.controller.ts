@@ -1,4 +1,9 @@
 import { Controller } from '@nestjs/common';
+import { QuestsService } from './quests.service';
 
-@Controller('quests')
-export class QuestsController {}
+@Controller('api/quests')
+export class QuestsController {
+  constructor(private readonly questsService: QuestsService) {}
+
+  /* 퀘스트 수행 */
+}
