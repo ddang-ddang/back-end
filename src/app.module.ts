@@ -5,14 +5,23 @@ import { UsersModule } from './users/users.module';
 import { FeedsModule } from './feeds/feeds.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
-import { AchievementsService } from './achievements/achievements.service';
-import { AchievementsController } from './achievements/achievements.controller';
 import { QuestsModule } from './quests/quests.module';
+import * as config from 'config';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { typeORMConfig } from 'ormconfig';
 
 @Module({
-  imports: [UsersModule, FeedsModule, CommentsModule, LikesModule, QuestsModule],
-  controllers: [AppController, AchievementsController],
-  providers: [AppService, AchievementsService],
+  imports: [
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot(typeORMConfig),
+    UsersModule,
+    FeedsModule,
+    CommentsModule,
+    LikesModule,
+    QuestsModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
 })
-
 export class AppModule {}
