@@ -17,4 +17,7 @@ export class QuestsController {
     console.log(`[컨트롤러] 퀘스트id: ${id}`);
     return this.questService.getOne(id);
   }
+  
+  /* 퀘스트 수행 */
+
 }
