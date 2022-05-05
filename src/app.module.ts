@@ -21,7 +21,7 @@ import { typeORMConfig } from 'ormconfig';
     LikesModule,
     QuestsModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, AchievementsController],
+  providers: [AppService, AchievementsService],
 })
 export class AppModule {}
