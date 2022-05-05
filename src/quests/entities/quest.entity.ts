@@ -1,1 +1,1 @@
-export class Feed {}
+export class Quest {}
