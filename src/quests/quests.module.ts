@@ -5,6 +5,8 @@ import { FeedRepository } from 'src/feeds/feeds.repository';
 import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
 import { HttpModule } from '@nestjs/axios';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { FeedRepository } from '../feeds/feeds.repository';
 
 @Module({
   imports: [

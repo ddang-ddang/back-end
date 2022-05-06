@@ -28,6 +28,7 @@ async function bootstrap() {
 
   const port = serverConfig.port;
   await app.listen(port);
-  logger.log(`Application running on port ${port}`);
+  // await app.listen(3000);
+  logger.log(`Application running on port:: ${port}`);
 }
 bootstrap();
