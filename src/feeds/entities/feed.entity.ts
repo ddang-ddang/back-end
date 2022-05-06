@@ -15,7 +15,7 @@ import {
 } from 'typeorm';
 import { Place } from './place.entity';
 
-@Entity()
+@Entity({ name: 'feeds' })
 export class Feed extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'feedId' })
   id: number;
