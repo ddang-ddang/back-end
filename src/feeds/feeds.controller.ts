@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   UploadedFiles,
+  Logger,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { CreateFeedDto } from './dto/create-feed.dto';
@@ -16,21 +17,47 @@ import { UpdateFeedDto } from './dto/update-feed.dto';
 import { customFileIntercept } from 'src/lib/fileInterceptor';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { Feed } from './entities/feed.entity';
 
 @Controller('api/feeds')
 export class FeedsController {
+  private logger = new Logger('FeedController');
   constructor(private readonly feedsService: FeedsService) {}
 
   /* 모든 피드에 대한 정보 */
   @Get()
-  findAllFeeds() {
-    return this.feedsService.findAllFeeds();
+  async findAllFeeds() {
+    this.logger.verbose(`trying to get all feeds user id by `);
+    try {
+      const feeds = await this.feedsService.findAllFeeds();
+      return {
+        ok: true,
+        rows: feeds,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 
   /* 특정 피드에 대한 정보 */
   @Get(':feedId')
-  findOneFeed(@Param('feedId') feedId: number) {
-    return this.feedsService.findOneFeed(feedId);
+  async findOneFeed(@Param('feedId') feedId: number): Promise<object> {
+    this.logger.verbose(`trying to get a feed `);
+    try {
+      const feed = await this.feedsService.findOneFeed(feedId);
+      return {
+        ok: true,
+        row: feed,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 
   /* 피드 수정 */
@@ -53,16 +80,34 @@ export class FeedsController {
     // @Body() updateFeedDto: UpdateFeedDto
     @Body() content: string
   ) {
-    // return this.feedsService.updateFeed(feedId, files, updateFeedDto);
-    console.log(content);
     const feedContent = content['content'];
-    console.log(feedContent);
-    return this.feedsService.updateFeed(feedId, files, feedContent);
+    try {
+      const feed = await this.feedsService.updateFeed(
+        feedId,
+        files,
+        feedContent
+      );
+      return {
+        ok: true,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 
   /* 피드 삭제 */
   @Delete(':feedId')
   remove(@Param('feedId') feedId: number) {
-    return this.feedsService.removeQuest(feedId);
+    try {
+      return this.feedsService.removeQuest(feedId);
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 }

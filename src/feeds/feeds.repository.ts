@@ -5,6 +5,7 @@ import { CreateFeedQuestDto } from 'src/quests/dto/create-feedquest.dto';
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
+  /* 피드 업로드 퀘스트 수행 */
   async feedQuest(
     // user: User,
     pathList: string[],
@@ -22,13 +23,8 @@ export class FeedRepository extends Repository<Feed> {
     return newContent;
   }
 
-  async updateFeed(
-    feedId: number,
-    pathList: string[],
-    // updateFeedDto: UpdateFeedDto
-    feedContent: string
-  ) {
-    // const { content } = updateFeedDto;
+  /* 피드 수정 */
+  async updateFeed(feedId: number, pathList: string[], feedContent: string) {
     return this.update(
       { id: feedId },
       {
@@ -40,6 +36,7 @@ export class FeedRepository extends Repository<Feed> {
     );
   }
 
+  /* 피드 삭제 */
   async deleteFeed(feedId: number) {
     await this.update({ id: feedId }, { deletedAt: new Date() });
     return;

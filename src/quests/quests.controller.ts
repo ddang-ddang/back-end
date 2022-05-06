@@ -46,10 +46,8 @@ export class QuestsController {
     if (questType === 'feed') {
       return this.questsService.feedQuest(files, createFeedQuestDto);
     } else if (questType === 'comment') {
-
     } else if (questType === 'like') {
-
     }
     return;
-  };
+  }
 }
