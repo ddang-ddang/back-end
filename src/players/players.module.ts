@@ -12,7 +12,6 @@ const jwtConfig = config.get('jwt');
 
 @Module({
   imports: [
-    ConfigService,
     TypeOrmModule.forFeature([Players]),
     JwtModule.register({
       secret: jwtConfig.secret,
