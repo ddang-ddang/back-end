@@ -17,9 +17,11 @@ export class QuestsController {
   getAll(@Query('lat') lat: number, @Query('lng') lng: number) {
     /* [예외처리] 쿼리 파라미터 누락: 위도(lat), 경도(lng) */
     if (!lat || !lng) {
-      // return '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/';
       throw new HttpException(
-        '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/',
+        {
+          ok: false,
+          message: '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/',
+        },
         HttpStatus.BAD_REQUEST
       );
     }
