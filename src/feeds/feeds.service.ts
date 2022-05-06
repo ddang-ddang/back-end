@@ -24,12 +24,6 @@ export class FeedsService {
   }
 
   async findOneFeed(feedId: number) {
-    // return Feed.findOne({
-    //   where: {
-    //     id: feedId,
-    //   },
-    //   relations: ['place'],
-    // });
     const content = await this.feedRepository.findOne({
       where: {
         id: feedId,
@@ -42,12 +36,23 @@ export class FeedsService {
     return content;
   }
 
-  async updateFeed(feedId: number, file: object, updateFeedDto: UpdateFeedDto) {
-    const content = await this.findOneFeed(feedId);
-    const filePath = file['path'];
-    if (content) {
-      return this.feedRepository.updateFeed(feedId, filePath, updateFeedDto);
+  async updateFeed(
+    feedId: number,
+    files: object[],
+    // updateFeedDto: UpdateFeedDto
+    feedContent: string
+  ) {
+    const feed = await this.findOneFeed(feedId);
+    // const filePath = files['path'];
+    const pathList = [];
+    files.map((file) => {
+      pathList.push(file['path']);
+    });
+    if (feed) {
+      // return this.feedRepository.updateFeed(feedId, pathList, updateFeedDto);
+      return this.feedRepository.updateFeed(feedId, pathList, feedContent);
     }
+    return `feed not found id ${feedId}`;
   }
 
   async removeQuest(feedId: number) {

@@ -13,7 +13,7 @@ import { typeORMConfig } from 'ormconfig';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    // ConfigModule.forRoot(),
     TypeOrmModule.forRoot(typeORMConfig),
     UsersModule,
     FeedsModule,

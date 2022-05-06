@@ -8,20 +8,18 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { customFileIntercept } from 'src/lib/fileInterceptor';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
 
 @Controller('api/feeds')
 export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
-
-  // @Post()
-  // createFeed(@Body() createFeedDto: CreateFeedDto) {
-  //   return this.feedsService.createFeed(createFeedDto);
-  // }
 
   /* 모든 피드에 대한 정보 */
   @Get()
@@ -38,22 +36,28 @@ export class FeedsController {
   /* 피드 수정 */
   @Patch(':feedId')
   @UseInterceptors(
-    customFileIntercept({
-      fieldname: 'file',
-      dest: './uploads',
-      maxFileSize: 500000,
-      fileCount: 3,
-      allowFileTypes: ['image/png', 'image/jpg', 'image/jpeg'],
+    FilesInterceptor('file', 3, {
+      storage: diskStorage({
+        destination: './files',
+        filename: (req, files, cb) => {
+          const fileNameSplit = files.originalname.split('.');
+          const fileExt = fileNameSplit[fileNameSplit.length - 1];
+          cb(null, `${Date.now()}.${fileExt}`);
+        },
+      }),
     })
   )
-  updateFeed(
-    @UploadedFile() file: Express.Multer.File,
+  async updateFeed(
     @Param('feedId') feedId: number,
-    @Body() updateFeedDto: UpdateFeedDto
+    @UploadedFiles() files,
+    // @Body() updateFeedDto: UpdateFeedDto
+    @Body() content: string
   ) {
-    console.log(feedId);
-    console.log(updateFeedDto);
-    return this.feedsService.updateFeed(feedId, file, updateFeedDto);
+    // return this.feedsService.updateFeed(feedId, files, updateFeedDto);
+    console.log(content);
+    const feedContent = content['content'];
+    console.log(feedContent);
+    return this.feedsService.updateFeed(feedId, files, feedContent);
   }
 
   /* 피드 삭제 */
