@@ -17,8 +17,6 @@ export class Place extends BaseEntity {
   @Column()
   placeName: string;
 
-  // @Column('simple-array')
-  // coords: number[];
   @Column({ type: 'float' })
   lat: number;
 
