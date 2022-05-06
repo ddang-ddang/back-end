@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from 'src/auth/auth.service';
@@ -12,7 +11,6 @@ const jwtConfig = config.get('jwt');
 
 @Module({
   imports: [
-    ConfigService,
     TypeOrmModule.forFeature([Players]),
     JwtModule.register({
       secret: jwtConfig.secret,
