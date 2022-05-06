@@ -1,10 +1,32 @@
 import { Injectable } from '@nestjs/common';
+import { FeedRepository } from 'src/feeds/feeds.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CommentRepository } from 'src/comments/comments.repository';
 import { HttpService } from '@nestjs/axios';
-import { map } from 'rxjs';
+import { map, Observable } from 'rxjs';
+import { AxiosResponse } from 'axios';
 
 @Injectable()
 export class QuestsService {
-  constructor(private httpService: HttpService) {}
+  constructor(
+    @InjectRepository(FeedRepository)
+    private feedRepository: FeedRepository,
+    private commentRepository: CommentRepository,
+    private httpService: HttpService
+  ) {}
+
+  feedQuest(files: object[], content: string) {
+    const feedText = content['content'];
+    const pathList = [];
+    files.map((file) => {
+      pathList.push(file['path']);
+    });
+    return this.feedRepository.feedQuest(pathList, feedText);
+  }
+
+  commentQuest(content: string) {
+    const comment = content['content'];
+    return this.commentRepository.commentQuest(comment);
 
   /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */
   getAll(lat: number, lng: number) {

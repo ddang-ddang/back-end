@@ -14,7 +14,7 @@ import { AchievementsController } from './achievements/achievements.controller';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    // ConfigModule.forRoot(),
     TypeOrmModule.forRoot(typeORMConfig),
     UsersModule,
     FeedsModule,

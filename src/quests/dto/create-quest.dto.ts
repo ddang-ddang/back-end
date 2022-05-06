@@ -1,1 +1,6 @@
-export class CreateQuestDto {}
+import { IsNotEmpty } from 'class-validator';
+
+export class CreateQuestDto {
+  content: string;
+  comment: string;
+}

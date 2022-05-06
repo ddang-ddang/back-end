@@ -20,8 +20,14 @@ export class Feed extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'feedId' })
   id: number;
 
-  @Column()
-  image: string;
+  @Column({ default: null })
+  image1: string;
+
+  @Column({ default: null })
+  image2: string;
+
+  @Column({ default: null })
+  image3: string;
 
   @Column()
   content: string;

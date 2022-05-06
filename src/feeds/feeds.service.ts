@@ -13,23 +13,19 @@ export class FeedsService {
     private feedRepository: FeedRepository
   ) {}
 
-  // createFeed(createFeedDto: CreateFeedDto) {
-  //   return 'This action adds a new feed';
-  // }
-
-  async findAllFeeds() {
-    // return Feed.find();
-    const feeds = await Feed.find({ relations: ['place'] });
+  /* 모든 피드 가져오기 */
+  async findAllFeeds(): Promise<Feed[]> {
+    const feeds = await Feed.find({
+      where: {
+        deletedAt: null,
+      },
+      relations: ['place'],
+    });
     return feeds;
   }
 
-  async findOneFeed(feedId: number) {
-    // return Feed.findOne({
-    //   where: {
-    //     id: feedId,
-    //   },
-    //   relations: ['place'],
-    // });
+  /* 특정 피드 가저오기 */
+  async findOneFeed(feedId: number): Promise<Feed> {
     const content = await this.feedRepository.findOne({
       where: {
         id: feedId,
@@ -42,15 +38,29 @@ export class FeedsService {
     return content;
   }
 
-  async updateFeed(feedId: number, file: object, updateFeedDto: UpdateFeedDto) {
-    const content = await this.findOneFeed(feedId);
-    const filePath = file['path'];
-    if (content) {
-      return this.feedRepository.updateFeed(feedId, filePath, updateFeedDto);
+  /* 피드 수정 */
+  async updateFeed(feedId: number, files: object[], feedContent: string) {
+    const feed = await this.findOneFeed(feedId);
+    const pathList = [];
+    files.map((file) => {
+      pathList.push(file['path']);
+    });
+    if (feed) {
+      return this.feedRepository.updateFeed(feedId, pathList, feedContent);
     }
+    return `feed not found id ${feedId}`;
   }
 
-  async removeQuest(feedId: number) {
+  /* 피드 삭제 */
+  async removeQuest(feedId: number): Promise<void | object> {
+    const feed = await this.feedRepository.findOne(feedId);
+    if (!feed) {
+      // throw new NotFoundException(`feed not found`);
+      return {
+        ok: false,
+        message: `not found`,
+      };
+    }
     return this.feedRepository.deleteFeed(feedId);
   }
 }

@@ -37,5 +37,7 @@ lerna-debug.log*
 # etc
 ormconfig.ts
 config/
+uploads/
+files/
 .env
 .gitmessage
