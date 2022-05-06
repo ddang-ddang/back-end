@@ -9,12 +9,9 @@ import {
   Request,
   UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { customFileIntercept } from 'src/lib/fileInterceptor';
-import { fileURLToPath } from 'url';
-import { CreateCommentQuestDto } from './dto/create-commentquest.dto';
-import { CreateFeedQuestDto } from './dto/create-feedquest.dto';
+import { CreateQuestDto } from './dto/create-quest.dto';
 import { QuestsService } from './quests.service';
 
 @Controller('api/quests')
@@ -41,11 +38,12 @@ export class QuestsController {
   async questComplete(
     @Query('type') questType: string,
     @UploadedFiles() files,
-    @Body() createFeedQuestDto: CreateFeedQuestDto
+    @Body() content: string
   ) {
     if (questType === 'feed') {
-      return this.questsService.feedQuest(files, createFeedQuestDto);
+      return this.questsService.feedQuest(files, content);
     } else if (questType === 'comment') {
+      return this.questsService.commentQuest(content);
     } else if (questType === 'like') {
     }
     return;

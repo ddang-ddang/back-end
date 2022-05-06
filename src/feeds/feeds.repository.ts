@@ -1,7 +1,7 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Feed } from './entities/feed.entity';
 import { UpdateFeedDto } from './dto/update-feed.dto';
-import { CreateFeedQuestDto } from 'src/quests/dto/create-feedquest.dto';
+import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
@@ -9,11 +9,10 @@ export class FeedRepository extends Repository<Feed> {
   async feedQuest(
     // user: User,
     pathList: string[],
-    createFeedQuestDto: CreateFeedQuestDto
+    feedText: string
   ): Promise<Feed> {
-    const { content } = createFeedQuestDto;
     const newContent = this.create({
-      content,
+      content: feedText,
       image1: pathList[0],
       image2: pathList[1],
       image3: pathList[2],

@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class CreateFeedQuestDto {
-  @IsNotEmpty()
+export class CreateQuestDto {
   content: string;
+  comment: string;
 }
