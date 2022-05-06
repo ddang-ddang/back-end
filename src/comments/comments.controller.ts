@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Logger,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -13,6 +14,7 @@ import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Controller('/api/feeds/:feedId/comments')
 export class CommentsController {
+  private logger = new Logger('CommentController');
   constructor(private readonly commentsService: CommentsService) {}
 
   // @Post()
@@ -23,6 +25,7 @@ export class CommentsController {
   /* 특정 게시글 댓글 조회 */
   @Get()
   async findAllComments(@Param('feedId') feedId: number) {
+    this.logger.verbose(`trying to get all comments feedId:  userId: `);
     try {
       const comments = await this.commentsService.findAllComments(feedId);
       return {
@@ -40,6 +43,7 @@ export class CommentsController {
   /* 특정 댓글 조회 */
   @Get(':commentId')
   async findOneComment(@Param() params: number) {
+    this.logger.verbose(`trying to get a comment feedId:  userId: `);
     try {
       const feedId = params['feedId'];
       const commentId = params['commentId'];
@@ -62,6 +66,7 @@ export class CommentsController {
     @Param() params: number,
     @Body() updateCommentDto: UpdateCommentDto
   ) {
+    this.logger.verbose(`trying to update comment feedId:  userId: `);
     try {
       const feedId = params['feedId'];
       const commentId = params['commentId'];
@@ -80,6 +85,7 @@ export class CommentsController {
   /* 댓글 삭제 */
   @Delete(':commentId')
   removeComment(@Param('commentId') commentId: number) {
+    this.logger.verbose(`trying to delete comment feedId:  userId: `);
     try {
       this.commentsService.removeComment(commentId);
       return {
