@@ -6,17 +6,16 @@ import { FeedsModule } from './feeds/feeds.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { QuestsModule } from './quests/quests.module';
-import * as config from 'config';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-// import { typeORMConfig } from 'ormconfig';
+import { typeORMConfig } from 'ormconfig';
 import { AchievementsService } from './achievements/achievements.service';
 import { AchievementsController } from './achievements/achievements.controller';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    // TypeOrmModule.forRoot(typeORMConfig),
+    TypeOrmModule.forRoot(typeORMConfig),
     UsersModule,
     FeedsModule,
     CommentsModule,
