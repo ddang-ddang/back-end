@@ -4,13 +4,13 @@ import { Repository } from 'typeorm';
 import { Players } from './entities/player.entity';
 import { CreateBodyDto } from './dto/create-player.dto';
 
-export type User = any;
 @Injectable()
 export class PlayersService {
   constructor(
     @InjectRepository(Players) private playersRepository: Repository<Players>
   ) {}
   async getByEmail(email: string): Promise<Players> {
+    console.log('hello getByEmail');
     return this.playersRepository.findOne({ where: { email } });
   }
 
@@ -22,6 +22,7 @@ export class PlayersService {
     mbti: string,
     profileImg: string
   ): Promise<CreateBodyDto> {
+    console.log('hello create players');
     const newPlayer = await this.playersRepository.create({
       email,
       nickname,
@@ -29,7 +30,6 @@ export class PlayersService {
       mbti,
       profileImg,
     });
-    console.log(newPlayer);
     return this.playersRepository.save(newPlayer);
   }
 

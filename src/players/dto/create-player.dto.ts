@@ -2,7 +2,7 @@ import { IsEmail } from 'class-validator';
 import { PickType } from '@nestjs/swagger';
 
 export class CreatePlayerDto {
-  @IsEmail()
+  // @IsEmail()
   email: string;
 
   password: string;
@@ -26,4 +26,9 @@ export class CreateBodyDto extends PickType(CreatePlayerDto, [
   'nickname',
   'mbti',
   'profileImg',
+] as const) {}
+
+export class CreateIdDto extends PickType(CreatePlayerDto, [
+  'email',
+  'password',
 ] as const) {}
