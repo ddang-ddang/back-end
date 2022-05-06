@@ -22,7 +22,7 @@ import { QuestsService } from './quests.service';
 @Controller('/api/quests')
 @ApiTags('퀘스트 API')
 export class QuestsController {
-  constructor(private readonly questService: QuestsService) {}
+  constructor(private readonly questsService: QuestsService) {}
 
   /* 퀘스트 전체 조회 API */
   @Get()
@@ -37,13 +37,13 @@ export class QuestsController {
         HttpStatus.BAD_REQUEST
       );
     }
-    return this.questService.getAll(lat, lng);
+    return this.questsService.getAll(lat, lng);
   }
 
   /* 특정 퀘스트 조회 API */
   @Get(':quest_id')
   getOne(@Param('quest_id') id: number): string {
-    return this.questService.getOne(id);
+    return this.questsService.getOne(id);
   }
 
   /**
