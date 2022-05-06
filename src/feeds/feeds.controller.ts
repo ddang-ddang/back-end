@@ -45,7 +45,7 @@ export class FeedsController {
   /* 특정 피드에 대한 정보 */
   @Get(':feedId')
   async findOneFeed(@Param('feedId') feedId: number): Promise<object> {
-    this.logger.verbose(`trying to get a feed `);
+    this.logger.verbose(`trying to get a feed ${feedId}`);
     try {
       const feed = await this.feedsService.findOneFeed(feedId);
       return {
@@ -80,6 +80,7 @@ export class FeedsController {
     // @Body() updateFeedDto: UpdateFeedDto
     @Body() content: string
   ) {
+    this.logger.verbose(`trying to update feed id ${feedId}`);
     const feedContent = content['content'];
     try {
       const feed = await this.feedsService.updateFeed(
@@ -101,6 +102,7 @@ export class FeedsController {
   /* 피드 삭제 */
   @Delete(':feedId')
   remove(@Param('feedId') feedId: number) {
+    this.logger.verbose(`trying to delete feed id ${feedId}`);
     try {
       return this.feedsService.removeQuest(feedId);
     } catch (error) {
