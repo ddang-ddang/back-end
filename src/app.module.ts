@@ -7,7 +7,7 @@ import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { QuestsModule } from './quests/quests.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeORMConfig } from '../ormconfig';
+import { typeORMConfig } from 'ormconfig';
 import { AchievementsService } from './achievements/achievements.service';
 import { AchievementsController } from './achievements/achievements.controller';
 import * as config from 'config';
