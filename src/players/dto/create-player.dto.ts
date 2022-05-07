@@ -1,16 +1,20 @@
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsEmpty, isNotEmpty, IsNotEmpty } from 'class-validator';
 import { PickType } from '@nestjs/swagger';
 
 export class CreatePlayerDto {
-  // @IsEmail()
+  @IsEmail()
   email: string;
 
+  @IsNotEmpty()
   password: string;
 
+  @IsNotEmpty()
   nickname: string;
 
+  @IsNotEmpty()
   mbti: string;
 
+  @IsNotEmpty()
   profileImg: string;
 }
 
