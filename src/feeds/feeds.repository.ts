@@ -13,9 +13,9 @@ export class FeedRepository extends Repository<Feed> {
   ): Promise<Feed> {
     const newContent = this.create({
       content: feedText,
-      image1: pathList[0],
-      image2: pathList[1],
-      image3: pathList[2],
+      image1_url: pathList[0],
+      image2_url: pathList[1],
+      image3_url: pathList[2],
     });
 
     await this.save(newContent);
@@ -28,9 +28,9 @@ export class FeedRepository extends Repository<Feed> {
       { id: feedId },
       {
         content: feedContent,
-        image1: pathList[0],
-        image2: pathList[1],
-        image3: pathList[2],
+        image1_url: pathList[0],
+        image2_url: pathList[1],
+        image3_url: pathList[2],
       }
     );
   }

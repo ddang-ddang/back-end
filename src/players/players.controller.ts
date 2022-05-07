@@ -3,6 +3,7 @@ import { ApiCreatedResponse } from '@nestjs/swagger';
 import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { Player } from './entities/player.entity';
 import {
   Body,
   Controller,
@@ -12,16 +13,6 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { Players } from './entities/player.entity';
-import { CreateIdDto } from './dto/create-player.dto';
-
-class Player {
-  email: string;
-  // nickname: string;
-  // password: string;
-  // mbti: string;
-  // profileImg: string;
-}
 
 @Controller('players')
 export class PlayersController {
@@ -40,7 +31,7 @@ export class PlayersController {
   // @ApiCreatedResponse({ type: CreateBodyDto })
   @Post('signup')
   async signUp(
-    @Body() { email, password, nickname, mbti, profileImg }: Players
+    @Body() { email, password, nickname, mbti, profileImg }: Player
   ): Promise<any> {
     console.log(email, password, nickname, mbti, profileImg);
     return this.playersService.createPlayer(

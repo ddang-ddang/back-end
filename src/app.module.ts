@@ -15,7 +15,7 @@ import { AchievementsController } from './achievements/achievements.controller';
 import * as config from 'config';
 import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
-import { Players } from './players/entities/player.entity';
+import { Player } from './players/entities/player.entity';
 import { FeedRepository } from './feeds/feeds.repository';
 import { PassportModule } from '@nestjs/passport';
 import { PlayersController } from './players/players.controller';
@@ -33,7 +33,7 @@ const jwtConfig = config.get('jwt');
       signOptions: { expiresIn: '60s' },
     }),
     TypeOrmModule.forRoot(typeORMConfig),
-    TypeOrmModule.forFeature([Players, FeedRepository]),
+    TypeOrmModule.forFeature([Player, FeedRepository]),
     AuthModule,
     PlayersModule,
     TypeOrmModule.forRoot(typeORMConfig),
