@@ -13,7 +13,7 @@ import {
   RelationId,
   UpdateDateColumn,
 } from 'typeorm';
-import { Place } from './place.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @Entity()
 export class Feed extends BaseEntity {
@@ -21,13 +21,13 @@ export class Feed extends BaseEntity {
   id: number;
 
   @Column({ default: null })
-  image1: string;
+  image1_url: string;
 
   @Column({ default: null })
-  image2: string;
+  image2_url: string;
 
   @Column({ default: null })
-  image3: string;
+  image3_url: string;
 
   @Column()
   content: string;
@@ -45,6 +45,6 @@ export class Feed extends BaseEntity {
   @JoinColumn({ name: 'id' })
   comments: Comment[];
 
-  @ManyToOne((type) => Place, (place) => place.feeds)
-  place: Place;
+  @ManyToOne((type) => Player, (player) => player.feeds)
+  player: Player;
 }
