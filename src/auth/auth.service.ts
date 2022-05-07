@@ -1,32 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PlayersService } from 'src/players/players.service';
+import * as bcrypt from 'bcrypt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PlayerRepository } from 'src/players/players.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(PlayerRepository)
     private playersService: PlayersService,
+    private playersRepository: PlayerRepository,
     private jwtService: JwtService
   ) {}
 
-  // 인증이 되어 있나 감시
   async validatePlayer(email: string, password: string): Promise<any> {
-    console.log('validate');
-    const player = await this.playersService.getByEmail(email);
-    if (email && player.password === password) {
-      const { password, ...result } = player;
+    const player = await this.playersRepository.findOne({ email: email });
+    const valid = await bcrypt.compare(password, player.password);
+    if (email && valid) {
+      const { password, nickname, ...result } = player;
       return result;
     }
     return null;
   }
 
   async login(email: string, password: string): Promise<any> {
-    console.log('hello login');
-    const payload = { email: email, password: password };
-    // 찾아서 반환해야함
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const payload = {
+      email: email,
+      password: hashedPassword,
+    };
 
     return {
-      email,
+      ok: true,
+      row: {
+        email: email,
+        nickname: 'nickname',
+      },
       access_token: this.jwtService.sign(payload),
     };
   }
