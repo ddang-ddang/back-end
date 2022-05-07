@@ -22,6 +22,7 @@ import { PlayersController } from './players/players.controller';
 import { PlayersService } from './players/players.service';
 import { AuthService } from './auth/auth.service';
 import { FeedsService } from './feeds/feeds.service';
+import { ChatsModule } from './chats/chats.module';
 
 const jwtConfig = config.get('jwt');
 
@@ -42,6 +43,7 @@ const jwtConfig = config.get('jwt');
     CommentsModule,
     LikesModule,
     QuestsModule,
+    ChatsModule,
   ],
   controllers: [AppController, PlayersController, AchievementsController],
   providers: [
