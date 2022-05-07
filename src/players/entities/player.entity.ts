@@ -1,4 +1,4 @@
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsEmpty, IsNotEmpty } from 'class-validator';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Like } from 'src/likes/entities/like.entity';
 import { Comment } from 'src/comments/entities/comment.entity';
@@ -15,42 +15,48 @@ import {
 @Entity()
 export class Player extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'playerId' })
-  id: number;
+  Id: number;
 
+  @IsEmail()
   @Column({
     type: 'varchar',
     length: 128,
   })
   email: string;
 
+  @IsNotEmpty()
   @Column({
     type: 'varchar',
     length: 20,
   })
   nickname: string;
 
+  @IsNotEmpty()
   @Column({
     type: 'varchar',
-    length: 20,
   })
   password: string;
 
+  @IsNotEmpty()
   @Column({
     type: 'varchar',
     length: 20,
   })
   mbti: string;
 
+  @IsNotEmpty()
   @Column({
     // default: false,
   })
   profileImg: string;
 
+  @IsEmpty()
   @Column({
     default: 1,
   })
   level: number;
 
+  @IsEmpty()
   @Column({
     default: 0,
   })

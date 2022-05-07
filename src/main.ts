@@ -8,6 +8,7 @@ async function bootstrap() {
   const logger = new Logger();
   const app = await NestFactory.create(AppModule);
   const serverConfig = config.get('server');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -16,9 +17,10 @@ async function bootstrap() {
     })
   );
 
+  //스웨거 설정
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Nest API')
-    .setDescription('the description of the API')
+    .setTitle('너땅내땅 API Swagger')
+    .setDescription('너땅내땅 관련 API 입니다.')
     .setVersion('1.0')
     .build();
 

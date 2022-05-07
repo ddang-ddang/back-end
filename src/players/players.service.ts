@@ -1,39 +1,46 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Player } from './entities/player.entity';
 import { CreateBodyDto } from './dto/create-player.dto';
+import { Player } from './entities/player.entity';
+import { CreateIdDto, CreatePlayerDto } from './dto/create-player.dto';
+import { PlayerRepository } from './players.repository';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class PlayersService {
   constructor(
-    @InjectRepository(Player) private playersRepository: Repository<Player>
+    @InjectRepository(PlayerRepository)
+    private playersRepository: PlayerRepository
   ) {}
-  async getByEmail(email: string): Promise<Player> {
-    console.log('hello getByEmail');
-    return this.playersRepository.findOne({ where: { email } });
+
+  // 이멜일로 찾기
+  async findByEmail(email: string): Promise<CreateIdDto> {
+    console.log('findByEmail');
+    const players = await this.playersRepository.findByEmail(email);
+    console.log(players);
+    return players;
   }
 
-  // 유져 생성 함수
-  async createPlayer(
-    email: string,
-    nickname: string,
-    password: string,
-    mbti: string,
-    profileImg: string
-  ): Promise<CreateBodyDto> {
-    const newPlayer = await this.playersRepository.create({
-      email,
-      nickname,
-      password,
-      mbti,
-      profileImg,
+  // 플레이어 생성
+  async signup({
+    email,
+    nickname,
+    password,
+    mbti,
+    profileImg,
+  }: CreatePlayerDto): Promise<Player> {
+    console.log('signup');
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log({ email, nickname, hashedPassword, mbti, profileImg });
+
+    const createPlayer = await this.playersRepository.createPlayer({
+      email: email,
+      nickname: nickname,
+      password: hashedPassword,
+      mbti: mbti,
+      profileImg: profileImg,
     });
-    return this.playersRepository.save(newPlayer);
-  }
-
-  //유져 찾기 함수
-  async findPlayer(email: string): Promise<Player> {
-    return this.playersRepository.findOne({ email: email });
+    return createPlayer;
   }
 }

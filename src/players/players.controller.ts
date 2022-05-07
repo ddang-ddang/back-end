@@ -1,4 +1,3 @@
-import { LocalAuthGuard } from './../auth/local/local-auth.guard';
 import { ApiCreatedResponse } from '@nestjs/swagger';
 import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
@@ -13,6 +12,12 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import {
+  CreateBodyDto,
+  CreateIdDto,
+  CreatePlayerDto,
+} from './dto/create-player.dto';
+import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
 
 @Controller('players')
 export class PlayersController {
@@ -27,27 +32,27 @@ export class PlayersController {
     console.log(email);
     return { email: email };
   }
+
   // signup
-  // @ApiCreatedResponse({ type: CreateBodyDto })
+  @ApiCreatedResponse({ type: CreateBodyDto })
   @Post('signup')
   async signUp(
-    @Body() { email, password, nickname, mbti, profileImg }: Player
+    @Body() { email, nickname, password, mbti, profileImg }: CreatePlayerDto
   ): Promise<any> {
-    console.log(email, password, nickname, mbti, profileImg);
-    return this.playersService.createPlayer(
+    await this.playersService.signup({
       email,
-      password,
       nickname,
+      password,
       mbti,
-      profileImg
-    );
+      profileImg,
+    });
+    return { ok: true };
   }
 
   // signin
   @UseGuards(LocalAuthGuard)
   @Post('signin')
-  async signIn(@Body() { email, password }) {
-    console.log(email, password);
+  async signIn(@Body() { email, password }: CreateIdDto) {
     return this.authService.login(email, password);
   }
 
@@ -57,11 +62,11 @@ export class PlayersController {
     return { hello: 'world' };
   }
 
+  //원하는 곳에 JwtAuthGuard 붙이면 됨
   @UseGuards(JwtAuthGuard)
-  @Get('protected')
+  @Get('auth')
   async getHello(@Request() req): Promise<any> {
-    console.log(req.user);
-    return req.players.email;
+    return req.user;
   }
 
   // mypage
