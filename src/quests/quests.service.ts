@@ -28,11 +28,6 @@ export class QuestsService {
     return this.feedRepository.feedQuest(pathList, feedText);
   }
 
-  commentQuest(content: string) {
-    const comment = content['content'];
-    return this.commentRepository.commentQuest(comment);
-  }
-
   /* TODO: 공통
    *       1. 좌표 기준으로 동 조회 (kakao API)
    *       2. 오늘 날짜, 주소(시, 구, 동) 기준으로 DB 조회 (MySQL)

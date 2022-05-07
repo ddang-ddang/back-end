@@ -71,8 +71,6 @@ export class QuestsController {
   ) {
     if (questType === 'feed') {
       return this.questsService.feedQuest(files, content);
-    } else if (questType === 'comment') {
-      return this.questsService.commentQuest(content);
     }
     return;
   }

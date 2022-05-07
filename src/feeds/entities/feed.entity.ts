@@ -41,7 +41,9 @@ export class Feed extends BaseEntity {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @OneToMany((type) => Comment, (comment) => comment.feed)
+  @OneToMany((type) => Comment, (comment) => comment.feed, {
+    cascade: ['insert', 'update'],
+  })
   @JoinColumn({ name: 'id' })
   comments: Comment[];
 
