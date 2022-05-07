@@ -1,4 +1,5 @@
 import { Feed } from 'src/feeds/entities/feed.entity';
+import { Player } from 'src/players/entities/player.entity';
 import {
   BaseEntity,
   Column,
@@ -29,4 +30,7 @@ export class Comment extends BaseEntity {
 
   @ManyToOne((type) => Feed, (feed) => feed.comments)
   feed: Feed;
+
+  @ManyToOne((type) => Player, (player) => player.comments)
+  player: Player;
 }

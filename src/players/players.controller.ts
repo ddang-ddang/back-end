@@ -2,6 +2,7 @@ import { ApiCreatedResponse } from '@nestjs/swagger';
 import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { Player } from './entities/player.entity';
 import {
   Body,
   Controller,
@@ -11,7 +12,6 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { Player } from './entities/player.entity';
 import {
   CreateBodyDto,
   CreateIdDto,

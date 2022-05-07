@@ -73,7 +73,6 @@ export class QuestsController {
       return this.questsService.feedQuest(files, content);
     } else if (questType === 'comment') {
       return this.questsService.commentQuest(content);
-    } else if (questType === 'like') {
     }
     return;
   }

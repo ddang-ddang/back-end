@@ -14,7 +14,6 @@ import {
 import { FeedsService } from './feeds.service';
 import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
-import { customFileIntercept } from 'src/lib/fileInterceptor';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { Feed } from './entities/feed.entity';

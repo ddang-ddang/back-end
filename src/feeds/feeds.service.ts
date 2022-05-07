@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
-import { Place } from './entities/place.entity';
 import { FeedRepository } from './feeds.repository';
 
 @Injectable()
@@ -30,7 +29,6 @@ export class FeedsService {
       where: {
         id: feedId,
       },
-      relations: ['place'],
     });
     if (!content) {
       throw new NotFoundException(`content id ${feedId} not found`);
