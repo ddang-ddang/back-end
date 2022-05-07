@@ -10,6 +10,7 @@ import { Server } from 'http';
 import { Socket } from 'socket.io';
 import { ChatsService } from './chats.service';
 import { CreateChatDto } from './dto/create-chat.dto';
+import { WsResponse } from '@nestjs/websockets';
 
 @WebSocketGateway({
   cors: {
@@ -23,9 +24,16 @@ export class ChatsGateway {
   private logger = new Logger('FeedController');
   constructor(private readonly chatsService: ChatsService) {}
 
+  @SubscribeMessage('creaetRoom')
+  async createRoom(socket: Socket, data: string) {
+    socket.join('aRoom');
+    socket.to('aRoom').emit('roomCreated', { room: 'aRoom' });
+    return { event: 'roomCreated', room: 'aRoom' };
+  }
+
   @SubscribeMessage('createChat')
-  async create(@MessageBody() createChatDto: CreateChatDto) {
-    const message = await this.chatsService.create(createChatDto);
+  async createChat(@MessageBody() createChatDto: CreateChatDto) {
+    const message = await this.chatsService.createChat(createChatDto);
     this.server.emit('message', message);
     return message;
   }
@@ -53,6 +61,6 @@ export class ChatsGateway {
   }
 
   handleDisconnction(client: Socket) {
-    this.logger.log(`Client connected`);
+    this.logger.log(`Client disconnected`);
   }
 }

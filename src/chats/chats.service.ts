@@ -3,7 +3,7 @@ import { CreateChatDto } from './dto/create-chat.dto';
 
 @Injectable()
 export class ChatsService {
-  create(createChatDto: CreateChatDto) {
+  createChat(createChatDto: CreateChatDto) {
     const message = { ...createChatDto };
     // TODO db에 저장하는 로직 추가
     return message;
