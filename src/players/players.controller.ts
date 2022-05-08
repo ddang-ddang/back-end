@@ -19,6 +19,7 @@ import {
   CreatePlayerDto,
 } from './dto/create-player.dto';
 import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
+import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 
 @Controller('players')
 export class PlayersController {
@@ -80,6 +81,18 @@ export class PlayersController {
   @UseGuards(GoogleAuthGuard)
   googleAuthRedirect(@Request() req) {
     return this.authService.googleLogin(req);
+  }
+
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakaoauth')
+  async kakaoAuth(@Request() req) {
+    return req;
+  }
+
+  @Get('kakaoredirect')
+  @UseGuards(KakaoAuthGuard)
+  kakaopage(@Request() req) {
+    return this.authService.kakaoLogin(req);
   }
 
   // mypage

@@ -50,4 +50,15 @@ export class AuthService {
       user: req.user,
     };
   }
+
+  kakaoLogin(req) {
+    console.log(req.user);
+    if (!req) {
+      return 'No user from kakao';
+    }
+    return {
+      message: 'User information from kakao',
+      data: req.user,
+    };
+  }
 }
