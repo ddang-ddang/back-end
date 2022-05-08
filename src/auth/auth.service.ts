@@ -25,6 +25,7 @@ export class AuthService {
   }
 
   async login(email: string, password: string): Promise<any> {
+    console.log('login');
     const hashedPassword = await bcrypt.hash(password, 10);
     const payload = {
       email: email,

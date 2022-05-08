@@ -10,6 +10,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PlayerRepository } from 'src/players/players.repository';
 import { GoogleStrategy } from './google/google.strategy';
 import { KakaoStrategy } from './kakao/kakao-strategy';
+import { SessionSerializer } from './session/session.seralizer';
 
 const jwtConfig = config.get('jwt');
 
@@ -25,6 +26,7 @@ const jwtConfig = config.get('jwt');
   ],
   providers: [
     AuthService,
+    SessionSerializer,
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,

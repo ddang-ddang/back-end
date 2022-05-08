@@ -12,6 +12,7 @@ import {
   Post,
   UseGuards,
   Request,
+  Header,
 } from '@nestjs/common';
 import {
   CreateBodyDto,
@@ -55,7 +56,8 @@ export class PlayersController {
   @UseGuards(LocalAuthGuard)
   @Post('signin')
   async signIn(@Body() { email, password }: CreateIdDto) {
-    return this.authService.login(email, password);
+    await this.authService.login(email, password);
+    return { ok: true };
   }
 
   // signout
@@ -65,24 +67,28 @@ export class PlayersController {
   }
 
   //원하는 곳에 JwtAuthGuard 붙이면 됨
+  @Header('Access-Control-Allow-Origin', '*')
   @UseGuards(JwtAuthGuard)
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
     return req.user;
   }
 
+  @Header('Access-Control-Allow-Origin', '*')
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
   async googleAuth(@Request() req) {
     return req;
   }
 
+  @Header('Access-Control-Allow-Origin', '*')
   @Get('redirect')
   @UseGuards(GoogleAuthGuard)
   googleAuthRedirect(@Request() req) {
     return this.authService.googleLogin(req);
   }
 
+  @Header('Access-Control-Allow-Origin', '*')
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoauth')
   async kakaoAuth(@Request() req) {
