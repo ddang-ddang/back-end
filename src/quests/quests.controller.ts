@@ -16,6 +16,7 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
+import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { CreateQuestDto } from './dto/create-quest.dto';
 import { QuestsService } from './quests.service';
 
@@ -52,25 +53,12 @@ export class QuestsController {
    */
   @Post()
   @ApiOperation({ summary: '퀘스트 수행 로직 API' })
-  @UseInterceptors(
-    FilesInterceptor('file', 3, {
-      storage: diskStorage({
-        destination: './files',
-        filename: (req, files, cb) => {
-          const fileNameSplit = files.originalname.split('.');
-          const fileExt = fileNameSplit[fileNameSplit.length - 1];
-          cb(null, `${Date.now()}.${fileExt}`);
-        },
-      }),
-    })
-  )
   async questComplete(
     @Query('type') questType: string,
-    @UploadedFiles() files,
-    @Body() content: string
+    @Body() createFeedDto: CreateFeedDto
   ) {
     if (questType === 'feed') {
-      return this.questsService.feedQuest(files, content);
+      return this.questsService.feedQuest(createFeedDto);
     }
     return;
   }

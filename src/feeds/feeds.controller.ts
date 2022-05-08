@@ -66,28 +66,15 @@ export class FeedsController {
   /* 피드 수정 */
   @Patch(':feedId')
   @ApiOperation({ summary: '특정 피드 수정 API' })
-  @UseInterceptors(
-    FilesInterceptor('file', 3, {
-      storage: diskStorage({
-        destination: './files',
-        filename: (req, files, cb) => {
-          const fileNameSplit = files.originalname.split('.');
-          const fileExt = fileNameSplit[fileNameSplit.length - 1];
-          cb(null, `${Date.now()}.${fileExt}`);
-        },
-      }),
-    })
-  )
   async updateFeed(
     @Param('feedId') feedId: number,
-    @UploadedFiles() files,
-    // @Body() updateFeedDto: UpdateFeedDto
-    @Body() content: string
+    @Body() content: string,
+    img: string[]
   ) {
     this.logger.verbose(`trying to update feed id ${feedId}`);
     const feedContent = content['content'];
     try {
-      await this.feedsService.updateFeed(feedId, files, feedContent);
+      await this.feedsService.updateFeed(feedId, img, feedContent);
       return {
         ok: true,
       };

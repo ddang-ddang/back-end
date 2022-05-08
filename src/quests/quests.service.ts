@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
 import axios from 'axios';
 import * as config from 'config';
+import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
@@ -19,13 +20,13 @@ export class QuestsService {
     private commentRepository: CommentRepository
   ) {}
 
-  feedQuest(files: object[], content: string) {
-    const feedText = content['content'];
-    const pathList = [];
-    files.map((file) => {
-      pathList.push(file['path']);
-    });
-    return this.feedRepository.feedQuest(pathList, feedText);
+  // feedQuest(img: string[], content: string) {
+  feedQuest(createFeedDto: CreateFeedDto) {
+    // const feedText = content['content'];
+    console.log(createFeedDto);
+    const { img, content } = createFeedDto;
+    // return this.feedRepository.feedQuest(img, feedText);
+    return this.feedRepository.feedQuest(img, content);
   }
 
   /* TODO: 공통
