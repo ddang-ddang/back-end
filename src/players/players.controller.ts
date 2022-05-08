@@ -2,6 +2,7 @@ import { ApiCreatedResponse } from '@nestjs/swagger';
 import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { GoogleAuthGuard } from 'src/auth/google/google-auth.guard';
 import { Player } from './entities/player.entity';
 import {
   Body,
@@ -67,6 +68,18 @@ export class PlayersController {
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
     return req.user;
+  }
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('googleauth')
+  async googleAuth(@Request() req) {
+    return req;
+  }
+
+  @Get('redirect')
+  @UseGuards(GoogleAuthGuard)
+  googleAuthRedirect(@Request() req) {
+    return this.authService.googleLogin(req);
   }
 
   // mypage

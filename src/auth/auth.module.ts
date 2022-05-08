@@ -8,6 +8,7 @@ import { JwtStrategy } from './jwt/jwt.strategy';
 import * as config from 'config';
 import { ConfigModule } from '@nestjs/config';
 import { PlayerRepository } from 'src/players/players.repository';
+import { GoogleStrategy } from './google/google.strategy';
 
 const jwtConfig = config.get('jwt');
 
@@ -21,7 +22,7 @@ const jwtConfig = config.get('jwt');
     }),
     TypeOrmModule.forFeature([PlayerRepository]),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy, GoogleStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
