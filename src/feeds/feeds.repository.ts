@@ -6,16 +6,12 @@ import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
   /* 피드 업로드 퀘스트 수행 */
-  async feedQuest(
-    // user: User,
-    pathList: string[],
-    feedText: string
-  ): Promise<Feed> {
+  async feedQuest(img: string[], feedText: string): Promise<Feed> {
     const newContent = this.create({
       content: feedText,
-      image1_url: pathList[0],
-      image2_url: pathList[1],
-      image3_url: pathList[2],
+      image1_url: img[0],
+      image2_url: img[1],
+      image3_url: img[2],
     });
 
     await this.save(newContent);
@@ -23,14 +19,14 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 수정 */
-  async updateFeed(feedId: number, pathList: string[], feedContent: string) {
+  async updateFeed(feedId: number, img: string[], content: string) {
     return this.update(
       { id: feedId },
       {
-        content: feedContent,
-        image1_url: pathList[0],
-        image2_url: pathList[1],
-        image3_url: pathList[2],
+        content,
+        image1_url: img[0],
+        image2_url: img[1],
+        image3_url: img[2],
       }
     );
   }

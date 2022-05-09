@@ -37,14 +37,14 @@ export class FeedsService {
   }
 
   /* 피드 수정 */
-  async updateFeed(feedId: number, files: object[], feedContent: string) {
+  async updateFeed(feedId: number, img: string[], feedContent: string) {
     const feed = await this.findOneFeed(feedId);
-    const pathList = [];
-    files.map((file) => {
-      pathList.push(file['path']);
-    });
+    // const pathList = [];
+    // files.map((file) => {
+    //   pathList.push(file['path']);
+    // });
     if (feed) {
-      return this.feedRepository.updateFeed(feedId, pathList, feedContent);
+      return this.feedRepository.updateFeed(feedId, img, feedContent);
     }
     return `feed not found id ${feedId}`;
   }
