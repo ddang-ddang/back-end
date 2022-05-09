@@ -51,15 +51,11 @@ export class QuestsService {
 
   /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
-    console.time('getAllQuests');
     const kakaoAddress = await this.getAddressName(lat, lng);
     const { totalCount, pageCount } = await this.getDongData(kakaoAddress);
+    console.time('API req-res time');
     const quests = await this.getQuests(totalCount, pageCount, kakaoAddress);
-    console.timeEnd('getAllQuests');
-
-    // test
-    const test = await this.getPromises(totalCount, pageCount, kakaoAddress);
-    console.log(test);
+    console.timeEnd('API req-res time');
 
     return quests;
   }
@@ -100,8 +96,9 @@ export class QuestsService {
         )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
       );
       const { totalCount } = res.data.results.common;
-      // const pageCount = Math.ceil(totalCount / 100);
-      const pageCount = 3;
+      const pageCount = Math.ceil(totalCount / 100);
+      // const pageCount = 3; // 페이지가 3개일 경우
+      // const pageCount = 10; // 페이지가 10개일 경우
       return { totalCount, pageCount };
     } catch (error) {
       console.log(error.message);
@@ -117,48 +114,30 @@ export class QuestsService {
    */
   async getQuests(totalCount, pageCount, kakaoAddress) {
     const quests = [];
+    const addrIndex = [];
     for (let i = 1; i <= pageCount; i++) {
       const idx =
         i !== pageCount
           ? Math.floor(Math.random() * 100) + 1
           : Math.floor(Math.random() * (totalCount % 100)) + 1;
-      /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-      const roadAddr = await this.getRoadAddress(i, kakaoAddress, idx);
-      /* 상세주소에 해당하는 좌표값 얻기 */
-      const { lat, lng } = await this.getCoords(roadAddr);
-      const type = Math.floor(Math.random() * 3);
-      quests.push({ lat, lng, type });
+      addrIndex.push({ i, idx });
     }
-    return quests;
-  }
 
-  // 테스트입니다.
-  async getPromises(totalCount, pageCount, kakaoAddress) {
-    const quests = [];
-    for (let i = 1; i <= pageCount; i++) {
-      quests.push(i);
-    }
-    const resQuests = await Promise.all([
-      ...quests.map((i) => {
-        this.getQuestsAll(totalCount, pageCount, kakaoAddress, i);
-      }),
-    ]);
-    return resQuests;
-  }
-
-  // 테스트입니다.
-  async getQuestsAll(totalCount, pageCount, kakaoAddress, i) {
-    const idx =
-      i !== pageCount
-        ? Math.floor(Math.random() * 100) + 1
-        : Math.floor(Math.random() * (totalCount % 100)) + 1;
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-    const roadAddr = await this.getRoadAddress(i, kakaoAddress, idx);
+    const resRoadAddr = await Promise.all([
+      ...addrIndex.map(({ i, idx }) =>
+        this.getRoadAddress(i, kakaoAddress, idx)
+      ),
+    ]);
     /* 상세주소에 해당하는 좌표값 얻기 */
-    const { lat, lng } = await this.getCoords(roadAddr);
-    const type = Math.floor(Math.random() * 3);
-    return { lat, lng, type };
-    // }
+    const resCoordsArr = await Promise.all([
+      ...resRoadAddr.map((roadAddr) => this.getCoords(roadAddr)),
+    ]);
+    resCoordsArr.map((coords) => {
+      const type = Math.floor(Math.random() * 3);
+      quests.push({ ...coords, type });
+    });
+    return quests;
   }
 
   /* 상세주소 얻어오기 */
@@ -177,7 +156,7 @@ export class QuestsService {
       );
       return res.data.results.juso[idx].roadAddr;
     } catch (error) {
-      console.log(error.message);
+      console.log(`getRoadAddress: ${error.message}`);
     }
   }
 
@@ -200,7 +179,7 @@ export class QuestsService {
       const lng = res.data.documents[0].x;
       return { lat, lng };
     } catch (error) {
-      console.log(error.message);
+      console.log(`getCoords: ${error.message}`);
     }
   }
 
