@@ -10,13 +10,15 @@ import { ConfigModule } from '@nestjs/config';
 import { PlayerRepository } from 'src/players/players.repository';
 import { GoogleStrategy } from './google/google.strategy';
 import { KakaoStrategy } from './kakao/kakao-strategy';
-import { SessionSerializer } from './session/session.seralizer';
+// import { SessionSerializer } from './session/session.seralizer';
+import { PassportModule } from '@nestjs/passport';
 
 const jwtConfig = config.get('jwt');
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    PassportModule,
     PlayersModule,
     JwtModule.register({
       secret: jwtConfig.secret,
@@ -26,7 +28,7 @@ const jwtConfig = config.get('jwt');
   ],
   providers: [
     AuthService,
-    SessionSerializer,
+    // SessionSerializer,
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,
