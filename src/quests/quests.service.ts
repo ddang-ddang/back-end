@@ -5,6 +5,10 @@ import { CommentRepository } from 'src/comments/comments.repository';
 import axios from 'axios';
 import * as config from 'config';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
+import { QuestsRepository } from './quests.repository';
+import { Quest } from './entities/quest.entity';
+import { DongsRepository } from './dongs.repository';
+import { Dong } from './entities/dong.entity';
 
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
@@ -17,7 +21,9 @@ export class QuestsService {
   constructor(
     @InjectRepository(FeedRepository)
     private feedRepository: FeedRepository,
-    private commentRepository: CommentRepository
+    private commentRepository: CommentRepository,
+    private questsRepository: QuestsRepository,
+    private dongsRepository: DongsRepository
   ) {}
 
   // feedQuest(img: string[], content: string) {
@@ -29,42 +35,87 @@ export class QuestsService {
     return this.feedRepository.feedQuest(img, content);
   }
 
-  /* TODO: 공통
-   *       1. 좌표 기준으로 동 조회 (kakao API)
-   *       2. 오늘 날짜, 주소(시, 구, 동) 기준으로 DB 조회 (MySQL)
+  /*
+   * 퀘스트 조회 프로세스 => 좌표 기준으로 주소 조회, 주소 및 날짜 기준으로 DB 조회
+   * DB에 동 데이터 있는 경우 => 퀘스트, 완료여부 조인해서 클라이언트로 발송
+   * DB에 동 데이터가 없는 경우 => 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
    */
-  /* TODO: DB에 동 데이터 있는 경우
-   *       1. 퀘스트 조회, 완료여부 JOIN (MySQL)
-   *       2. 조회한 퀘스트들을 클라이언트로 보내줌
-   */
-  /* TODO: DB에 동 데이터가 없는 경우
-   *       1. 오늘 날짜, 주소(시, 구, 동) 포함한 동 데이터 DB에 추가 (MySQL)
-   *       2. 주소(동) 기준으로 랜덤 좌표 생성 (주소센터 API)
-   *       3. 랜덤 좌표마다 퀘스트 만들어서 DB에 추가 (MySQL)
-   *       4. 생성한 퀘스트들을 클라이언트로 보내줌
-   */
-  // TODO: get 요청시 try...catch 예외처리
 
   /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
-    console.time('getAllQuests');
     const kakaoAddress = await this.getAddressName(lat, lng);
-    const { totalCount, pageCount } = await this.getDongData(kakaoAddress);
-    const quests = await this.getQuests(totalCount, pageCount, kakaoAddress);
-    console.timeEnd('getAllQuests');
+    const stringAddress = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
-    // test
-    const test = await this.getPromises(totalCount, pageCount, kakaoAddress);
-    console.log(test);
+    // TODO: 2. DB에서 퀘스트 조회
+    const { regionSi, regionGu, regionDong } = kakaoAddress;
+    const today = new Date();
+    const date =
+      today.getFullYear() +
+      '-' +
+      ('0' + (today.getMonth() + 1)).slice(-2) +
+      '-' +
+      ('0' + today.getDate()).slice(-2);
+    const dong = await this.dongsRepository.findDong(
+      date,
+      regionSi,
+      regionGu,
+      regionDong
+    );
 
-    return quests;
+    if (dong) {
+      // 퀘스트, 완료여부 조인해서 클라이언트로 발송
+      const quests = await this.questsRepository.findQuests(dong);
+      return quests;
+    } else {
+      // 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
+      const { totalCount, pageCount } = await this.getDongData(stringAddress);
+      console.time('API req-res time');
+      const quests = await this.createQuests(
+        totalCount,
+        pageCount,
+        stringAddress
+      );
+      console.timeEnd('API req-res time');
+
+      // 동 DB 생성, dong 객체를 return 함
+      await this.dongsRepository.createDong({
+        date,
+        regionSi,
+        regionGu,
+        regionDong,
+      });
+
+      // dong 모델 자체를 return 함
+      const createdDong = await this.dongsRepository.findDong(
+        date,
+        regionSi,
+        regionGu,
+        regionDong
+      );
+      let questsWithId;
+      // 퀘스트 DB 생성 하고 결과 return
+      Promise.all([
+        ...quests.map((quest) => {
+          this.questsRepository.createQuest({ ...quest, dong: createdDong });
+        }),
+      ]).then(async (r) => {
+        console.log(r);
+        questsWithId = await this.questsRepository.findQuests(createdDong);
+        console.log(questsWithId);
+      });
+
+      // TODO: id 포함한 db를 받아와야 하는디...
+      // const quests = await this.questsRepository.findQuests(dong);
+
+      return questsWithId;
+    }
   }
 
   /* 주소 데이터 얻어오기 */
   /**
    * @param {number} lat - 위도
    * @param {number} lng - 경도
-   * @returns {string} - 주소(시/구/동)
+   * @returns {object} - { 시, 구, 동 }
    */
   async getAddressName(lat, lng) {
     try {
@@ -77,7 +128,11 @@ export class QuestsService {
       const region_2depth = address.region_2depth_name;
       const region_3depth = address.region_3depth_name;
 
-      return `${region_1depth} ${region_2depth} ${region_3depth}`;
+      return {
+        regionSi: region_1depth,
+        regionGu: region_2depth,
+        regionDong: region_3depth,
+      };
     } catch (error) {
       console.log(error.message);
     }
@@ -85,19 +140,19 @@ export class QuestsService {
 
   /* 특정 동의 개요 얻어오기 */
   /**
-   * @param {string} address - 주소(시/구/동)
+   * @param {string} stringAddress - "시 구 동"
    * @returns {object} - { 전체 주소 개수, 페이지수 }
    */
-  async getDongData(address) {
+  async getDongData(stringAddress) {
     try {
       const res = await axios.get(
         `${JUSO_BASE_URL}?currentPage=1&countPerPage=10&keyword=${encodeURI(
-          address
+          stringAddress
         )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
       );
       const { totalCount } = res.data.results.common;
-      // const pageCount = Math.ceil(totalCount / 100);
-      const pageCount = 3;
+      const pageCount = Math.ceil(totalCount / 100);
+      // const lastPage = 25;
       return { totalCount, pageCount };
     } catch (error) {
       console.log(error.message);
@@ -107,73 +162,91 @@ export class QuestsService {
   /* 퀘스트 만들기 */
   /**
    * @param {number} totalCount - 전체 주소 개수
-   * @param {number} pageCount - 전체 페이지 수
-   * @param {string} kakaoAddress - 주소(시/구/동)
+   * @param {number} paegCount - 전체 페이지 수
+   * @param {string} stringAddress - "시 구 동"
    * @returns {array} - [ 퀘스트 ]
    */
-  async getQuests(totalCount, pageCount, kakaoAddress) {
-    const quests = [];
-    for (let i = 1; i <= pageCount; i++) {
-      const idx =
-        i !== pageCount
-          ? Math.floor(Math.random() * 100) + 1
-          : Math.floor(Math.random() * (totalCount % 100)) + 1;
-      /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-      const roadAddr = await this.getRoadAddress(i, kakaoAddress, idx);
-      /* 상세주소에 해당하는 좌표값 얻기 */
-      const { lat, lng } = await this.getCoords(roadAddr);
-      const type = Math.floor(Math.random() * 3);
-      quests.push({ lat, lng, type });
+  async createQuests(totalCount, paegCount, stringAddress) {
+    const limitsPerRequest = 20;
+    let questsCoords = [];
+    for (
+      let startPage = 1;
+      startPage < paegCount;
+      startPage += limitsPerRequest
+    ) {
+      const lastPage =
+        startPage + limitsPerRequest < paegCount
+          ? startPage + limitsPerRequest
+          : paegCount + 1;
+      questsCoords = [
+        ...questsCoords,
+        ...(await this.getQuestsCoords(
+          totalCount,
+          startPage,
+          lastPage,
+          stringAddress
+        )),
+      ];
     }
+
+    const quests = questsCoords.map((coords) => {
+      const type = Math.floor(Math.random() * 3);
+      return { ...coords, type };
+    });
+
     return quests;
   }
 
-  // 테스트입니다.
-  async getPromises(totalCount, pageCount, kakaoAddress) {
-    const quests = [];
-    for (let i = 1; i <= pageCount; i++) {
-      quests.push(i);
+  /* 퀘스트를 만들기 위한 좌표값 얻기 */
+  /**
+   * @param {number} totalCount - 전체 주소 개수
+   * @param {number} startPage - 시작 페이지
+   * @param {number} lastPage - 마지막 페이지
+   * @param {string} stringAddress - "시 구 동"
+   * @returns {array} - [ { lat, lng } ]
+   */
+  async getQuestsCoords(totalCount, startPage, lastPage, stringAddress) {
+    const addrIndex = [];
+    for (let curPage = startPage; curPage < lastPage; curPage++) {
+      const idx =
+        curPage !== lastPage
+          ? Math.floor(Math.random() * 100) + 1
+          : Math.floor(Math.random() * (totalCount % 100)) + 1;
+      addrIndex.push({ curPage: curPage, idx });
     }
-    const resQuests = await Promise.all([
-      ...quests.map((i) => {
-        this.getQuestsAll(totalCount, pageCount, kakaoAddress, i);
-      }),
-    ]);
-    return resQuests;
-  }
 
-  // 테스트입니다.
-  async getQuestsAll(totalCount, pageCount, kakaoAddress, i) {
-    const idx =
-      i !== pageCount
-        ? Math.floor(Math.random() * 100) + 1
-        : Math.floor(Math.random() * (totalCount % 100)) + 1;
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-    const roadAddr = await this.getRoadAddress(i, kakaoAddress, idx);
+    const resRoadAddr = await Promise.all([
+      ...addrIndex.map(({ curPage, idx }) =>
+        this.getRoadAddress(curPage, stringAddress, idx)
+      ),
+    ]);
     /* 상세주소에 해당하는 좌표값 얻기 */
-    const { lat, lng } = await this.getCoords(roadAddr);
-    const type = Math.floor(Math.random() * 3);
-    return { lat, lng, type };
-    // }
+    const resCoordsArr = await Promise.all([
+      ...resRoadAddr
+        .filter((addr) => addr)
+        .map((roadAddr) => this.getCoords(roadAddr)),
+    ]);
+    return resCoordsArr;
   }
 
   /* 상세주소 얻어오기 */
   /**
    * @param {number} curPage - 현재 페이지 번호
-   * @param {string} kakaoAddress - 주소(시/구/동)
+   * @param {string} stringAddress - "시 구 동"
    * @param {number} idx - 인덱스(1~100 랜덤)
    * @returns {string} - 상세주소 (ex. 서울특별시 강남구 언주로63길 20(역삼동))
    */
-  async getRoadAddress(curPage, kakaoAddress, idx) {
+  async getRoadAddress(curPage, stringAddress, idx) {
     try {
       const res = await axios.get(
         `${JUSO_BASE_URL}?currentPage=${curPage}&countPerPage=100&keyword=${encodeURI(
-          kakaoAddress
+          stringAddress
         )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
       );
       return res.data.results.juso[idx].roadAddr;
     } catch (error) {
-      console.log(error.message);
+      console.log(`getRoadAddress: ${error.message}`);
     }
   }
 
@@ -196,7 +269,7 @@ export class QuestsService {
       const lng = res.data.documents[0].x;
       return { lat, lng };
     } catch (error) {
-      console.log(error.message);
+      console.log(`getCoords: ${error.message}`);
     }
   }
 
