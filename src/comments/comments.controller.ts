@@ -19,10 +19,13 @@ export class CommentsController {
   private logger = new Logger('CommentController');
   constructor(private readonly commentsService: CommentsService) {}
 
-  // @Post()
-  // create(@Body() createCommentDto: CreateCommentDto) {
-  //   return this.commentsService.create(createCommentDto);
-  // }
+  @Post()
+  async createComment(
+    @Param('feedId') feedId: number,
+    @Body() createCommentDto: CreateCommentDto
+  ) {
+    return this.commentsService.createComment(feedId, createCommentDto);
+  }
 
   /* 특정 게시글 댓글 조회 */
   @Get()

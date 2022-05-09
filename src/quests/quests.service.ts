@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
 import axios from 'axios';
 import * as config from 'config';
+import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
 import { Quest } from './entities/quest.entity';
 import { DongsRepository } from './dongs.repository';
@@ -25,18 +26,13 @@ export class QuestsService {
     private dongsRepository: DongsRepository
   ) {}
 
-  feedQuest(files: object[], content: string) {
-    const feedText = content['content'];
-    const pathList = [];
-    files.map((file) => {
-      pathList.push(file['path']);
-    });
-    return this.feedRepository.feedQuest(pathList, feedText);
-  }
-
-  commentQuest(content: string) {
-    const comment = content['content'];
-    return this.commentRepository.commentQuest(comment);
+  // feedQuest(img: string[], content: string) {
+  feedQuest(createFeedDto: CreateFeedDto) {
+    // const feedText = content['content'];
+    console.log(createFeedDto);
+    const { img, content } = createFeedDto;
+    // return this.feedRepository.feedQuest(img, feedText);
+    return this.feedRepository.feedQuest(img, content);
   }
 
   /*

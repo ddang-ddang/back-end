@@ -1,15 +1,10 @@
+import { IsNotEmpty } from 'class-validator';
 import { Column } from 'typeorm';
 
 export class CreateFeedDto {
-  @Column()
-  image1?: string;
+  @IsNotEmpty()
+  img?: string[];
 
-  @Column()
-  image2?: string;
-
-  @Column()
-  image3?: string;
-
-  @Column()
+  @IsNotEmpty()
   content?: string;
 }
