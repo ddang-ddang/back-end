@@ -97,7 +97,7 @@ export class QuestsService {
       );
       const { totalCount } = res.data.results.common;
       const pageCount = Math.ceil(totalCount / 100);
-      // const pageCount = 25;
+      // const lastPage = 25;
       return { totalCount, pageCount };
     } catch (error) {
       console.log(error.message);
@@ -107,49 +107,51 @@ export class QuestsService {
   /* 퀘스트 만들기 */
   /**
    * @param {number} totalCount - 전체 주소 개수
-   * @param {number} pageCount - 전체 페이지 수
+   * @param {number} paegCount - 전체 페이지 수
    * @param {string} kakaoAddress - 주소(시/구/동)
    * @returns {array} - [ 퀘스트 ]
    */
-  async getQuests(totalCount, pageCount, kakaoAddress) {
+  async getQuests(totalCount, paegCount, kakaoAddress) {
     const quests = [];
 
-    while (pageCount > 25) {
-      const addrIndex = [];
-      for (let curPage = 1; curPage <= 25; curPage++) {
-        const idx =
-          curPage !== 25
-            ? Math.floor(Math.random() * 100) + 1
-            : Math.floor(Math.random() * (totalCount % 100)) + 1;
-        addrIndex.push({ curPage, idx });
-      }
-
-      /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-      const resRoadAddr = await Promise.all([
-        ...addrIndex.map(({ curPage, idx }) =>
-          this.getRoadAddress(curPage, kakaoAddress, idx)
+    let questsCoords = [];
+    for (let startPage = 1; startPage < paegCount; startPage += 25) {
+      const lastPage = startPage + 25 < paegCount ? startPage + 25 : paegCount;
+      questsCoords = [
+        ...questsCoords,
+        await this.getQuestsCoords(
+          totalCount,
+          startPage,
+          lastPage,
+          kakaoAddress
         ),
-      ]);
-      /* 상세주소에 해당하는 좌표값 얻기 */
-      const resCoordsArr = await Promise.all([
-        ...resRoadAddr
-          .filter((addr) => addr)
-          .map((roadAddr) => this.getCoords(roadAddr)),
-      ]);
-      resCoordsArr.map((coords) => {
-        const type = Math.floor(Math.random() * 3);
-        quests.push({ ...coords, type });
-      });
-      pageCount -= 25;
+      ];
     }
 
+    questsCoords.map((coords) => {
+      const type = Math.floor(Math.random() * 3);
+      quests.push({ ...coords, type });
+    });
+
+    return quests;
+  }
+
+  /* 퀘스트를 만들기 위한 좌표값 얻기 */
+  /**
+   * @param {number} totalCount - 전체 주소 개수
+   * @param {number} startPage - 시작 페이지
+   * @param {number} lastPage - 마지막 페이지
+   * @param {string} kakaoAddress - 주소(시/구/동)
+   * @returns {array} - [ { lat, lng } ]
+   */
+  async getQuestsCoords(totalCount, startPage, lastPage, kakaoAddress) {
     const addrIndex = [];
-    for (let curPage = 1; curPage <= pageCount; curPage++) {
+    for (let curPage = startPage; curPage <= lastPage; curPage++) {
       const idx =
-        curPage !== pageCount
+        curPage !== lastPage
           ? Math.floor(Math.random() * 100) + 1
           : Math.floor(Math.random() * (totalCount % 100)) + 1;
-      addrIndex.push({ curPage, idx });
+      addrIndex.push({ curPage: curPage, idx });
     }
 
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
@@ -164,12 +166,7 @@ export class QuestsService {
         .filter((addr) => addr)
         .map((roadAddr) => this.getCoords(roadAddr)),
     ]);
-    resCoordsArr.map((coords) => {
-      const type = Math.floor(Math.random() * 3);
-      quests.push({ ...coords, type });
-    });
-
-    return quests;
+    return resCoordsArr;
   }
 
   /* 상세주소 얻어오기 */
