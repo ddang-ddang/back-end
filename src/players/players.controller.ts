@@ -1,3 +1,4 @@
+import { access } from 'fs'
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -12,8 +13,12 @@ import {
   Post,
   UseGuards,
   Request,
+  Response,
   Header,
   Logger,
+  UseInterceptors,
+  UploadedFile,
+  Res,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -33,6 +38,8 @@ import {
   CreateIdDto,
   CreatePlayerDto,
 } from './dto/create-player.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { request } from 'express';
 
 /* TODO
  * 1. [ ] 이메일 중복 조회 (중복 이메일이 있으면 중복, 없으면 사용 가능)
@@ -79,10 +86,13 @@ export class PlayersController {
   // signin
   // 흐름도 local auth -> auth service (validate) -> controller
   @UseGuards(LocalAuthGuard)
+  // @Header('Authorization', 'Bearer')
   @Post('signin')
-  async signIn(@Request() req) {
+  async signIn(@Request() req, @Res({ passthrough: true }) res) {
     try {
       const { email, nickname } = req.user;
+      const access_token = await this.authService.login(email, nickname);
+      res.setHeader('Authorization', `Bearer ${access_token.access_token}`);
       return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
       return {
@@ -94,8 +104,15 @@ export class PlayersController {
 
   // signout
   @Get('signout')
-  signOut() {
+  signOut(@Response() res) {
+    res.cookie('access_token', '', { expires: new Date(0) });
     return { hello: 'world' };
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log(file);
   }
 
   //원하는 곳에 JwtAuthGuard 붙이면 됨

@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
 import { SigninDto } from 'src/players/dto/create-player.dto';
+import { access } from 'fs';
 
 @Injectable()
 export class AuthService {
@@ -25,20 +26,18 @@ export class AuthService {
     return null;
   }
 
-  async login(email: string, password: string): Promise<any> {
+  async login(email: string, nickname: string): Promise<any> {
     // const hashedPassword = await bcrypt.hash(password, 10);
-    // const payload = {
-    //   email: email,
-    //   password: hashedPassword,
-    // };
-    console.log('auth service login', email, password);
+    const payload = {
+      email: email,
+      nickname: nickname,
+      // password: hashedPassword,
+    };
+    console.log('auth service login', email, nickname);
+    console.log(this.jwtService.sign(payload));
 
     return {
-      ok: true,
-      row: {
-        email: email,
-        nickname: 'nickname',
-      },
+      access_token: this.jwtService.sign(payload),
     };
   }
 
