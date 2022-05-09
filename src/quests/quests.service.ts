@@ -112,25 +112,23 @@ export class QuestsService {
    * @returns {array} - [ 퀘스트 ]
    */
   async getQuests(totalCount, paegCount, kakaoAddress) {
-    const quests = [];
-
     let questsCoords = [];
     for (let startPage = 1; startPage < paegCount; startPage += 25) {
       const lastPage = startPage + 25 < paegCount ? startPage + 25 : paegCount;
       questsCoords = [
         ...questsCoords,
-        await this.getQuestsCoords(
+        ...(await this.getQuestsCoords(
           totalCount,
           startPage,
           lastPage,
           kakaoAddress
-        ),
+        )),
       ];
     }
 
-    questsCoords.map((coords) => {
+    const quests = questsCoords.map((coords) => {
       const type = Math.floor(Math.random() * 3);
-      quests.push({ ...coords, type });
+      return { ...coords, type };
     });
 
     return quests;
