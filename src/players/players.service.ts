@@ -16,9 +16,7 @@ export class PlayersService {
 
   // 이멜일로 찾기
   async findByEmail(email: string): Promise<CreateIdDto> {
-    console.log('findByEmail');
     const players = await this.playersRepository.findByEmail(email);
-    console.log(players);
     return players;
   }
 
@@ -29,7 +27,7 @@ export class PlayersService {
     password,
     mbti,
     profileImg,
-  }: CreatePlayerDto): Promise<Player> {
+  }: CreateBodyDto): Promise<Player> {
     console.log('signup');
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log({ email, nickname, hashedPassword, mbti, profileImg });
