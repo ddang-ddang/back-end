@@ -132,7 +132,9 @@ export class QuestsService {
       ]);
       /* 상세주소에 해당하는 좌표값 얻기 */
       const resCoordsArr = await Promise.all([
-        ...resRoadAddr.map((roadAddr) => this.getCoords(roadAddr)),
+        ...resRoadAddr
+          .filter((addr) => addr)
+          .map((roadAddr) => this.getCoords(roadAddr)),
       ]);
       resCoordsArr.map((coords) => {
         const type = Math.floor(Math.random() * 3);
@@ -158,7 +160,9 @@ export class QuestsService {
     ]);
     /* 상세주소에 해당하는 좌표값 얻기 */
     const resCoordsArr = await Promise.all([
-      ...resRoadAddr.map((roadAddr) => this.getCoords(roadAddr)),
+      ...resRoadAddr
+        .filter((addr) => addr)
+        .map((roadAddr) => this.getCoords(roadAddr)),
     ]);
     resCoordsArr.map((coords) => {
       const type = Math.floor(Math.random() * 3);
