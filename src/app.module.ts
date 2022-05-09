@@ -34,7 +34,6 @@ const jwtConfig = config.get('jwt');
     TypeOrmModule.forFeature([PlayerRepository, FeedRepository]),
     AuthModule,
     PlayersModule,
-    TypeOrmModule.forRoot(typeORMConfig),
     FeedsModule,
     CommentsModule,
     LikesModule,
