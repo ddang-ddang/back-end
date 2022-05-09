@@ -4,6 +4,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
 import axios from 'axios';
 import * as config from 'config';
+import { QuestsRepository } from './quests.repository';
+import { Quest } from './entities/quest.entity';
 
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
@@ -16,7 +18,8 @@ export class QuestsService {
   constructor(
     @InjectRepository(FeedRepository)
     private feedRepository: FeedRepository,
-    private commentRepository: CommentRepository
+    private commentRepository: CommentRepository,
+    private questsRepository: QuestsRepository
   ) {}
 
   feedQuest(files: object[], content: string) {
@@ -33,32 +36,49 @@ export class QuestsService {
     return this.commentRepository.commentQuest(comment);
   }
 
-  /* TODO: 공통
-   *       1. 좌표 기준으로 동 조회 (kakao API)
-   *       2. 오늘 날짜, 주소(시, 구, 동) 기준으로 DB 조회 (MySQL)
+  /*
+   * 퀘스트 조회 프로세스 => 좌표 기준으로 주소 조회, 주소 및 날짜 기준으로 DB 조회
+   * DB에 동 데이터 있는 경우 => 퀘스트, 완료여부 조인해서 클라이언트로 발송
+   * DB에 동 데이터가 없는 경우 => 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
    */
-  /* TODO: DB에 동 데이터 있는 경우
-   *       1. 퀘스트 조회, 완료여부 JOIN (MySQL)
-   *       2. 조회한 퀘스트들을 클라이언트로 보내줌
-   */
-  /* TODO: DB에 동 데이터가 없는 경우
-   *       1. 오늘 날짜, 주소(시, 구, 동) 포함한 동 데이터 DB에 추가 (MySQL)
-   *       2. 주소(동) 기준으로 랜덤 좌표 생성 (주소센터 API)
-   *       3. 랜덤 좌표마다 퀘스트 만들어서 DB에 추가 (MySQL)
-   *       4. 생성한 퀘스트들을 클라이언트로 보내줌
-   */
-  // TODO: get 요청시 try...catch 예외처리
 
   /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
     const kakaoAddress = await this.getAddressName(lat, lng);
+
+    // TODO: 2. DB에서 퀘스트 조회
+    /*
+     * 동데이터 있는지 확인
+     * const dongExist = await this.checkDongExists(email);
+     * if (dongExist) {
+     *   // TODO: 3. 있으면 퀘스트, 완료여부 조인해서 클라이언트로 발송
+     *   return "해당동 관련 퀘스트"
+     * }
+     */
+
+    // 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
+    // 퀘스트 생성
     const { totalCount, pageCount } = await this.getDongData(kakaoAddress);
     console.time('API req-res time');
-    const quests = await this.getQuests(totalCount, pageCount, kakaoAddress);
+    const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
     console.timeEnd('API req-res time');
+    // TODO: 1. DB에 퀘스트 추가
+    const quest = new Quest();
+    quest.id = 1;
+    quest.lat = 1;
+    quest.lng = 1;
+    quest.type = 1;
+    await this.questsRepository.save(quest);
 
     return quests;
   }
+
+  // 동 데이터 있는지 확인하는 함수
+  // private async checkDongExists(emailAddress: string): Promise<boolean> {
+  //   const dong = await this.dongsRepository.findOne({ email: emailAddress });
+  //
+  //   return dong !== undefined;
+  // }
 
   /* 주소 데이터 얻어오기 */
   /**
@@ -111,10 +131,18 @@ export class QuestsService {
    * @param {string} kakaoAddress - 주소(시/구/동)
    * @returns {array} - [ 퀘스트 ]
    */
-  async getQuests(totalCount, paegCount, kakaoAddress) {
+  async createQuests(totalCount, paegCount, kakaoAddress) {
+    const limitsPerRequest = 20;
     let questsCoords = [];
-    for (let startPage = 1; startPage < paegCount; startPage += 25) {
-      const lastPage = startPage + 25 < paegCount ? startPage + 25 : paegCount;
+    for (
+      let startPage = 1;
+      startPage < paegCount;
+      startPage += limitsPerRequest
+    ) {
+      const lastPage =
+        startPage + limitsPerRequest < paegCount
+          ? startPage + limitsPerRequest
+          : paegCount + 1;
       questsCoords = [
         ...questsCoords,
         ...(await this.getQuestsCoords(
@@ -144,7 +172,7 @@ export class QuestsService {
    */
   async getQuestsCoords(totalCount, startPage, lastPage, kakaoAddress) {
     const addrIndex = [];
-    for (let curPage = startPage; curPage <= lastPage; curPage++) {
+    for (let curPage = startPage; curPage < lastPage; curPage++) {
       const idx =
         curPage !== lastPage
           ? Math.floor(Math.random() * 100) + 1
