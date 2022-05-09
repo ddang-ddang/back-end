@@ -97,8 +97,7 @@ export class QuestsService {
       );
       const { totalCount } = res.data.results.common;
       const pageCount = Math.ceil(totalCount / 100);
-      // const pageCount = 3; // 페이지가 3개일 경우
-      // const pageCount = 10; // 페이지가 10개일 경우
+      // const pageCount = 25;
       return { totalCount, pageCount };
     } catch (error) {
       console.log(error.message);
@@ -114,19 +113,47 @@ export class QuestsService {
    */
   async getQuests(totalCount, pageCount, kakaoAddress) {
     const quests = [];
+
+    while (pageCount > 25) {
+      const addrIndex = [];
+      for (let curPage = 1; curPage <= 25; curPage++) {
+        const idx =
+          curPage !== 25
+            ? Math.floor(Math.random() * 100) + 1
+            : Math.floor(Math.random() * (totalCount % 100)) + 1;
+        addrIndex.push({ curPage, idx });
+      }
+
+      /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
+      const resRoadAddr = await Promise.all([
+        ...addrIndex.map(({ curPage, idx }) =>
+          this.getRoadAddress(curPage, kakaoAddress, idx)
+        ),
+      ]);
+      /* 상세주소에 해당하는 좌표값 얻기 */
+      const resCoordsArr = await Promise.all([
+        ...resRoadAddr.map((roadAddr) => this.getCoords(roadAddr)),
+      ]);
+      resCoordsArr.map((coords) => {
+        const type = Math.floor(Math.random() * 3);
+        quests.push({ ...coords, type });
+      });
+      pageCount -= 25;
+    }
+
     const addrIndex = [];
-    for (let i = 1; i <= pageCount; i++) {
+    for (let curPage = 1; curPage <= pageCount; curPage++) {
       const idx =
-        i !== pageCount
+        curPage !== pageCount
           ? Math.floor(Math.random() * 100) + 1
           : Math.floor(Math.random() * (totalCount % 100)) + 1;
-      addrIndex.push({ i, idx });
+      addrIndex.push({ curPage, idx });
     }
 
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
     const resRoadAddr = await Promise.all([
-      ...addrIndex.map(({ i, idx }) =>
-        this.getRoadAddress(i, kakaoAddress, idx)
+      ...addrIndex.map(({ curPage, idx }) =>
+        this.getRoadAddress(curPage, kakaoAddress, idx)
       ),
     ]);
     /* 상세주소에 해당하는 좌표값 얻기 */
@@ -137,6 +164,7 @@ export class QuestsService {
       const type = Math.floor(Math.random() * 3);
       quests.push({ ...coords, type });
     });
+
     return quests;
   }
 
