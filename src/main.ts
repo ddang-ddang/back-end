@@ -11,23 +11,24 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, { cors: true });
   const serverConfig = config.get('server');
 
-  // app.enableCors({
-  //   origin: '*',
-  //   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  //   preflightContinue: false,
-  //   optionsSuccessStatus: 204,
-  // });
-  app.use(
-    session({
-      secret: 'keyboard cat', //get env vars
-      resave: false,
-      saveUninitialized: true,
-      cookie: { maxAge: 3600000 },
-    })
-  );
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    credentials: true,
+  });
+  // app.use(
+  //   session({
+  //     secret: 'keyboard cat', //get env vars
+  //     resave: false,
+  //     saveUninitialized: true,
+  //     cookie: { maxAge: 3600000 },
+  //   })
+  // );
 
-  app.use(passport.initialize());
-  app.use(passport.session());
+  // app.use(passport.initialize());
+  // app.use(passport.session());
 
   app.useGlobalPipes(
     new ValidationPipe({
