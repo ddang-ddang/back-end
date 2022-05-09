@@ -1,8 +1,10 @@
-import { ApiCreatedResponse } from '@nestjs/swagger';
-import { AuthService } from 'src/auth/auth.service';
-import { PlayersService } from './players.service';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
-import { Player } from './entities/player.entity';
+import { access } from 'fs'
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import {
   Body,
   Controller,
@@ -11,62 +13,143 @@ import {
   Post,
   UseGuards,
   Request,
+  Response,
+  Header,
+  Logger,
+  UseInterceptors,
+  UploadedFile,
+  Res,
 } from '@nestjs/common';
+
+// 서비스 관련 모듈
+import { AuthService } from 'src/auth/auth.service';
+import { PlayersService } from './players.service';
+
+// 인증관련 모듈
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { GoogleAuthGuard } from 'src/auth/google/google-auth.guard';
+import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
+import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
+
+// 데이터 엔티티
+import { Player } from './entities/player.entity';
 import {
   CreateBodyDto,
   CreateIdDto,
   CreatePlayerDto,
 } from './dto/create-player.dto';
-import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { request } from 'express';
+
+/* TODO
+ * 1. [ ] 이메일 중복 조회 (중복 이메일이 있으면 중복, 없으면 사용 가능)
+ * 2. [ ] 닉네임 수정
+ * 3. [ ] 프로필 사진 수정
+ * 4. [ ] auth controller를 만들어서 넣을지 생각해보자
+ * 5.
+ */
 
 @Controller('players')
 export class PlayersController {
+  private logger = new Logger('PlayersController');
   constructor(
-    private playersService: PlayersService,
-    private authService: AuthService
+    private readonly playersService: PlayersService,
+    private readonly authService: AuthService
   ) {}
 
-  @Post('test')
-  test(@Body() { email }: Player): any {
-    console.log('email' + email);
-    console.log(email);
-    return { email: email };
-  }
-
   // signup
+  @ApiOkResponse({ type: Player, isArray: true })
+  @ApiQuery({ name: 'name', required: false })
   @ApiCreatedResponse({ type: CreateBodyDto })
   @Post('signup')
   async signUp(
-    @Body() { email, nickname, password, mbti, profileImg }: CreatePlayerDto
+    @Body() { email, nickname, password, mbti, profileImg }: CreateBodyDto
   ): Promise<any> {
-    await this.playersService.signup({
-      email,
-      nickname,
-      password,
-      mbti,
-      profileImg,
-    });
-    return { ok: true };
+    this.logger.verbose(`try to sign up player: ${email}`);
+    try {
+      await this.playersService.signup({
+        email,
+        nickname,
+        password,
+        mbti,
+        profileImg,
+      });
+      return { ok: true };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err.message,
+      };
+    }
   }
 
   // signin
+  // 흐름도 local auth -> auth service (validate) -> controller
   @UseGuards(LocalAuthGuard)
+  // @Header('Authorization', 'Bearer')
   @Post('signin')
-  async signIn(@Body() { email, password }: CreateIdDto) {
-    return this.authService.login(email, password);
+  async signIn(@Request() req, @Res({ passthrough: true }) res) {
+    try {
+      const { email, nickname } = req.user;
+      const access_token = await this.authService.login(email, nickname);
+      res.setHeader('Authorization', `Bearer ${access_token.access_token}`);
+      return { ok: true, row: { email: email, nickname: nickname } };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err.message,
+      };
+    }
   }
 
   // signout
   @Get('signout')
-  signOut() {
+  signOut(@Response() res) {
+    res.cookie('access_token', '', { expires: new Date(0) });
     return { hello: 'world' };
   }
 
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadFile(@UploadedFile() file: Express.Multer.File) {
+    console.log(file);
+  }
+
   //원하는 곳에 JwtAuthGuard 붙이면 됨
+  @Header('Access-Control-Allow-Origin', '*')
+  @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(JwtAuthGuard)
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
     return req.user;
+  }
+
+  @Header('Access-Control-Allow-Origin', '*')
+  @ApiOperation({ summary: 'jwt인증 API' })
+  @UseGuards(GoogleAuthGuard)
+  @Get('googleauth')
+  async googleAuth(@Request() req) {
+    return req;
+  }
+
+  @Header('Access-Control-Allow-Origin', '*')
+  @Get('redirect')
+  @UseGuards(GoogleAuthGuard)
+  googleAuthRedirect(@Request() req) {
+    return this.authService.googleLogin(req);
+  }
+
+  @Header('Access-Control-Allow-Origin', '*')
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakaoauth')
+  async kakaoAuth(@Request() req) {
+    return req;
+  }
+
+  @Get('kakaoredirect')
+  @UseGuards(KakaoAuthGuard)
+  kakaopage(@Request() req) {
+    return this.authService.kakaoLogin(req);
   }
 
   // mypage

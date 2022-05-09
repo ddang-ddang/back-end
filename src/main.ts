@@ -3,11 +3,32 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as config from 'config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as session from 'express-session';
+import * as passport from 'passport';
 
 async function bootstrap() {
   const logger = new Logger();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { cors: true });
   const serverConfig = config.get('server');
+
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+    credentials: true,
+  });
+  // app.use(
+  //   session({
+  //     secret: 'keyboard cat', //get env vars
+  //     resave: false,
+  //     saveUninitialized: true,
+  //     cookie: { maxAge: 3600000 },
+  //   })
+  // );
+
+  // app.use(passport.initialize());
+  // app.use(passport.session());
 
   app.useGlobalPipes(
     new ValidationPipe({
