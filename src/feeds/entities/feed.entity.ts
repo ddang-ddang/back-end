@@ -14,6 +14,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Player } from 'src/players/entities/player.entity';
+import { Quest } from '../../quests/entities/quest.entity';
 
 @Entity()
 export class Feed extends BaseEntity {
@@ -47,4 +48,7 @@ export class Feed extends BaseEntity {
 
   @ManyToOne((type) => Player, (player) => player.feeds)
   player: Player;
+
+  @ManyToOne((type) => Quest, (quest) => quest.feeds)
+  quest: Quest;
 }
