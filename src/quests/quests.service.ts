@@ -68,8 +68,7 @@ export class QuestsService {
 
     if (dong) {
       // 퀘스트, 완료여부 조인해서 클라이언트로 발송
-      // const quests = await this.questsRepository.findQuests(dong.id);
-      const quests = '퀘스트요';
+      const quests = await this.questsRepository.findQuests(dong);
       return quests;
     } else {
       // 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
@@ -82,7 +81,7 @@ export class QuestsService {
       );
       console.timeEnd('API req-res time');
 
-      // 동 DB 생성
+      // 동 DB 생성, dong 객체를 return 함
       await this.dongsRepository.createDong({
         date,
         regionSi,
@@ -90,21 +89,29 @@ export class QuestsService {
         regionDong,
       });
 
-      const dong = await this.dongsRepository.findDong(
+      // dong 모델 자체를 return 함
+      const createdDong = await this.dongsRepository.findDong(
         date,
         regionSi,
         regionGu,
         regionDong
       );
-
-      // 퀘스트 DB 생성
-      await Promise.all([
+      let questsWithId;
+      // 퀘스트 DB 생성 하고 결과 return
+      Promise.all([
         ...quests.map((quest) => {
-          this.questsRepository.createQuest({ ...quest, dong });
+          this.questsRepository.createQuest({ ...quest, dong: createdDong });
         }),
-      ]);
+      ]).then(async (r) => {
+        console.log(r);
+        questsWithId = await this.questsRepository.findQuests(createdDong);
+        console.log(questsWithId);
+      });
 
-      return quests;
+      // TODO: id 포함한 db를 받아와야 하는디...
+      // const quests = await this.questsRepository.findQuests(dong);
+
+      return questsWithId;
     }
   }
 

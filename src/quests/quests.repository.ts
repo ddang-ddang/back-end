@@ -6,8 +6,8 @@ import { Dong } from './entities/dong.entity';
 @EntityRepository(Quest)
 export class QuestsRepository extends Repository<Quest> {
   /* 동 찾기 함수 */
-  findQuests = async (dongId: Dong): Promise<Quest[]> => {
-    return await this.find({ where: { dongId } });
+  findQuests = async (dong: Dong): Promise<Quest[]> => {
+    return await this.find({ where: { dong } });
   };
 
   createQuest = async ({ lat, lng, type, dong }: CreateQuestDto) => {
