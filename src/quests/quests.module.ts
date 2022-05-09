@@ -7,11 +7,13 @@ import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
 import { Quest } from './entities/quest.entity';
 import { Dong } from './entities/dong.entity';
+import { DongsRepository } from './dongs.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Quest, Dong]),
     TypeOrmModule.forFeature([QuestsRepository]),
+    TypeOrmModule.forFeature([DongsRepository]),
     TypeOrmModule.forFeature([FeedRepository]),
     TypeOrmModule.forFeature([CommentRepository]),
   ],

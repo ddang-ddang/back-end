@@ -11,13 +11,13 @@ import { Dong } from './dong.entity';
 
 @Entity()
 export class Quest extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'dongId' })
+  @PrimaryGeneratedColumn({ name: 'questId' })
   id: number;
 
-  @Column()
+  @Column('decimal', { precision: 8, scale: 6 })
   lat: number;
 
-  @Column()
+  @Column('decimal', { precision: 9, scale: 6 })
   lng: number;
 
   @Column()

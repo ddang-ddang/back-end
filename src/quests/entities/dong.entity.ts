@@ -13,7 +13,7 @@ export class Dong extends BaseEntity {
   id: number;
 
   @Column()
-  date: Date;
+  date: string;
 
   @Column()
   regionSi: string;
