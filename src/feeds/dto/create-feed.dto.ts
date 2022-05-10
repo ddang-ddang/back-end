@@ -3,8 +3,8 @@ import { Column } from 'typeorm';
 
 export class CreateFeedDto {
   @IsNotEmpty()
-  img?: string[];
+  content?: string;
 
   @IsNotEmpty()
-  content?: string;
+  img?: string[];
 }

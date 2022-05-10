@@ -8,9 +8,12 @@ import {
   HttpStatus,
   Param,
   UseGuards,
+  Req,
+  Request,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsService } from './quests.service';
 
@@ -47,8 +50,9 @@ export class QuestsController {
    */
   @Post()
   @ApiOperation({ summary: '퀘스트 수행 로직 API' })
-  // @UseGuards(AuthGuard('jwt'))
+  // @UseGuards(JwtAuthGuard)
   async questComplete(
+    // @Req() req: Request,
     @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto
   ) {
