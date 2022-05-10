@@ -1,22 +1,13 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
   Delete,
-  UseInterceptors,
-  UploadedFile,
-  UploadedFiles,
   Logger,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
-import { CreateFeedDto } from './dto/create-feed.dto';
-import { UpdateFeedDto } from './dto/update-feed.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { Feed } from './entities/feed.entity';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('api/feeds')

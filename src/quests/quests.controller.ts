@@ -3,21 +3,15 @@ import {
   Controller,
   Post,
   Query,
-  Req,
   Get,
   HttpException,
   HttpStatus,
   Param,
-  UploadedFile,
-  UseInterceptors,
-  Request,
-  UploadedFiles,
+  UseGuards,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
-import { CreateQuestDto } from './dto/create-quest.dto';
 import { QuestsService } from './quests.service';
 
 @Controller('/api/quests')
@@ -53,6 +47,7 @@ export class QuestsController {
    */
   @Post()
   @ApiOperation({ summary: '퀘스트 수행 로직 API' })
+  // @UseGuards(AuthGuard('jwt'))
   async questComplete(
     @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto

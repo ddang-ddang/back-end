@@ -70,6 +70,6 @@ export class Player extends BaseEntity {
   @JoinColumn({ name: 'id' })
   comments: Comment[];
 
-  // @OneToMany((type) => Like, (like) => like.player)
-  // likes: Like[];
+  @OneToMany((type) => Like, (like) => like.player)
+  likes: Like[];
 }

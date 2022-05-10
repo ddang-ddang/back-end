@@ -29,7 +29,6 @@ export class PlayerRepository extends Repository<Player> {
     });
   };
 
-
   //유져 찾기 함수
   async findPlayer(email: string): Promise<Player> {
     return this.findOne({ email: email });

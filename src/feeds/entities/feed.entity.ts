@@ -53,4 +53,7 @@ export class Feed extends BaseEntity {
 
   @ManyToOne((type) => Quest, (quest) => quest.feeds)
   quest: Quest;
+
+  @OneToMany((type) => Like, (like) => like.feed)
+  likes: Like[];
 }
