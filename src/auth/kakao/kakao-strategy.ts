@@ -11,7 +11,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     super({
       clientID: kakaoConfig.clientId,
       clientSecret: kakaoConfig.clientSecret,
-      callbackURL: 'http://localhost:3000/players/kakaoredirect',
+      callbackURL: '/players/kakaoredirect',
       //   scope: ['profile'],
     });
   }

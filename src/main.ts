@@ -10,6 +10,7 @@ async function bootstrap() {
   const logger = new Logger();
   const app = await NestFactory.create(AppModule, { cors: true });
   const serverConfig = config.get('server');
+  const developmentConfig = config.get('jwt');
 
   app.enableCors({
     origin: '*',
@@ -18,17 +19,18 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
     credentials: true,
   });
-  // app.use(
-  //   session({
-  //     secret: 'keyboard cat', //get env vars
-  //     resave: false,
-  //     saveUninitialized: true,
-  //     cookie: { maxAge: 3600000 },
-  //   })
-  // );
 
-  // app.use(passport.initialize());
-  // app.use(passport.session());
+  app.use(
+    session({
+      secret: developmentConfig.secret, //get env vars
+      resave: false,
+      saveUninitialized: true,
+      cookie: { maxAge: 3600000 },
+    })
+  );
+
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   app.useGlobalPipes(
     new ValidationPipe({
