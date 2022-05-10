@@ -33,11 +33,11 @@ export class AuthService {
       nickname: nickname,
       // password: hashedPassword,
     };
-    console.log('auth service login', email, nickname);
-    console.log(this.jwtService.sign(payload));
+
+    const access_token = this.jwtService.sign(payload);
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
     };
   }
 
