@@ -24,19 +24,29 @@ export class QuestsService {
     private dongsRepository: DongsRepository
   ) {}
 
-  // feedQuest(img: string[], content: string) {
+  /* 피드작성 퀘스트 완료 요청 로직 */
   feedQuest(createFeedDto: CreateFeedDto) {
-    // const feedText = content['content'];
     console.log(createFeedDto);
     const { img, content } = createFeedDto;
-    // return this.feedRepository.feedQuest(img, feedText);
     return this.feedRepository.feedQuest(img, content);
   }
 
+  /* 타임어택 퀘스트 완료 요청 로직 */
+  timeQuest() {
+    return '타임어택 퀘스트 완료!!';
+    // return this.questsRepository.timeQuest();
+  }
+
+  /* 몬스터 대결 퀘스트 완료 요청 로직 */
+  mobQuest() {
+    return '몬스터 대결 퀘스트 완료!!';
+    // return this.questsRepository.mobQuest();
+  }
+
   /*
-   * 퀘스트 조회 프로세스 => 좌표 기준으로 주소 조회, 주소 및 날짜 기준으로 DB 조회
-   * DB에 동 데이터 있는 경우 => 퀘스트, 완료여부 조인해서 클라이언트로 발송
-   * DB에 동 데이터가 없는 경우 => 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
+   * 퀘스트 조회 프로세스: player의 좌표 값으로 region 테이블 조회
+   * DB에 데이터 있으면, 퀘스트 + 완료여부 조인해서 응답
+   * DB에 데이터 없으면, 지역 + 퀘스트 데이터 DB에 추가하고 응답
    */
 
   /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */

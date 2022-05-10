@@ -19,6 +19,7 @@ export class QuestsController {
 
   /* 퀘스트 전체 조회 API */
   @Get()
+  @ApiOperation({ summary: '전체 퀘스트 조회 API' })
   getAll(@Query('lat') lat: number, @Query('lng') lng: number) {
     /* [예외처리] 쿼리 파라미터 누락: 위도(lat), 경도(lng) */
     if (!lat || !lng) {
@@ -35,6 +36,7 @@ export class QuestsController {
 
   /* 특정 퀘스트 조회 API */
   @Get(':quest_id')
+  @ApiOperation({ summary: '특정 퀘스트 조회 API' })
   getOne(@Param('quest_id') id: number) {
     return this.questsService.getOne(id);
   }
@@ -51,6 +53,10 @@ export class QuestsController {
   ) {
     if (questType === 'feed') {
       return this.questsService.feedQuest(createFeedDto);
+    } else if (questType === 'time') {
+      return this.questsService.timeQuest();
+    } else if (questType === 'mob') {
+      return this.questsService.mobQuest();
     }
     return;
   }
