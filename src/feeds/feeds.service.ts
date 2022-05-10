@@ -18,7 +18,9 @@ export class FeedsService {
       where: {
         deletedAt: null,
       },
-      relations: ['place'],
+      relations: ['player'],
+      // 좋아요 개수
+      // 현재 사용자가 좋아요 눌렀는지 여부
     });
     return feeds;
   }
@@ -53,7 +55,6 @@ export class FeedsService {
   async removeQuest(feedId: number): Promise<void | object> {
     const feed = await this.feedRepository.findOne(feedId);
     if (!feed) {
-      // throw new NotFoundException(`feed not found`);
       return {
         ok: false,
         message: `not found`,

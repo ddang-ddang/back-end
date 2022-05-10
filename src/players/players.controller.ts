@@ -1,4 +1,4 @@
-import { access } from 'fs'
+import { access } from 'fs';
 import {
   ApiCreatedResponse,
   ApiOkResponse,

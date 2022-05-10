@@ -1,23 +1,15 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
   Delete,
-  UseInterceptors,
-  UploadedFile,
-  UploadedFiles,
   Logger,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
-import { CreateFeedDto } from './dto/create-feed.dto';
-import { UpdateFeedDto } from './dto/update-feed.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { Feed } from './entities/feed.entity';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { UpdateFeedDto } from './dto/update-feed.dto';
 
 @Controller('api/feeds')
 @ApiTags('피드 API')
@@ -68,13 +60,12 @@ export class FeedsController {
   @ApiOperation({ summary: '특정 피드 수정 API' })
   async updateFeed(
     @Param('feedId') feedId: number,
-    @Body() content: string,
-    img: string[]
+    @Body() updateFeedDto: UpdateFeedDto
   ) {
     this.logger.verbose(`trying to update feed id ${feedId}`);
-    const feedContent = content['content'];
+    const { content, img } = { ...updateFeedDto };
     try {
-      await this.feedsService.updateFeed(feedId, img, feedContent);
+      await this.feedsService.updateFeed(feedId, img, content);
       return {
         ok: true,
       };
