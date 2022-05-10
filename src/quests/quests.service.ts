@@ -45,7 +45,7 @@ export class QuestsService {
     //   mbti: 'mbti',
     //   profileImg: 'path',
     // });
-    const player = await this.playersRepository.getByEmail(
+    const player = await this.playersRepository.findByEmail(
       'nature9th@gmail.com'
     );
     const quest = await this.getOne(questId);
