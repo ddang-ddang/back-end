@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
@@ -66,11 +66,13 @@ export class QuestsService {
     console.log(dong);
 
     // 퀘스트 DB 생성 하고 결과 return
+    console.time('abc');
     await Promise.all([
-      ...quests.map((quest) => {
-        return this.questsRepository.createAndSave({ ...quest, dong });
+      ...quests.map(async (quest) => {
+        return await this.questsRepository.createAndSave({ ...quest, dong });
       }),
-    ]).then((val) => console.log(val));
+    ]);
+    console.timeEnd('abc');
 
     return await this.questsRepository.findAll(dong);
   }
