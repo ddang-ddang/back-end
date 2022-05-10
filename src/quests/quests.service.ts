@@ -7,6 +7,8 @@ import * as config from 'config';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
 import { DongsRepository } from './dongs.repository';
+import { CompletesRepository } from './completes.repository';
+import { PlayerRepository } from '../players/players.repository';
 
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
@@ -21,7 +23,9 @@ export class QuestsService {
     private feedRepository: FeedRepository,
     private commentRepository: CommentRepository,
     private questsRepository: QuestsRepository,
-    private dongsRepository: DongsRepository
+    private dongsRepository: DongsRepository,
+    private completesRepository: CompletesRepository,
+    private playersRepository: PlayerRepository
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 로직 */
@@ -31,16 +35,23 @@ export class QuestsService {
     return this.feedRepository.feedQuest(img, content);
   }
 
-  /* 타임어택 퀘스트 완료 요청 로직 */
-  timeQuest() {
-    return '타임어택 퀘스트 완료!!';
-    // return this.questsRepository.timeQuest();
-  }
-
-  /* 몬스터 대결 퀘스트 완료 요청 로직 */
-  mobQuest() {
-    return '몬스터 대결 퀘스트 완료!!';
-    // return this.questsRepository.mobQuest();
+  /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
+  async questComplete(questId: number) {
+    // TODO: 토큰에서 플레이어 email 가져오기
+    // await this.playersRepository.createPlayer({
+    //   email: 'nature9th@gmail.com',
+    //   nickname: 'nick',
+    //   password: 'pass',
+    //   mbti: 'mbti',
+    //   profileImg: 'path',
+    // });
+    const player = await this.playersRepository.getByEmail(
+      'nature9th@gmail.com'
+    );
+    const quest = await this.getOne(questId);
+    console.log(player, quest);
+    await this.completesRepository.complete(player, quest);
+    return { ok: true };
   }
 
   /*
