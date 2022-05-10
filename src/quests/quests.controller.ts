@@ -45,18 +45,17 @@ export class QuestsController {
    * 퀘스트 수행
    * 유저 확인 필요
    */
-  @Post()
+  @Post(':quest_id')
   @ApiOperation({ summary: '퀘스트 수행 로직 API' })
   async questComplete(
+    @Param('quest_id') id: number,
     @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto
   ) {
     if (questType === 'feed') {
       return this.questsService.feedQuest(createFeedDto);
-    } else if (questType === 'time') {
-      return this.questsService.timeQuest();
-    } else if (questType === 'mob') {
-      return this.questsService.mobQuest();
+    } else if (questType === 'time' || questType === 'mob') {
+      return this.questsService.questComplete(id);
     }
     return;
   }
