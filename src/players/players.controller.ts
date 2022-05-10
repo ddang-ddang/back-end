@@ -14,11 +14,11 @@ import {
   UseGuards,
   Request,
   Response,
-  Header,
   Logger,
   UseInterceptors,
   UploadedFile,
   Res,
+  Param,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -37,9 +37,9 @@ import {
   CreateBodyDto,
   CreateIdDto,
   CreatePlayerDto,
+  UpdateNickname,
 } from './dto/create-player.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { request } from 'express';
 
 /* TODO
  * 1. [ ] 이메일 중복 조회 (중복 이메일이 있으면 중복, 없으면 사용 가능)
@@ -86,13 +86,16 @@ export class PlayersController {
   // signin
   // 흐름도 local auth -> auth service (validate) -> controller
   @UseGuards(LocalAuthGuard)
-  // @Header('Authorization', 'Bearer')
   @Post('signin')
   async signIn(@Request() req, @Res({ passthrough: true }) res) {
     try {
       const { email, nickname } = req.user;
+
+      this.logger.verbose(`try to sign in player: ${email}`);
+
       const access_token = await this.authService.login(email, nickname);
       res.setHeader('Authorization', `Bearer ${access_token.access_token}`);
+
       return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
       return {
@@ -116,40 +119,48 @@ export class PlayersController {
   }
 
   //원하는 곳에 JwtAuthGuard 붙이면 됨
-  @Header('Access-Control-Allow-Origin', '*')
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(JwtAuthGuard)
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
-    return req.user;
+    const { playerId, email, nickname } = req.user.player;
+    this.logger.verbose(`try to sign in player: ${email}`);
+    console.log(req.user.player);
+    return { ok: true, row: { email: email, nickname: nickname } };
   }
 
-  @Header('Access-Control-Allow-Origin', '*')
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
   async googleAuth(@Request() req) {
+    console.log(req.user);
     return req;
   }
 
-  @Header('Access-Control-Allow-Origin', '*')
   @Get('redirect')
   @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@Request() req) {
-    return this.authService.googleLogin(req);
+  googleAuthRedirect(@Request() req, @Res() res) {
+    // return this.authService.googleLogin(req);
+    // return res.status(302).redirect('http://localhost:3005');
+    return res.writeHead(301, { Location: 'http://localhost:3005' });
   }
 
-  @Header('Access-Control-Allow-Origin', '*')
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoauth')
   async kakaoAuth(@Request() req) {
-    return req;
+    const { email, nickname, access_token, profileImg } = req.user;
+    console.log(req.user);
+    return { ok: true };
   }
 
   @Get('kakaoredirect')
   @UseGuards(KakaoAuthGuard)
-  kakaopage(@Request() req) {
-    return this.authService.kakaoLogin(req);
+  kakaopage(@Request() req, @Res() res) {
+    const { email, nickname, access_token, profileImg } = req.user;
+    // return { ok: true, row: req.user };
+    // return res.writeHead(301, { Location: 'http://localhost:3005' });
+    return res.status(302).redirect('http://localhost:3005');
+    // return res.status(302).redirect('/');
   }
 
   // mypage
@@ -158,9 +169,25 @@ export class PlayersController {
     return null;
   }
 
+  // 중복확인
+  @Post('dupNickname')
+  async duplicateNicknameCheck(@Body() nickname: string) {
+    const result = await this.playersService.findByNickname(nickname);
+    return { ok: true, row: result };
+  }
+
+  @Post('dupEmail')
+  async duplicateEmailCheck(@Body() nickname: string) {
+    const result = await this.playersService.findByEmail(nickname);
+    return { ok: true, row: result };
+  }
   // edit
   @Patch('edit')
-  editPlayers() {
-    return null;
+  async editPlayers(@Body() { email, nickname }: UpdateNickname) {
+    const result = await this.playersService.updateNickname({
+      email,
+      nickname,
+    });
+    return { ok: true, row: result };
   }
 }

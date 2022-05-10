@@ -1,16 +1,28 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { CreateBodyDto, CreatePlayerDto } from './dto/create-player.dto';
+import {
+  CreateBodyDto,
+  CreatePlayerDto,
+  UpdateNickname,
+} from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 
 @EntityRepository(Player)
 export class PlayerRepository extends Repository<Player> {
   async findByEmail(email: string): Promise<Player> {
-    return this.findOne(email);
-    // return this.findOne({ where: { email: 'diasm2@gmail.com' } });
+    return this.findOne({ where: email });
   }
 
-  async getByEmail(email: string) {
-    return this.findOne({ where: { email } });
+  async findByNickname(nickname: string) {
+    return await this.find({ where: nickname });
+  }
+
+  async updateNickname(updateNickname: UpdateNickname): Promise<any> {
+    const { email, nickname } = updateNickname;
+    const result = await this.update({ email: email }, { nickname });
+    // result.then((data) => console.log(data))
+
+    console.log(result);
+    // return result
   }
 
   createPlayer = async ({

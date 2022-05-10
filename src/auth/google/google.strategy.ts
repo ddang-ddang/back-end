@@ -1,3 +1,4 @@
+import { CreateLikeDto } from './../../likes/dto/create-like.dto';
 // import { AuthService } from '../auth.service';
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
@@ -12,7 +13,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     super({
       clientID: googleConfig.clientId,
       clientSecret: googleConfig.clientSecret,
-      callbackURL: 'http://localhost:3000/players/redirect',
+      callbackURL: '/players/redirect',
+      passReqToCallback: true,
       scope: ['profile', 'email'],
     });
   }
@@ -23,12 +25,20 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
     profile: any,
     Done: VerifyCallback
   ): Promise<any> {
-    const { emails, photos } = profile;
-    const player = {
-      email: emails[0].value,
-      profileImg: photos[0].value,
-      accessToken,
-    };
-    Done(null, player);
+    console.log(googleConfig.clientId);
+    console.log(googleConfig.clientSecret);
+    // console.log(accessToken);
+    try {
+      console.log(profile);
+      const { emails, photos } = profile;
+      const player = {
+        email: emails[0].value,
+        profileImg: photos[0].value,
+        accessToken,
+      };
+      Done(null, player);
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
