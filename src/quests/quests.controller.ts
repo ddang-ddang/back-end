@@ -59,6 +59,7 @@ export class QuestsController {
     @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto
   ) {
+    // console.log(req);
     if (questType === 'feed') {
       return this.questsService.feedQuest(createFeedDto);
     } else if (questType === 'time' || questType === 'mob') {

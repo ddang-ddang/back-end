@@ -4,6 +4,7 @@ import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
+import { Like } from '../likes/entities/like.entity';
 
 @Injectable()
 export class FeedsService {
@@ -18,10 +19,11 @@ export class FeedsService {
       where: {
         deletedAt: null,
       },
-      relations: ['player'],
+      relations: ['player', 'likes'],
       // 좋아요 개수
       // 현재 사용자가 좋아요 눌렀는지 여부
     });
+
     return feeds;
   }
 
@@ -41,10 +43,6 @@ export class FeedsService {
   /* 피드 수정 */
   async updateFeed(feedId: number, img: string[], feedContent: string) {
     const feed = await this.findOneFeed(feedId);
-    // const pathList = [];
-    // files.map((file) => {
-    //   pathList.push(file['path']);
-    // });
     if (feed) {
       return this.feedRepository.updateFeed(feedId, img, feedContent);
     }
