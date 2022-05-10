@@ -67,8 +67,9 @@ export class QuestsService {
 
     // TODO: 2. DB에서 퀘스트 조회
     let dong = await this.dongsRepository.findByAddrs(kakaoAddress);
+
     if (dong) {
-      // 퀘스트, 완료여부 조인해서 클라이언트로 발송
+      // TODO: 완료여부, 완료횟수 JOIN 해서 응답
       return await this.questsRepository.findAll(dong);
     }
 
