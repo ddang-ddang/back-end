@@ -2,12 +2,14 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Feed } from '../../feeds/entities/feed.entity';
 import { Dong } from './dong.entity';
+import { Complete } from './complete.entity';
 
 @Entity()
 export class Quest extends BaseEntity {
@@ -23,9 +25,13 @@ export class Quest extends BaseEntity {
   @Column()
   type: number;
 
-  @OneToMany((type) => Feed, (feed) => feed.quest)
+  @OneToMany(() => Feed, (feed) => feed.quest)
   feeds: Feed[];
 
-  @ManyToOne((type) => Dong, (dong) => dong.quests)
+  @OneToMany(() => Complete, (complete) => complete.quest)
+  completes: Complete[];
+
+  @ManyToOne(() => Dong, (dong) => dong.quests)
+  @JoinColumn()
   dong: Dong;
 }

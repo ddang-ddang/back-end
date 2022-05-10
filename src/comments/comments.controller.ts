@@ -20,6 +20,7 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
+  // @UseGuards(JwtAuthGuard)
   async createComment(
     @Param('feedId') feedId: number,
     @Body() createCommentDto: CreateCommentDto
