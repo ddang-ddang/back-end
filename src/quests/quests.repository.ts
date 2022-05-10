@@ -20,7 +20,7 @@ export class QuestsRepository extends Repository<Quest> {
     return await this.find({ where: { dong } });
   };
 
-  /* 전체 퀘스트 조회 */
+  /* 특정 퀘스트 조회 */
   findOneBy = async (id: number): Promise<Quest> => {
     return await this.findOne({ id });
   };
