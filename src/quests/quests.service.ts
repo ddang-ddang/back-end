@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
@@ -6,9 +6,7 @@ import axios from 'axios';
 import * as config from 'config';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
-import { Quest } from './entities/quest.entity';
 import { DongsRepository } from './dongs.repository';
-import { Dong } from './entities/dong.entity';
 
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
@@ -44,71 +42,37 @@ export class QuestsService {
   /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
     const kakaoAddress = await this.getAddressName(lat, lng);
-    const stringAddress = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
+    const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
     // TODO: 2. DB에서 퀘스트 조회
-    const { regionSi, regionGu, regionDong } = kakaoAddress;
-    const today = new Date();
-    const date =
-      today.getFullYear() +
-      '-' +
-      ('0' + (today.getMonth() + 1)).slice(-2) +
-      '-' +
-      ('0' + today.getDate()).slice(-2);
-    const dong = await this.dongsRepository.findDong(
-      date,
-      regionSi,
-      regionGu,
-      regionDong
-    );
-
+    let dong = await this.dongsRepository.findByAddrs(kakaoAddress);
     if (dong) {
       // 퀘스트, 완료여부 조인해서 클라이언트로 발송
-      const quests = await this.questsRepository.findQuests(dong);
-      return quests;
-    } else {
-      // 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송
-      const { totalCount, pageCount } = await this.getDongData(stringAddress);
-      console.time('API req-res time');
-      const quests = await this.createQuests(
-        totalCount,
-        pageCount,
-        stringAddress
-      );
-      console.timeEnd('API req-res time');
-
-      // 동 DB 생성, dong 객체를 return 함
-      await this.dongsRepository.createDong({
-        date,
-        regionSi,
-        regionGu,
-        regionDong,
-      });
-
-      // dong 모델 자체를 return 함
-      const createdDong = await this.dongsRepository.findDong(
-        date,
-        regionSi,
-        regionGu,
-        regionDong
-      );
-      let questsWithId;
-      // 퀘스트 DB 생성 하고 결과 return
-      Promise.all([
-        ...quests.map((quest) => {
-          this.questsRepository.createQuest({ ...quest, dong: createdDong });
-        }),
-      ]).then(async (r) => {
-        console.log(r);
-        questsWithId = await this.questsRepository.findQuests(createdDong);
-        console.log(questsWithId);
-      });
-
-      // TODO: id 포함한 db를 받아와야 하는디...
-      // const quests = await this.questsRepository.findQuests(dong);
-
-      return questsWithId;
+      return await this.questsRepository.findAll(dong);
     }
+
+    /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
+    const { totalCount, pageCount } = await this.getDongData(address);
+    console.time('API req-res time');
+    const quests = await this.createQuests(totalCount, pageCount, address);
+    console.timeEnd('API req-res time');
+
+    // 동 DB를 생성합니다
+    // return dong 객체 (id 불포함)
+    await this.dongsRepository.createAndSave(kakaoAddress);
+
+    // return dong 모델 (id 포함)
+    dong = await this.dongsRepository.findByAddrs(kakaoAddress);
+    console.log(dong);
+
+    // 퀘스트 DB 생성 하고 결과 return
+    await Promise.all([
+      ...quests.map((quest) => {
+        return this.questsRepository.createAndSave({ ...quest, dong });
+      }),
+    ]).then((val) => console.log(val));
+
+    return await this.questsRepository.findAll(dong);
   }
 
   /* 주소 데이터 얻어오기 */
@@ -140,14 +104,14 @@ export class QuestsService {
 
   /* 특정 동의 개요 얻어오기 */
   /**
-   * @param {string} stringAddress - "시 구 동"
+   * @param {string} address - "시 구 동"
    * @returns {object} - { 전체 주소 개수, 페이지수 }
    */
-  async getDongData(stringAddress) {
+  async getDongData(address) {
     try {
       const res = await axios.get(
         `${JUSO_BASE_URL}?currentPage=1&countPerPage=10&keyword=${encodeURI(
-          stringAddress
+          address
         )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
       );
       const { totalCount } = res.data.results.common;
@@ -163,10 +127,10 @@ export class QuestsService {
   /**
    * @param {number} totalCount - 전체 주소 개수
    * @param {number} paegCount - 전체 페이지 수
-   * @param {string} stringAddress - "시 구 동"
+   * @param {string} address - "시 구 동"
    * @returns {array} - [ 퀘스트 ]
    */
-  async createQuests(totalCount, paegCount, stringAddress) {
+  async createQuests(totalCount, paegCount, address) {
     const limitsPerRequest = 20;
     let questsCoords = [];
     for (
@@ -184,7 +148,7 @@ export class QuestsService {
           totalCount,
           startPage,
           lastPage,
-          stringAddress
+          address
         )),
       ];
     }
@@ -202,10 +166,10 @@ export class QuestsService {
    * @param {number} totalCount - 전체 주소 개수
    * @param {number} startPage - 시작 페이지
    * @param {number} lastPage - 마지막 페이지
-   * @param {string} stringAddress - "시 구 동"
+   * @param {string} address - "시 구 동"
    * @returns {array} - [ { lat, lng } ]
    */
-  async getQuestsCoords(totalCount, startPage, lastPage, stringAddress) {
+  async getQuestsCoords(totalCount, startPage, lastPage, address) {
     const addrIndex = [];
     for (let curPage = startPage; curPage < lastPage; curPage++) {
       const idx =
@@ -218,7 +182,7 @@ export class QuestsService {
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
     const resRoadAddr = await Promise.all([
       ...addrIndex.map(({ curPage, idx }) =>
-        this.getRoadAddress(curPage, stringAddress, idx)
+        this.getRoadAddress(curPage, address, idx)
       ),
     ]);
     /* 상세주소에 해당하는 좌표값 얻기 */
@@ -233,15 +197,15 @@ export class QuestsService {
   /* 상세주소 얻어오기 */
   /**
    * @param {number} curPage - 현재 페이지 번호
-   * @param {string} stringAddress - "시 구 동"
+   * @param {string} address - "시 구 동"
    * @param {number} idx - 인덱스(1~100 랜덤)
    * @returns {string} - 상세주소 (ex. 서울특별시 강남구 언주로63길 20(역삼동))
    */
-  async getRoadAddress(curPage, stringAddress, idx) {
+  async getRoadAddress(curPage, address, idx) {
     try {
       const res = await axios.get(
         `${JUSO_BASE_URL}?currentPage=${curPage}&countPerPage=100&keyword=${encodeURI(
-          stringAddress
+          address
         )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
       );
       return res.data.results.juso[idx].roadAddr;
@@ -273,12 +237,14 @@ export class QuestsService {
     }
   }
 
-  getOne(id: number): string {
-    // const quest = this.quests.find((quest) => quest.id === Number(id));
-    // if (!quest) {
-    //   throw new NotFoundException(`quest not found`);
-    // }
-    // return quest;
-    return `quest_id: ${id}해당하는 퀘스트 받아주세요//`;
+  async getOne(id: number) {
+    const quest = await this.questsRepository.findOneBy(id);
+    if (!quest) {
+      throw new NotFoundException({
+        ok: false,
+        message: '퀘스트를 찾을 수 없습니다.',
+      });
+    }
+    return quest;
   }
 }

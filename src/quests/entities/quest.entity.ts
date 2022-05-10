@@ -2,6 +2,7 @@ import {
   BaseEntity,
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -27,5 +28,6 @@ export class Quest extends BaseEntity {
   feeds: Feed[];
 
   @ManyToOne((type) => Dong, (dong) => dong.quests)
+  @JoinColumn()
   dong: Dong;
 }

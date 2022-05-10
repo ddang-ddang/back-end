@@ -3,21 +3,13 @@ import {
   Controller,
   Post,
   Query,
-  Req,
   Get,
   HttpException,
   HttpStatus,
   Param,
-  UploadedFile,
-  UseInterceptors,
-  Request,
-  UploadedFiles,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
-import { CreateQuestDto } from './dto/create-quest.dto';
 import { QuestsService } from './quests.service';
 
 @Controller('/api/quests')
@@ -43,7 +35,7 @@ export class QuestsController {
 
   /* 특정 퀘스트 조회 API */
   @Get(':quest_id')
-  getOne(@Param('quest_id') id: number): string {
+  getOne(@Param('quest_id') id: number) {
     return this.questsService.getOne(id);
   }
 
