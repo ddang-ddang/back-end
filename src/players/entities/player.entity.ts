@@ -10,6 +10,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Complete } from '../../quests/entities/complete.entity';
 
 //연결해야함
 @Entity()
@@ -72,4 +73,7 @@ export class Player extends BaseEntity {
 
   @OneToMany((type) => Like, (like) => like.player)
   likes: Like[];
+
+  @OneToMany((type) => Complete, (complete) => complete.quest)
+  completes: Complete[];
 }
