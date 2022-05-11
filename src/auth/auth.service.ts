@@ -33,13 +33,12 @@ export class AuthService {
     // const hashedPassword = await bcrypt.hash(password, 10);
     console.log('loginsld 할게요');
 
-    // const player = await this.playersRepository.findOne({ email: email });
+    const player = await this.playersRepository.findOne({ email: email });
 
     const payload = {
-      // Id: Id,
+      Id: player.Id,
       email: email,
       nickname: nickname,
-      // password: hashedPassword,
     };
 
     const accessToken = this.jwtService.sign(payload);

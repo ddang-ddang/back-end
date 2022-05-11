@@ -138,12 +138,12 @@ export class PlayersController {
   @UseGuards(JwtAuthGuard)
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
-    const { Id, email, nickname } = req.user.player;
+    const { playerId, email, nickname } = req.user.player;
     this.logger.verbose(`try to sign in player: ${email}`);
-    console.log(req.user.player);
+    console.log(req.user);
     return {
       ok: true,
-      row: { playerId: Id, email: email, nickname: nickname },
+      row: { playerId: playerId, email: email, nickname: nickname },
     };
   }
 
