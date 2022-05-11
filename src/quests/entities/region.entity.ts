@@ -8,8 +8,8 @@ import {
 import { Quest } from './quest.entity';
 
 @Entity()
-export class Dong extends BaseEntity {
-  @PrimaryGeneratedColumn({ name: 'dongId' })
+export class Region extends BaseEntity {
+  @PrimaryGeneratedColumn({ name: 'regionId' })
   id: number;
 
   @Column()
@@ -24,6 +24,6 @@ export class Dong extends BaseEntity {
   @Column()
   regionDong: string;
 
-  @OneToMany((type) => Quest, (quest) => quest.dong)
+  @OneToMany((type) => Quest, (quest) => quest.region)
   quests: Quest[];
 }

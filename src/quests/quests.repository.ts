@@ -1,31 +1,36 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Quest } from './entities/quest.entity';
 import { CreateQuestDto } from './dto/create-quest.dto';
-import { Dong } from './entities/dong.entity';
+import { Region } from './entities/region.entity';
 
 @EntityRepository(Quest)
 export class QuestsRepository extends Repository<Quest> {
   /* 퀘스트 생성 */
-  async createAndSave({ lat, lng, type, dong }: CreateQuestDto) {
+  async createAndSave({ lat, lng, type, region }: CreateQuestDto) {
     return await this.save({
       lat,
       lng,
       type,
-      dong,
+      region,
     });
   }
 
   /* 전체 퀘스트 조회 */
-  async findAll(dong: Dong): Promise<Quest[]> {
-    // 퀘스트 완료여부, 완료횟수 조인해서 클라이언트로 발송
-    return await this.find({
-      where: { dong },
-      // join: {
-      //   alias: 'm',
-      //   leftJoinAndSelect: {
-      //     complete: 'm.join',
-      //   },
-      // },
+  async findAll(region: Region, id?: number): Promise<Object[]> {
+    const quests = await this.find({
+      where: { region },
+      relations: ['completes', 'completes.player'],
+    });
+    /* 플레이어의 완료여부(completed), 전체 완료 횟수(completes) 추가 */
+    return quests.map((quest) => {
+      const completed = !!quest.completes.find(
+        ({ player }) => player.Id === id
+      );
+      return {
+        ...quest,
+        completed,
+        completes: quest.completes.length,
+      };
     });
   }
 

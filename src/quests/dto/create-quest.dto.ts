@@ -1,9 +1,9 @@
 import { IsNotEmpty } from 'class-validator';
-import { Dong } from '../entities/dong.entity';
+import { Region } from '../entities/region.entity';
 
 export class CreateQuestDto {
   lat: number;
   lng: number;
   type: number;
-  dong: Dong;
+  region: Region;
 }

@@ -1,11 +1,15 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { Dong } from './entities/dong.entity';
-import { CreateDongDto } from './dto/create-dong.dto';
+import { Region } from './entities/region.entity';
+import { CreateRegionDto } from './dto/create-region.dto';
 
-@EntityRepository(Dong)
-export class DongsRepository extends Repository<Dong> {
-  /* 동 생성 */
-  createAndSave = async ({ regionSi, regionGu, regionDong }: CreateDongDto) => {
+@EntityRepository(Region)
+export class RegionsRepository extends Repository<Region> {
+  /* 지역(동) 생성 */
+  createAndSave = async ({
+    regionSi,
+    regionGu,
+    regionDong,
+  }: CreateRegionDto) => {
     const today = new Date();
     const date =
       today.getFullYear() +
@@ -21,8 +25,8 @@ export class DongsRepository extends Repository<Dong> {
     });
   };
 
-  /* 전체 동 조회 */
-  findByAddrs = async ({ regionSi, regionGu, regionDong }): Promise<Dong> => {
+  /* 특정 지역(동) 조회 */
+  findByAddrs = async ({ regionSi, regionGu, regionDong }): Promise<Region> => {
     const today = new Date();
     const date =
       today.getFullYear() +
