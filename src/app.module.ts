@@ -20,6 +20,7 @@ import { PlayersService } from './players/players.service';
 import { AuthService } from './auth/auth.service';
 import { FeedsService } from './feeds/feeds.service';
 import { PlayerRepository } from './players/players.repository';
+import { LikeRepository } from './likes/likes.repository';
 
 const jwtConfig = config.get('jwt');
 

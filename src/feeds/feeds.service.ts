@@ -5,6 +5,7 @@ import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
 import { Likes } from '../likes/entities/like.entity';
+import { LikeRepository } from 'src/likes/likes.repository';
 
 @Injectable()
 export class FeedsService {
@@ -20,11 +21,13 @@ export class FeedsService {
         deletedAt: null,
       },
       relations: ['player', 'likes'],
-      // 좋아요 개수
-      // 현재 사용자가 좋아요 눌렀는지 여부
     });
 
-    return feeds;
+    return feeds.map((feed) => {
+      const likeCnt = feed.likes.length;
+      console.log(likeCnt);
+      return { ...feed, likeCnt };
+    });
   }
 
   /* 특정 피드 가저오기 */
