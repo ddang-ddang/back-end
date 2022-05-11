@@ -17,7 +17,7 @@ export class FeedsService {
 
   /* 모든 피드 가져오기 */
   async findAllFeeds() {
-    const playerId = 2; // 현재 접속 유저
+    const playerId = 3; // 현재 접속 유저
     const feeds = await Feed.find({
       where: {
         deletedAt: null,

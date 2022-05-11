@@ -3,12 +3,14 @@ import { Feed } from './entities/feed.entity';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 import { Quest } from 'src/quests/entities/quest.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
   /* 피드 업로드 퀘스트 수행 */
   async feedQuest(
     questId: number,
+    email: string,
     img: string[],
     feedText: string
   ): Promise<Feed> {
@@ -18,12 +20,19 @@ export class FeedRepository extends Repository<Feed> {
       },
     });
 
+    const player: Player = await Player.findOne({
+      where: {
+        email,
+      },
+    });
+
     const newContent = this.create({
       content: feedText,
       image1_url: img[0],
       image2_url: img[1],
       image3_url: img[2],
-      quest: quest,
+      player,
+      quest,
     });
 
     await this.save(newContent);
