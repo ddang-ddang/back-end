@@ -15,11 +15,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
   async validate(payload: any) {
-    console.log('payload', payload); // playerId 없음
+    console.log('payload', payload);
+    console.log('payload.sub', payload);
+
     return {
       ok: true,
       player: {
-        playerId: payload.playerId,
+        playerId: payload.Id,
         email: payload.email,
         nickname: payload.nickname,
       },

@@ -16,22 +16,42 @@ export class CreatePlayerDto {
 
   @IsNotEmpty()
   mbti: string;
+
   @IsNotEmpty()
   profileImg: string;
+
+  @IsNotEmpty()
+  provider: string;
+
+  @IsNotEmpty()
+  providerId: string;
 }
 
-// export class CreateNameDto extends PickType(CreateUserDto, [
-//   'nickname',
-// ] as const) {}
-// export class CreateIdDto extends PickType(CreateUserDto, [
-//   'user_id',
-// ] as const) {}
+export class InputPlayerDto extends PickType(CreatePlayerDto, [
+  'email',
+  'password',
+  'nickname',
+  'mbti',
+  'profileImg',
+] as const) {}
+
 export class CreateBodyDto extends PickType(CreatePlayerDto, [
   'email',
   'password',
   'nickname',
   'mbti',
   'profileImg',
+  'provider',
+] as const) {}
+
+export class CreateLocalDto extends PickType(CreatePlayerDto, [
+  'email',
+  'password',
+  'nickname',
+  'mbti',
+  'profileImg',
+  'provider',
+  'providerId',
 ] as const) {}
 
 export class CreateIdDto extends PickType(CreatePlayerDto, [

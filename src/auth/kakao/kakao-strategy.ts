@@ -30,7 +30,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
       username: username,
       profileImg: profile_image,
       thumbnailImg: thumbnail_image,
-      access_token,
+      accessToken: access_token,
     };
     Done(null, player);
   }

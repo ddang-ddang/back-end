@@ -37,6 +37,7 @@ import {
   CreateBodyDto,
   CreateIdDto,
   CreatePlayerDto,
+  InputPlayerDto,
   UpdateNickname,
 } from './dto/create-player.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -57,15 +58,23 @@ export class PlayersController {
     private readonly authService: AuthService
   ) {}
 
-  // signup
+  /*
+   * 회원가입
+   * @Param email, nickname, password, mbti, profileImg
+   */
+
   @ApiOkResponse({ type: Player, isArray: true })
   @ApiQuery({ name: 'name', required: false })
   @ApiCreatedResponse({ type: CreateBodyDto })
   @Post('signup')
   async signUp(
-    @Body() { email, nickname, password, mbti, profileImg }: CreateBodyDto
+    @Body()
+    inputBodyDto: InputPlayerDto
   ): Promise<any> {
+    const { email, nickname, password, mbti, profileImg } = inputBodyDto;
     this.logger.verbose(`try to sign up player: ${email}`);
+
+    console.log({ email, nickname, password, mbti, profileImg });
     try {
       await this.playersService.signup({
         email,
@@ -73,6 +82,7 @@ export class PlayersController {
         password,
         mbti,
         profileImg,
+        provider: 'local',
       });
       return { ok: true };
     } catch (err) {
@@ -85,6 +95,11 @@ export class PlayersController {
 
   // signin
   // 흐름도 local auth -> auth service (validate) -> controller
+  /*
+   * 이메일로 로그인
+   *
+   */
+
   @UseGuards(LocalAuthGuard)
   @Post('signin')
   async signIn(@Request() req, @Res({ passthrough: true }) res) {
@@ -93,9 +108,8 @@ export class PlayersController {
 
       this.logger.verbose(`try to sign in player: ${email}`);
 
-      const access_token = await this.authService.login(email, nickname);
-      console.log(access_token);
-      res.setHeader('Authorization', `Bearer ${access_token.access_token}`);
+      const accessToken = await this.authService.login(email, nickname);
+      res.setHeader('Authorization', `Bearer ${accessToken.accessToken}`);
 
       return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
@@ -109,7 +123,7 @@ export class PlayersController {
   // signout
   @Get('signout')
   signOut(@Response() res) {
-    res.cookie('access_token', '', { expires: new Date(0) });
+    res.cookie('accessToken', '', { expires: new Date(0) });
     return { hello: 'world' };
   }
 
@@ -124,10 +138,13 @@ export class PlayersController {
   @UseGuards(JwtAuthGuard)
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
-    const { playerId, email, nickname } = req.user.player;
+    const { Id, email, nickname } = req.user.player;
     this.logger.verbose(`try to sign in player: ${email}`);
     console.log(req.user.player);
-    return { ok: true, row: { email: email, nickname: nickname } };
+    return {
+      ok: true,
+      row: { playerId: Id, email: email, nickname: nickname },
+    };
   }
 
   @ApiOperation({ summary: 'jwt인증 API' })
@@ -149,7 +166,7 @@ export class PlayersController {
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoauth')
   async kakaoAuth(@Request() req) {
-    const { email, nickname, access_token, profileImg } = req.user;
+    const { email, nickname, accessToken, profileImg } = req.user;
     console.log(req.user);
     return { ok: true };
   }
@@ -157,7 +174,7 @@ export class PlayersController {
   @Get('kakaoredirect')
   @UseGuards(KakaoAuthGuard)
   kakaopage(@Request() req, @Res() res) {
-    const { email, nickname, access_token, profileImg } = req.user;
+    const { email, nickname, accessToken, profileImg } = req.user;
     // return { ok: true, row: req.user };
     // return res.writeHead(301, { Location: 'http://localhost:3005' });
     return res.status(302).redirect('http://localhost:3005');
@@ -165,9 +182,18 @@ export class PlayersController {
   }
 
   // mypage
+  @UseGuards(JwtAuthGuard)
   @Get('mypage')
-  loadMypage() {
-    return null;
+  async loadMypage(@Request() req): Promise<any> {
+    console.log(req.user.player);
+    const { email, nickname } = req.user.player;
+    const player = await this.playersService.getDataByEmail(email);
+    const { profileImg } = player;
+
+    return {
+      ok: true,
+      row: { email: email, nickname: nickname, profileImg: profileImg },
+    };
   }
 
   // 중복확인
@@ -179,6 +205,7 @@ export class PlayersController {
 
   @Post('dupEmail')
   async duplicateEmailCheck(@Body() nickname: string) {
+    console.log(nickname);
     const result = await this.playersService.findByEmail(nickname);
     return { ok: true, row: result };
   }
