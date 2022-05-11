@@ -1,10 +1,10 @@
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { EntityRepository, Repository } from 'typeorm';
-import { Like } from './entities/like.entity';
+import { Likes } from './entities/like.entity';
 
-@EntityRepository(Like)
-export class LikeRepository extends Repository<Like> {
+@EntityRepository(Likes)
+export class LikeRepository extends Repository<Likes> {
   /* 좋아요 */
   async chkLike(feedId: number, playerId: any) {
     const feed = await Feed.findOne(feedId);

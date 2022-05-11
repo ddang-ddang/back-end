@@ -42,7 +42,7 @@ export class QuestsController {
   /* 특정 퀘스트 조회 API */
   @Get(':questId')
   @ApiOperation({ summary: '특정 퀘스트 조회 API' })
-  getOne(@Param('quest_id') id: number) {
+  getOne(@Param('questId') id: number) {
     return this.questsService.getOne(id);
   }
 

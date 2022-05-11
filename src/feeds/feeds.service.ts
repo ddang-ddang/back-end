@@ -4,7 +4,7 @@ import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
-import { Like } from '../likes/entities/like.entity';
+import { Likes } from '../likes/entities/like.entity';
 
 @Injectable()
 export class FeedsService {
@@ -14,7 +14,7 @@ export class FeedsService {
   ) {}
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds(): Promise<Feed[]> {
+  async findAllFeeds() {
     const feeds = await Feed.find({
       where: {
         deletedAt: null,

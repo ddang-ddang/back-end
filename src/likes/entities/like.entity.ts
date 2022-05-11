@@ -2,7 +2,7 @@ import { Feed } from 'src/feeds/entities/feed.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
-export class Like {
+export class Likes {
   @PrimaryGeneratedColumn()
   id: number;
 
