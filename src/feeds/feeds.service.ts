@@ -11,11 +11,13 @@ import { LikeRepository } from 'src/likes/likes.repository';
 export class FeedsService {
   constructor(
     @InjectRepository(FeedRepository)
-    private feedRepository: FeedRepository
+    private feedRepository: FeedRepository,
+    private likeRepository: LikeRepository
   ) {}
 
   /* 모든 피드 가져오기 */
   async findAllFeeds() {
+    const playerId = 2; // 현재 접속 유저
     const feeds = await Feed.find({
       where: {
         deletedAt: null,
@@ -23,10 +25,20 @@ export class FeedsService {
       relations: ['player', 'likes'],
     });
 
+    const likeLst = await this.likeRepository.find({
+      relations: ['player', 'feed'],
+    });
+
+    let liked;
     return feeds.map((feed) => {
       const likeCnt = feed.likes.length;
-      console.log(likeCnt);
-      return { ...feed, likeCnt };
+      liked = false;
+      likeLst.map((like) => {
+        if (like.player.Id === playerId && feed.id === like.feed.id) {
+          liked = true;
+        }
+      });
+      return { ...feed, likeCnt, liked };
     });
   }
 

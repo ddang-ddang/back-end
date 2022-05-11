@@ -10,7 +10,7 @@ import { LikesService } from 'src/likes/likes.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([FeedRepository]),
+    TypeOrmModule.forFeature([FeedRepository, LikeRepository]),
     TypeOrmModule.forFeature([Feed]),
   ],
   controllers: [FeedsController],

@@ -32,7 +32,11 @@ const jwtConfig = config.get('jwt');
       signOptions: { expiresIn: '60s' },
     }),
     TypeOrmModule.forRoot(typeORMConfig),
-    TypeOrmModule.forFeature([PlayerRepository, FeedRepository]),
+    TypeOrmModule.forFeature([
+      PlayerRepository,
+      FeedRepository,
+      LikeRepository,
+    ]),
     AuthModule,
     PlayersModule,
     FeedsModule,
