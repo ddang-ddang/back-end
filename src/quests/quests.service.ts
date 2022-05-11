@@ -29,10 +29,10 @@ export class QuestsService {
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 로직 */
-  feedQuest(createFeedDto: CreateFeedDto) {
+  feedQuest(questId: number, createFeedDto: CreateFeedDto) {
     console.log(createFeedDto);
     const { img, content } = createFeedDto;
-    return this.feedRepository.feedQuest(img, content);
+    return this.feedRepository.feedQuest(questId, img, content);
   }
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
