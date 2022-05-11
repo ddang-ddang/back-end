@@ -14,12 +14,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       secretOrKey: jwtConfig.secret,
     });
   }
-
   async validate(payload: any) {
-    console.log('payload', payload);
+    console.log('payload', payload); // playerId 없음
     return {
       ok: true,
-      // test: 'test',
       player: {
         playerId: payload.playerId,
         email: payload.email,

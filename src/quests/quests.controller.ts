@@ -40,9 +40,9 @@ export class QuestsController {
   }
 
   /* 특정 퀘스트 조회 API */
-  @Get(':quest_id')
+  @Get(':questId')
   @ApiOperation({ summary: '특정 퀘스트 조회 API' })
-  getOne(@Param('quest_id') id: number) {
+  getOne(@Param('questId') id: number) {
     return this.questsService.getOne(id);
   }
 
@@ -50,17 +50,19 @@ export class QuestsController {
    * 퀘스트 수행
    * 유저 확인 필요
    */
-  @Post(':quest_id')
+  @Post(':questId')
   @ApiOperation({ summary: '퀘스트 수행 로직 API' })
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(AuthGuard('jwt'))
   async questComplete(
-    // @Req() req: Request,
-    @Param('quest_id') id: number,
+    @Req() req: Request,
+    @Param('questId') id: number,
     @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto
   ) {
+    const { email } = req['user'].player;
+    console.log(req['user']);
     if (questType === 'feed') {
-      return this.questsService.feedQuest(createFeedDto);
+      return this.questsService.feedQuest(id, email, createFeedDto);
     } else if (questType === 'time' || questType === 'mob') {
       return this.questsService.questComplete(id);
     }

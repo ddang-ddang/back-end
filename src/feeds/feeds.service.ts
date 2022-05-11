@@ -4,25 +4,42 @@ import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
+import { Likes } from '../likes/entities/like.entity';
+import { LikeRepository } from 'src/likes/likes.repository';
 
 @Injectable()
 export class FeedsService {
   constructor(
     @InjectRepository(FeedRepository)
-    private feedRepository: FeedRepository
+    private feedRepository: FeedRepository,
+    private likeRepository: LikeRepository
   ) {}
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds(): Promise<Feed[]> {
+  async findAllFeeds() {
+    const playerId = 3; // 현재 접속 유저
     const feeds = await Feed.find({
       where: {
         deletedAt: null,
       },
-      relations: ['player'],
-      // 좋아요 개수
-      // 현재 사용자가 좋아요 눌렀는지 여부
+      relations: ['player', 'likes'],
     });
-    return feeds;
+
+    const likeLst = await this.likeRepository.find({
+      relations: ['player', 'feed'],
+    });
+
+    let liked;
+    return feeds.map((feed) => {
+      const likeCnt = feed.likes.length;
+      liked = false;
+      likeLst.map((like) => {
+        if (like.player.Id === playerId && feed.id === like.feed.id) {
+          liked = true;
+        }
+      });
+      return { ...feed, likeCnt, liked };
+    });
   }
 
   /* 특정 피드 가저오기 */
@@ -41,10 +58,6 @@ export class FeedsService {
   /* 피드 수정 */
   async updateFeed(feedId: number, img: string[], feedContent: string) {
     const feed = await this.findOneFeed(feedId);
-    // const pathList = [];
-    // files.map((file) => {
-    //   pathList.push(file['path']);
-    // });
     if (feed) {
       return this.feedRepository.updateFeed(feedId, img, feedContent);
     }

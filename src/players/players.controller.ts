@@ -94,6 +94,7 @@ export class PlayersController {
       this.logger.verbose(`try to sign in player: ${email}`);
 
       const access_token = await this.authService.login(email, nickname);
+      console.log(access_token);
       res.setHeader('Authorization', `Bearer ${access_token.access_token}`);
 
       return { ok: true, row: { email: email, nickname: nickname } };
