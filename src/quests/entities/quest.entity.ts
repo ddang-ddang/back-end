@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Feed } from '../../feeds/entities/feed.entity';
-import { Dong } from './dong.entity';
+import { Region } from './region.entity';
 import { Complete } from './complete.entity';
 
 @Entity()
@@ -31,7 +31,7 @@ export class Quest extends BaseEntity {
   @OneToMany(() => Complete, (complete) => complete.quest)
   completes: Complete[];
 
-  @ManyToOne(() => Dong, (dong) => dong.quests)
+  @ManyToOne(() => Region, (region) => region.quests)
   @JoinColumn()
-  dong: Dong;
+  region: Region;
 }

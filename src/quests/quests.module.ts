@@ -6,17 +6,17 @@ import { QuestsRepository } from 'src/quests/quests.repository';
 import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
 import { Quest } from './entities/quest.entity';
-import { Dong } from './entities/dong.entity';
-import { DongsRepository } from './dongs.repository';
+import { Region } from './entities/region.entity';
+import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
 import { Complete } from './entities/complete.entity';
 import { PlayerRepository } from '../players/players.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Quest, Dong, Complete]),
+    TypeOrmModule.forFeature([Quest, Region, Complete]),
     TypeOrmModule.forFeature([QuestsRepository]),
-    TypeOrmModule.forFeature([DongsRepository]),
+    TypeOrmModule.forFeature([RegionsRepository]),
     TypeOrmModule.forFeature([CompletesRepository]),
     TypeOrmModule.forFeature([FeedRepository]),
     TypeOrmModule.forFeature([CommentRepository]),

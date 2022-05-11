@@ -1,6 +1,6 @@
 import { IsNotEmpty } from 'class-validator';
 
-export class CreateDongDto {
+export class CreateRegionDto {
   regionSi: string;
   regionGu: string;
   regionDong: string;
