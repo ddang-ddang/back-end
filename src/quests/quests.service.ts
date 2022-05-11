@@ -23,7 +23,7 @@ export class QuestsService {
     private feedRepository: FeedRepository,
     private commentRepository: CommentRepository,
     private questsRepository: QuestsRepository,
-    private dongsRepository: RegionsRepository,
+    private regionsRepository: RegionsRepository,
     private completesRepository: CompletesRepository,
     private playersRepository: PlayerRepository
   ) {}
@@ -56,7 +56,7 @@ export class QuestsService {
   /*
    * 퀘스트 조회 프로세스: player의 좌표 값으로 region 테이블 조회
    * DB에 데이터 있으면, 퀘스트 + 완료여부 조인해서 응답
-   * DB에 데이터 없으면, 지역 + 퀘스트 데이터 DB에 추가하고 응답
+   * DB에 데이터 없으면, 지역 + 퀘스트 데이터 DB에 생성하고 응답
    */
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
@@ -76,25 +76,24 @@ export class QuestsService {
     const kakaoAddress = await this.getAddressName(lat, lng);
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
-    let region = await this.dongsRepository.findByAddrs(kakaoAddress);
+    let region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
     if (region) {
-      // TODO: 완료여부, 완료횟수 JOIN 해서 응답
       return await this.questsRepository.findAll(region, player.Id);
     }
 
     /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
-    const { totalCount, pageCount } = await this.getDongData(address);
+    const { totalCount, pageCount } = await this.getRegionData(address);
     console.time('API req-res time');
     const quests = await this.createQuests(totalCount, pageCount, address);
     console.timeEnd('API req-res time');
 
     // 동 DB를 생성합니다
-    // return dong 객체 (id 불포함)
-    await this.dongsRepository.createAndSave(kakaoAddress);
+    // return region 객체 (id 불포함)
+    await this.regionsRepository.createAndSave(kakaoAddress);
 
     // return region 모델 (id 포함)
-    region = await this.dongsRepository.findByAddrs(kakaoAddress);
+    region = await this.regionsRepository.findByAddrs(kakaoAddress);
     console.log(region);
 
     // 퀘스트 DB 생성 하고 결과 return
@@ -142,7 +141,7 @@ export class QuestsService {
    * @param {string} address - "시 구 동"
    * @returns {object} - { 전체 주소 개수, 페이지수 }
    */
-  async getDongData(address) {
+  async getRegionData(address) {
     try {
       const res = await axios.get(
         `${JUSO_BASE_URL}?currentPage=1&countPerPage=10&keyword=${encodeURI(
@@ -151,7 +150,6 @@ export class QuestsService {
       );
       const { totalCount } = res.data.results.common;
       const pageCount = Math.ceil(totalCount / 100);
-      // const lastPage = 25;
       return { totalCount, pageCount };
     } catch (error) {
       console.log(error.message);
@@ -166,7 +164,7 @@ export class QuestsService {
    * @returns {array} - [ 퀘스트 ]
    */
   async createQuests(totalCount, paegCount, address) {
-    const limitsPerRequest = 20;
+    const limitsPerRequest = 20; // kakaoAPI 429 에러(Too Many Requests) 방지를 위해 요청당 호출수 제한
     let questsCoords = [];
     for (
       let startPage = 1;
@@ -188,12 +186,40 @@ export class QuestsService {
       ];
     }
 
-    const quests = questsCoords.map((coords) => {
+    /* 좌표별로 퀘스트 만들어서 return */
+    return questsCoords.map((coords) => {
       const type = Math.floor(Math.random() * 3);
+      // TODO: 퀘스트 상세 추가
+      const dong = address.split(' ')[-1];
+      let title, description, reward, difficulty, iconPath, retry, timeUntil;
+      switch (type) {
+        case 0:
+          title = '타임어택';
+          description = `${dong}에서 `;
+          reward = 1;
+          difficulty = 'easy';
+          iconPath = '.jpeg';
+          timeUntil = new Date();
+          break;
+        case 1:
+          title = '땅땅 쓰기';
+          description = `${dong}에서 `;
+          reward = 2;
+          difficulty = 'normal';
+          iconPath = '.jpeg';
+          break;
+        case 2:
+          title = '몬스터 대결';
+          description = `${dong}에서 `;
+          reward = 3;
+          difficulty = 'hard';
+          iconPath = '.jpeg';
+          retry = 2;
+          break;
+      }
+
       return { ...coords, type };
     });
-
-    return quests;
   }
 
   /* 퀘스트를 만들기 위한 좌표값 얻기 */
@@ -215,18 +241,17 @@ export class QuestsService {
     }
 
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-    const resRoadAddr = await Promise.all([
+    const roadAddrs = await Promise.all([
       ...addrIndex.map(({ curPage, idx }) =>
         this.getRoadAddress(curPage, address, idx)
       ),
     ]);
-    /* 상세주소에 해당하는 좌표값 얻기 */
-    const resCoordsArr = await Promise.all([
-      ...resRoadAddr
+    /* 상세주소에 해당하는 좌표값 return */
+    return await Promise.all([
+      ...roadAddrs
         .filter((addr) => addr)
         .map((roadAddr) => this.getCoords(roadAddr)),
     ]);
-    return resCoordsArr;
   }
 
   /* 상세주소 얻어오기 */
