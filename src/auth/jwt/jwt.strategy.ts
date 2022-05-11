@@ -15,6 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
   async validate(payload: any) {
+    console.log('payload', payload); // playerId 없음
     return {
       ok: true,
       player: {

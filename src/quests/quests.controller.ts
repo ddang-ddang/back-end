@@ -52,7 +52,6 @@ export class QuestsController {
    */
   @Post(':questId')
   @ApiOperation({ summary: '퀘스트 수행 로직 API' })
-  // @UseGuards(JwtAuthGuard)
   @UseGuards(AuthGuard('jwt'))
   async questComplete(
     @Req() req: Request,
@@ -61,6 +60,7 @@ export class QuestsController {
     @Body() createFeedDto: CreateFeedDto
   ) {
     const { email } = req['user'].player;
+    console.log(req['user']);
     if (questType === 'feed') {
       return this.questsService.feedQuest(id, email, createFeedDto);
     } else if (questType === 'time' || questType === 'mob') {
