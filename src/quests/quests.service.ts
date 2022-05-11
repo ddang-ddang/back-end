@@ -13,8 +13,8 @@ import { PlayerRepository } from '../players/players.repository';
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
 const REST_API_KEY = mapConfig.kakaoApiKey;
-const JUSO_CONFIRM_KEY = mapConfig.josoConfirmKey;
 const JUSO_BASE_URL = mapConfig.jusoBaseUrl;
+const JUSO_CONFIRM_KEY = mapConfig.josoConfirmKey;
 
 @Injectable()
 export class QuestsService {
@@ -37,7 +37,7 @@ export class QuestsService {
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
   async questComplete(questId: number) {
-    // TODO: 토큰에서 플레이어 email 가져오기
+    // TODO: 토큰에서 플레이어 데이터(email) 가져오기
     // await this.playersRepository.createPlayer({
     //   email: 'nature9th@gmail.com',
     //   nickname: 'nick',
@@ -49,7 +49,6 @@ export class QuestsService {
       'nature9th@gmail.com'
     );
     const quest = await this.getOne(questId);
-    console.log(player, quest);
     await this.completesRepository.complete(player, quest);
     return { ok: true };
   }
@@ -60,17 +59,28 @@ export class QuestsService {
    * DB에 데이터 없으면, 지역 + 퀘스트 데이터 DB에 추가하고 응답
    */
 
-  /* 위도(lat), 경도(lng) 기준으로 우리 마을 퀘스트 조회 */
+  /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
+    // TODO: 토큰에서 플레이어 데이터(email) 가져오기
+    // await this.playersRepository.createPlayer({
+    //   email: 'nature9th@gmail.com',
+    //   nickname: 'nick',
+    //   password: 'pass',
+    //   mbti: 'mbti',
+    //   profileImg: 'path',
+    // });
+    const player = await this.playersRepository.findByEmail(
+      'nature9th@gmail.com'
+    );
+
     const kakaoAddress = await this.getAddressName(lat, lng);
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
-    // TODO: 2. DB에서 퀘스트 조회
     let region = await this.dongsRepository.findByAddrs(kakaoAddress);
 
     if (region) {
       // TODO: 완료여부, 완료횟수 JOIN 해서 응답
-      return await this.questsRepository.findAll(region);
+      return await this.questsRepository.findAll(region, player.Id);
     }
 
     /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
@@ -97,7 +107,7 @@ export class QuestsService {
       }),
     ]);
 
-    return await this.questsRepository.findAll(region);
+    return await this.questsRepository.findAll(region, player.Id);
   }
 
   /* 주소 데이터 얻어오기 */
