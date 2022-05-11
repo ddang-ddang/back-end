@@ -6,7 +6,7 @@ import axios from 'axios';
 import * as config from 'config';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
-import { DongsRepository } from './dongs.repository';
+import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
 import { PlayerRepository } from '../players/players.repository';
 
@@ -23,7 +23,7 @@ export class QuestsService {
     private feedRepository: FeedRepository,
     private commentRepository: CommentRepository,
     private questsRepository: QuestsRepository,
-    private dongsRepository: DongsRepository,
+    private dongsRepository: RegionsRepository,
     private completesRepository: CompletesRepository,
     private playersRepository: PlayerRepository
   ) {}
@@ -66,11 +66,11 @@ export class QuestsService {
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
     // TODO: 2. DB에서 퀘스트 조회
-    let dong = await this.dongsRepository.findByAddrs(kakaoAddress);
+    let region = await this.dongsRepository.findByAddrs(kakaoAddress);
 
-    if (dong) {
+    if (region) {
       // TODO: 완료여부, 완료횟수 JOIN 해서 응답
-      return await this.questsRepository.findAll(dong);
+      return await this.questsRepository.findAll(region);
     }
 
     /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
@@ -83,20 +83,21 @@ export class QuestsService {
     // return dong 객체 (id 불포함)
     await this.dongsRepository.createAndSave(kakaoAddress);
 
-    // return dong 모델 (id 포함)
-    dong = await this.dongsRepository.findByAddrs(kakaoAddress);
-    console.log(dong);
+    // return region 모델 (id 포함)
+    region = await this.dongsRepository.findByAddrs(kakaoAddress);
+    console.log(region);
 
     // 퀘스트 DB 생성 하고 결과 return
-    console.time('abc');
     await Promise.all([
       ...quests.map(async (quest) => {
-        return await this.questsRepository.createAndSave({ ...quest, dong });
+        return await this.questsRepository.createAndSave({
+          ...quest,
+          region,
+        });
       }),
     ]);
-    console.timeEnd('abc');
 
-    return await this.questsRepository.findAll(dong);
+    return await this.questsRepository.findAll(region);
   }
 
   /* 주소 데이터 얻어오기 */
