@@ -15,34 +15,51 @@ export class PlayersService {
   ) {}
 
   // 플레이어 생성
-  async signup({
-    email,
-    nickname,
-    password,
-    mbti,
-    profileImg,
-  }: CreateBodyDto): Promise<Player> {
-    console.log('signup');
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log({ email, nickname, hashedPassword, mbti, profileImg });
-
-    const createPlayer = await this.playersRepository.createPlayer({
-      email: email,
-      nickname: nickname,
-      password: hashedPassword,
-      mbti: mbti,
-      profileImg: profileImg,
-    });
-    return createPlayer;
+  async signup(createPlayerDto: CreateBodyDto): Promise<Player> {
+    try {
+      const { email, password, nickname, mbti, profileImg, provider } =
+        createPlayerDto;
+      console.log('createPlayerDto', createPlayerDto);
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const createPlayer = await this.playersRepository.createPlayer({
+        email: email,
+        nickname: nickname,
+        password: hashedPassword,
+        mbti: mbti,
+        profileImg: profileImg,
+        provider: provider,
+        // providerId: providerId,
+      });
+      return createPlayer;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async findByNickname(nickname: string): Promise<any> {
     try {
       const result = await this.playersRepository.findByNickname(nickname);
+      console.log(result);
       if (!result) {
         return false;
       }
       return true;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async getDataByEmail(email: string): Promise<any> {
+    try {
+      const result = await this.playersRepository.findOne({
+        where: { email },
+        select: ['profileImg'],
+      });
+      console.log(result);
+      if (!result) {
+        return { ok: false };
+      }
+      return result;
     } catch (err) {
       console.log(err);
     }

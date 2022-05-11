@@ -19,8 +19,11 @@ export class AuthService {
   async validatePlayer(email: string, password: string): Promise<SigninDto> {
     const player = await this.playersRepository.findOne({ email: email });
     const valid = await bcrypt.compare(password, player.password);
+    console.log('------');
+    console.log(player);
     if (email && valid) {
       const { Id, email, nickname } = player;
+      console.log(Id, email, nickname);
       return { Id, email, nickname };
     }
     return null;
@@ -28,16 +31,21 @@ export class AuthService {
 
   async login(email: string, nickname: string): Promise<any> {
     // const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('loginsld 할게요');
+
+    // const player = await this.playersRepository.findOne({ email: email });
+
     const payload = {
+      // Id: Id,
       email: email,
       nickname: nickname,
       // password: hashedPassword,
     };
 
-    const access_token = this.jwtService.sign(payload);
+    const accessToken = this.jwtService.sign(payload);
 
     return {
-      access_token,
+      accessToken,
     };
   }
 
