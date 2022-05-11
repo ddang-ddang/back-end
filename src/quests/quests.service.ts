@@ -37,17 +37,24 @@ export class QuestsService {
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
   async questComplete(questId: number) {
     // TODO: 토큰에서 플레이어 데이터(email) 가져오기
-    // await this.playersRepository.createPlayer({
-    //   email: 'nature9th@gmail.com',
-    //   nickname: 'nick',
-    //   password: 'pass',
-    //   mbti: 'mbti',
-    //   profileImg: 'path',
-    // });
+    await this.playersRepository.createPlayer({
+      email: 'nature9th@gmail.com',
+      password: 'pass',
+      nickname: 'nick',
+      mbti: 'mbti',
+      profileImg: 'path',
+      provider: 'df',
+    });
     const player = await this.playersRepository.findByEmail(
       'nature9th@gmail.com'
     );
     const quest = await this.getOne(questId);
+    if (!quest) {
+      throw new NotFoundException({
+        ok: false,
+        message: '해당 게시글을 찾을 수 없습니다.',
+      });
+    }
     await this.completesRepository.complete(player, quest);
     return { ok: true };
   }
@@ -61,13 +68,14 @@ export class QuestsService {
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
     // TODO: 토큰에서 플레이어 데이터(email) 가져오기
-    // await this.playersRepository.createPlayer({
-    //   email: 'nature9th@gmail.com',
-    //   nickname: 'nick',
-    //   password: 'pass',
-    //   mbti: 'mbti',
-    //   profileImg: 'path',
-    // });
+    await this.playersRepository.createPlayer({
+      email: 'nature9th@gmail.com',
+      password: 'pass',
+      nickname: 'nick',
+      mbti: 'mbti',
+      profileImg: 'path',
+      provider: 'df',
+    });
     const player = await this.playersRepository.findByEmail(
       'nature9th@gmail.com'
     );
@@ -93,19 +101,17 @@ export class QuestsService {
 
     // return region 모델 (id 포함)
     region = await this.regionsRepository.findByAddrs(kakaoAddress);
-    console.log(region);
 
     // 퀘스트 DB 생성 하고 결과 return
     await Promise.all([
       ...quests.map(async (quest) => {
-        return await this.questsRepository.createAndSave({
-          ...quest,
-          region,
-        });
+        return await this.questsRepository.createAndSave({ region, ...quest });
       }),
     ]);
 
-    return await this.questsRepository.findAll(region, player.Id);
+    const allQuests = await this.questsRepository.findAll(region, player.Id);
+
+    return { ok: true, rows: allQuests };
   }
 
   /* 주소 데이터 얻어오기 */
@@ -190,34 +196,38 @@ export class QuestsService {
       const type = Math.floor(Math.random() * 3);
       // TODO: 퀘스트 상세 추가
       const dong = address.split(' ')[-1];
-      let title, description, reward, difficulty, iconPath, retry, timeUntil;
+      let title, description, reward, difficulty, timeUntil;
       switch (type) {
         case 0:
           title = '타임어택';
           description = `${dong}에서 `;
-          reward = 1;
-          difficulty = 'easy';
-          iconPath = '.jpeg';
+          difficulty = 1;
+          reward = 5;
           timeUntil = new Date();
           break;
         case 1:
           title = '땅땅 쓰기';
           description = `${dong}에서 `;
-          reward = 2;
-          difficulty = 'normal';
-          iconPath = '.jpeg';
+          difficulty = 2;
+          reward = 8;
           break;
         case 2:
           title = '몬스터 대결';
           description = `${dong}에서 `;
-          reward = 3;
-          difficulty = 'hard';
-          iconPath = '.jpeg';
-          retry = 2;
+          difficulty = 3;
+          reward = 10;
           break;
       }
 
-      return { ...coords, type };
+      return {
+        ...coords,
+        type,
+        title,
+        description,
+        reward,
+        difficulty,
+        timeUntil,
+      };
     });
   }
 
@@ -301,9 +311,9 @@ export class QuestsService {
     if (!quest) {
       throw new NotFoundException({
         ok: false,
-        message: '퀘스트를 찾을 수 없습니다.',
+        message: '해당 게시글을 찾을 수 없습니다.',
       });
     }
-    return quest;
+    return { ok: true, row: quest };
   }
 }
