@@ -7,8 +7,12 @@ import {
   Param,
   Delete,
   Logger,
+  UseGuards,
+  Req,
+  Request
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
@@ -20,8 +24,9 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async createComment(
+    @Req() req: Request,
     @Param('feedId') feedId: number,
     @Body() createCommentDto: CreateCommentDto
   ) {

@@ -1,4 +1,4 @@
-import { Like } from 'src/likes/entities/like.entity';
+import { Likes } from 'src/likes/entities/like.entity';
 import { Comment } from 'src/comments/entities/comment.entity';
 import {
   BaseEntity,
@@ -54,6 +54,6 @@ export class Feed extends BaseEntity {
   @ManyToOne((type) => Quest, (quest) => quest.feeds)
   quest: Quest;
 
-  @OneToMany((type) => Like, (like) => like.feed)
-  likes: Like[];
+  @OneToMany((type) => Likes, (like) => like.feed)
+  likes: Likes[];
 }
