@@ -4,15 +4,13 @@ import {
   Post,
   Query,
   Get,
-  HttpException,
-  HttpStatus,
   Param,
   UseGuards,
   Req,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsService } from './quests.service';
@@ -26,15 +24,11 @@ export class QuestsController {
   @Get()
   @ApiOperation({ summary: '전체 퀘스트 조회 API' })
   getAll(@Query('lat') lat: number, @Query('lng') lng: number) {
-    /* [예외처리] 쿼리 파라미터 누락: 위도(lat), 경도(lng) */
     if (!lat || !lng) {
-      throw new HttpException(
-        {
-          ok: false,
-          message: '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/',
-        },
-        HttpStatus.BAD_REQUEST
-      );
+      throw new BadRequestException({
+        ok: false,
+        message: '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/',
+      });
     }
     return this.questsService.getAll(lat, lng);
   }
