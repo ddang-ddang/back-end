@@ -4,7 +4,7 @@ import { CreateRegionDto } from './dto/create-region.dto';
 
 @EntityRepository(Region)
 export class RegionsRepository extends Repository<Region> {
-  /* 동 생성 */
+  /* 지역(동) 생성 */
   createAndSave = async ({
     regionSi,
     regionGu,
@@ -25,7 +25,7 @@ export class RegionsRepository extends Repository<Region> {
     });
   };
 
-  /* 전체 동 조회 */
+  /* 특정 지역(동) 조회 */
   findByAddrs = async ({ regionSi, regionGu, regionDong }): Promise<Region> => {
     const today = new Date();
     const date =
