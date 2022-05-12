@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateBodyDto, UpdateNickname } from './dto/create-player.dto';
+import { CreateBodyDto, UpdateInfoDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 import { CreateIdDto, CreatePlayerDto } from './dto/create-player.dto';
 import { PlayerRepository } from './players.repository';
@@ -49,6 +49,20 @@ export class PlayersService {
     }
   }
 
+  // 이멜일로 찾기
+  async findByEmail(email: string): Promise<boolean> {
+    try {
+      const players = await this.playersRepository.findByEmail(email);
+      console.log(players);
+      if (!players) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async getDataByEmail(email: string): Promise<any> {
     try {
       const result = await this.playersRepository.findOne({
@@ -65,26 +79,19 @@ export class PlayersService {
     }
   }
 
-  // 이멜일로 찾기
-  async findByEmail(email: string): Promise<boolean> {
-    try {
-      const players = await this.playersRepository.findByEmail(email);
-      if (!players) {
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   // nickname 변경하기
-  async updateNickname({ email, nickname }: UpdateNickname): Promise<any> {
+  async updateNickname({
+    email,
+    profileImg,
+    nickname,
+  }: UpdateInfoDto): Promise<any> {
     try {
       const result = await this.playersRepository.updateNickname({
         email,
+        profileImg,
         nickname,
       });
+      console.log(result);
       if (!result) {
         return false;
       }
