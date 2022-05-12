@@ -1,17 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PlayersService } from 'src/players/players.service';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
 import { SigninDto } from 'src/players/dto/create-player.dto';
-import { access } from 'fs';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(PlayerRepository)
-    private playersService: PlayersService,
     private playersRepository: PlayerRepository,
     private jwtService: JwtService
   ) {}
@@ -19,8 +16,6 @@ export class AuthService {
   async validatePlayer(email: string, password: string): Promise<SigninDto> {
     const player = await this.playersRepository.findOne({ email: email });
     const valid = await bcrypt.compare(password, player.password);
-    console.log('------');
-    console.log(player);
     if (email && valid) {
       const { Id, email, nickname } = player;
       console.log(Id, email, nickname);
@@ -30,22 +25,23 @@ export class AuthService {
   }
 
   async login(email: string, nickname: string): Promise<any> {
-    // const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('loginsld 할게요');
+    try {
+      const player = await this.playersRepository.findOne({ email: email });
 
-    const player = await this.playersRepository.findOne({ email: email });
+      const payload = {
+        Id: player.Id,
+        email: email,
+        nickname: nickname,
+      };
 
-    const payload = {
-      Id: player.Id,
-      email: email,
-      nickname: nickname,
-    };
+      const accessToken = this.jwtService.sign(payload);
 
-    const accessToken = this.jwtService.sign(payload);
-
-    return {
-      accessToken,
-    };
+      return {
+        accessToken,
+      };
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   googleLogin(req) {

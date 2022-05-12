@@ -37,7 +37,6 @@ import {
   InputPlayerDto,
   UpdateInfoDto,
 } from './dto/create-player.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
 
 /* TODO
  * 1. [ ] 이메일 중복 조회 (중복 이메일이 있으면 중복, 없으면 사용 가능)
@@ -59,7 +58,6 @@ export class PlayersController {
    * 회원가입
    * @Param email, nickname, password, mbti, profileImg
    */
-
   @ApiOkResponse({ type: Player, isArray: true })
   @ApiQuery({ name: 'name', required: false })
   @ApiCreatedResponse({ type: CreateBodyDto })
@@ -69,7 +67,7 @@ export class PlayersController {
     inputBodyDto: InputPlayerDto
   ): Promise<any> {
     const { email, nickname, password, mbti, profileImg } = inputBodyDto;
-    this.logger.verbose(`try to sign up player: ${email}`);
+    this.logger.verbose(`회원을 가입하려고 합니다.: ${email}`);
 
     console.log({ email, nickname, password, mbti, profileImg });
     try {
@@ -90,20 +88,57 @@ export class PlayersController {
     }
   }
 
-  // signin
-  // 흐름도 local auth -> auth service (validate) -> controller
+  /* 닉네임 중복확인 */
+  @Post('dupNickname')
+  async duplicateNicknameCheck(@Body() nickname: string) {
+    const result = await this.playersService.findByNickname(nickname);
+    console.log(result);
+    return { ok: true, row: result };
+  }
+
+  /* 이메일 중복확인 */
+  @Post('dupEmail')
+  async duplicateEmailCheck(@Body() nickname: string) {
+    console.log(nickname);
+    const result = await this.playersService.findByEmail(nickname);
+    return { ok: true, row: result };
+  }
+
+  // 이메일을 받아서 닉네임을 수정
+  @UseGuards(JwtAuthGuard)
+  @Patch('edit')
+  async editPlayers(
+    @Body() { profileImg, nickname }: UpdateInfoDto,
+    @Request() req
+  ) {
+    const { email } = req.user.player;
+    console.log(nickname);
+    const result = await this.playersService.updateNickname({
+      email,
+      profileImg,
+      nickname,
+    });
+    return { ok: true, row: result };
+  }
+
   /*
-   * 이메일로 로그인
-   *
+   ************************* 인증 관련 라우터 시작 *********************************
+   *  로컬 이메일 인증 : /players/signin -> /players/auth
+   *  카카오 인증 : /players/kakaosignin -> /players/auth
+   *  구글 인증 : /players/googlesignin -> /players/auth
+   ****************************************************************************
    */
 
+  /*
+   * 이메일로 로그인
+   */
   @UseGuards(LocalAuthGuard)
   @Post('signin')
   async signIn(@Request() req, @Res({ passthrough: true }) res) {
     try {
       const { email, nickname } = req.user;
 
-      this.logger.verbose(`try to sign in player: ${email}`);
+      this.logger.verbose(`${email}님이 로그인하려고 합니다`);
 
       const accessToken = await this.authService.login(email, nickname);
       res.setHeader('Authorization', `Bearer ${accessToken.accessToken}`);
@@ -117,27 +152,13 @@ export class PlayersController {
     }
   }
 
-  // signout
-  @Get('signout')
-  signOut(@Response() res) {
-    res.cookie('accessToken', '', { expires: new Date(0) });
-    return { hello: 'world' };
-  }
-
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
-    console.log(file);
-  }
-
   //원하는 곳에 JwtAuthGuard 붙이면 됨
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(JwtAuthGuard)
   @Get('auth')
   async getHello(@Request() req): Promise<any> {
     const { playerId, email, nickname } = req.user.player;
-    this.logger.verbose(`try to sign in player: ${email}`);
-    console.log(req.user);
+    this.logger.verbose(`${email}님이 인증을 시도합니다.`);
     return {
       ok: true,
       row: { playerId: playerId, email: email, nickname: nickname },
@@ -161,6 +182,12 @@ export class PlayersController {
   @Get('redirect')
   @UseGuards(GoogleAuthGuard)
   googleAuthRedirect(@Request() req, @Res() res) {
+    const { email, nickname, accessToken, profileImg } = req.user;
+    this.logger.verbose(
+      `${email}님이 구글로그인 리다이렉트을 이용 하려고 합니다`
+    );
+    console.log(accessToken);
+    console.log(req.user);
     return res.writeHead(301, { Location: 'http://localhost:3005' });
   }
 
@@ -171,6 +198,8 @@ export class PlayersController {
   @Get('kakaoauth')
   async kakaoAuth(@Request() req) {
     const { email, nickname, accessToken, profileImg } = req.user;
+    this.logger.verbose(`${email}님이 카카오 로그인을 이용 하려고 합니다`);
+    console.log(accessToken);
     console.log(req.user);
     return { ok: true };
   }
@@ -180,9 +209,15 @@ export class PlayersController {
   @UseGuards(KakaoAuthGuard)
   kakaopage(@Request() req, @Res() res) {
     const { email, nickname, accessToken, profileImg } = req.user;
+    this.logger.verbose(
+      `${email}님이 카카트로그인 리다이렉트을 이용 하려고 합니다`
+    );
+
+    console.log(accessToken);
+    console.log(req.user);
     // return { ok: true, row: req.user };
-    // return res.writeHead(301, { Location: 'http://localhost:3005' });
-    return res.status(302).redirect('http://localhost:3005');
+    return res.writeHead(301, { Location: 'http://localhost:3005' });
+    // return res.status(302).redirect('http://localhost:3005');
     // return res.status(302).redirect('/');
   }
 
@@ -190,45 +225,18 @@ export class PlayersController {
   @UseGuards(JwtAuthGuard)
   @Get('mypage')
   async loadMypage(@Request() req): Promise<any> {
-    console.log(req.user.player);
-    const { email, nickname } = req.user.player;
-    const player = await this.playersService.getDataByEmail(email);
-    const { profileImg } = player;
+    try {
+      const { email, nickname } = req.user.player;
+      this.logger.verbose(`${email}님이 마이페이지를 이용 하려고 합니다`);
+      const player = await this.playersService.getDataByEmail(email);
+      const { profileImg } = player;
 
-    return {
-      ok: true,
-      row: { email: email, nickname: nickname, profileImg: profileImg },
-    };
-  }
-
-  // 중복확인
-  @Post('dupNickname')
-  async duplicateNicknameCheck(@Body() nickname: string) {
-    const result = await this.playersService.findByNickname(nickname);
-    return { ok: true, row: result };
-  }
-
-  @Post('dupEmail')
-  async duplicateEmailCheck(@Body() nickname: string) {
-    console.log(nickname);
-    const result = await this.playersService.findByEmail(nickname);
-    return { ok: true, row: result };
-  }
-
-  // 이메일을 받아서 닉네임을 수정
-  @UseGuards(JwtAuthGuard)
-  @Patch('edit')
-  async editPlayers(
-    @Body() { profileImg, nickname }: UpdateInfoDto,
-    @Request() req
-  ) {
-    const { email } = req.user.player;
-    console.log(nickname);
-    const result = await this.playersService.updateNickname({
-      email,
-      profileImg,
-      nickname,
-    });
-    return { ok: true, row: result };
+      return {
+        ok: true,
+        profile: { email: email, nickname: nickname, profileImg: profileImg },
+      };
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
