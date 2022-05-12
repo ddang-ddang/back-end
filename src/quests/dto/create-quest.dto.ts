@@ -1,31 +1,38 @@
-import { IsNotEmpty, IsOptional } from 'class-validator';
+import {
+  IsDate,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Region } from '../entities/region.entity';
 
 export class CreateQuestDto {
   @IsNotEmpty()
   region: Region;
 
-  @IsNotEmpty()
+  @IsNumber()
   lat: number;
 
-  @IsNotEmpty()
+  @IsNumber()
   lng: number;
 
-  @IsNotEmpty()
+  @IsNumber()
   type: number;
 
-  @IsNotEmpty()
+  @IsString()
   title: string;
 
-  @IsNotEmpty()
+  @IsString()
   description: string;
 
-  @IsNotEmpty()
+  @IsNumber()
   difficulty: number;
 
-  @IsNotEmpty()
+  @IsNumber()
   reward: number;
 
   @IsOptional()
+  @IsDate()
   timeUntil: Date;
 }
