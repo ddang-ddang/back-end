@@ -9,6 +9,7 @@ import { QuestsRepository } from './quests.repository';
 import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
 import { PlayerRepository } from '../players/players.repository';
+import { Player } from '../players/entities/player.entity';
 
 const mapConfig = config.get('map');
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
@@ -35,8 +36,8 @@ export class QuestsService {
   }
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
-  async questComplete(questId: number, email: string) {
-    const player = await this.playersRepository.findByEmail(email);
+  async questComplete(questId: number, playerId: number) {
+    const player: Player = await Player.findOne({ where: { Id: playerId } });
     const quest = await this.questsRepository.findOneBy(questId);
     if (!quest) {
       throw new NotFoundException({
