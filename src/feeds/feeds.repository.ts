@@ -10,7 +10,7 @@ export class FeedRepository extends Repository<Feed> {
   /* 피드 업로드 퀘스트 수행 */
   async feedQuest(
     questId: number,
-    email: string,
+    playerId: number,
     img: string[],
     feedText: string
   ): Promise<Feed> {
@@ -22,7 +22,7 @@ export class FeedRepository extends Repository<Feed> {
 
     const player: Player = await Player.findOne({
       where: {
-        email,
+        Id: playerId,
       },
     });
 
