@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CommentsService } from '../comments.service';
+import { CommentsService } from './comments.service';
 
 const mockCommentRepository = () => {
-  createComment: jest.fn();
-  updateComment: jest.fn();
+  createComment: jest.fn().mockImplementation((data) => data);
+  updateComment: jest.fn().mockImplementation();
   deleteComment: jest.fn();
 };
 
@@ -36,8 +36,7 @@ describe('CommentsService', () => {
   //   expect(service).toBeDefined();
   // });
 
-  // it('createComment', async () => {});
-  it('shoud be 4', () => {
-    expect(2 + 2).toEqual(4);
+  it('createComment', async () => {
   });
+  
 });

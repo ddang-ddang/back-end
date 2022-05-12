@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateBodyDto, UpdateNickname } from './dto/create-player.dto';
+import { CreateBodyDto, UpdateInfoDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
-import { CreateIdDto, CreatePlayerDto } from './dto/create-player.dto';
 import { PlayerRepository } from './players.repository';
 import * as bcrypt from 'bcrypt';
 
@@ -19,7 +17,7 @@ export class PlayersService {
     try {
       const { email, password, nickname, mbti, profileImg, provider } =
         createPlayerDto;
-      console.log('createPlayerDto', createPlayerDto);
+
       const hashedPassword = await bcrypt.hash(password, 10);
       const createPlayer = await this.playersRepository.createPlayer({
         email: email,
@@ -39,8 +37,22 @@ export class PlayersService {
   async findByNickname(nickname: string): Promise<any> {
     try {
       const result = await this.playersRepository.findByNickname(nickname);
-      console.log(result);
+      console.log(result)
       if (!result) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  // 이멜일로 찾기
+  async findByEmail(email: string): Promise<boolean> {
+    try {
+      const players = await this.playersRepository.findByEmail(email);
+      console.log(players);
+      if (!players) {
         return false;
       }
       return true;
@@ -65,26 +77,19 @@ export class PlayersService {
     }
   }
 
-  // 이멜일로 찾기
-  async findByEmail(email: string): Promise<boolean> {
-    try {
-      const players = await this.playersRepository.findByEmail(email);
-      if (!players) {
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   // nickname 변경하기
-  async updateNickname({ email, nickname }: UpdateNickname): Promise<any> {
+  async updateNickname({
+    email,
+    profileImg,
+    nickname,
+  }: UpdateInfoDto): Promise<any> {
     try {
       const result = await this.playersRepository.updateNickname({
         email,
+        profileImg,
         nickname,
       });
+      console.log(result);
       if (!result) {
         return false;
       }
@@ -93,4 +98,8 @@ export class PlayersService {
       console.log(err);
     }
   }
+
+  
+
+
 }

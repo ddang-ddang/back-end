@@ -12,7 +12,6 @@ import {
 } from 'typeorm';
 import { Complete } from '../../quests/entities/complete.entity';
 
-
 //연결해야함
 @Entity()
 export class Player extends BaseEntity {
@@ -24,6 +23,7 @@ export class Player extends BaseEntity {
   @Column({
     type: 'varchar',
     length: 128,
+    unique: true,
   })
   email: string;
 
@@ -32,6 +32,7 @@ export class Player extends BaseEntity {
   @Column({
     type: 'varchar',
     length: 20,
+    unique: true,
   })
   nickname: string;
 
