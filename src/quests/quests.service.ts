@@ -8,7 +8,6 @@ import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
 import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
-import { PlayerRepository } from '../players/players.repository';
 import { Player } from '../players/entities/player.entity';
 
 const mapConfig = config.get('map');
@@ -25,8 +24,7 @@ export class QuestsService {
     private commentRepository: CommentRepository,
     private questsRepository: QuestsRepository,
     private regionsRepository: RegionsRepository,
-    private completesRepository: CompletesRepository,
-    private playersRepository: PlayerRepository
+    private completesRepository: CompletesRepository
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 로직 */
@@ -56,28 +54,14 @@ export class QuestsService {
    */
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
-  async getAll(lat: number, lng: number) {
-    // TODO: 토큰에서 플레이어 데이터(email) 가져오기
-
-    await this.playersRepository.createPlayer({
-      email: 'nature9th@gmail.com',
-      password: 'pass',
-      nickname: 'nick',
-      mbti: 'mbti',
-      profileImg: 'path',
-      provider: 'df',
-    });
-    const player = await this.playersRepository.findByEmail({
-      email: 'nature9th@gmail.com',
-    });
-
+  async getAll(lat: number, lng: number, playerId: number | null) {
     const kakaoAddress = await this.getAddressName(lat, lng);
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
     let region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
     if (region) {
-      const allQuests = await this.questsRepository.findAll(region, player.Id);
+      const allQuests = await this.questsRepository.findAll(region, playerId);
 
       return {
         ok: true,
@@ -106,7 +90,7 @@ export class QuestsService {
       }),
     ]);
 
-    const allQuests = await this.questsRepository.findAll(region, player.Id);
+    const allQuests = await this.questsRepository.findAll(region, playerId);
 
     return {
       ok: true,
@@ -224,7 +208,7 @@ export class QuestsService {
         case 6:
           if (category === 4) {
             description =
-              '특별한 기억이 있는 장소인가요? 여러분의 경험을 들려주세요. 낯선 곳이라면 첫번째 기억을 담으러 가볼까요?';
+              '특별한 기억이 있는 장소인가요? 여러분의 경험을 들려주세요. 낯선 곳이라면 첫번째 기억을 담으러 나서볼까요?';
           } else if (category === 5) {
             description =
               '동네 사람들에게 추천해 주고 싶은 장소인가요? 여러분의 리뷰를 남겨주세요.';

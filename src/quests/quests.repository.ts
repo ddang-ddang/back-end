@@ -11,7 +11,7 @@ export class QuestsRepository extends Repository<Quest> {
   }
 
   /* 전체 퀘스트 조회 */
-  async findAll(region: Region, id?: number): Promise<Object[]> {
+  async findAll(region: Region, id: number | null): Promise<Object[]> {
     const quests = await this.find({
       where: { region },
       relations: ['completes', 'completes.player'],
