@@ -1,4 +1,3 @@
-import { access } from 'fs';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -35,8 +34,6 @@ import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 import { Player } from './entities/player.entity';
 import {
   CreateBodyDto,
-  CreateIdDto,
-  CreatePlayerDto,
   InputPlayerDto,
   UpdateNickname,
 } from './dto/create-player.dto';
@@ -147,6 +144,11 @@ export class PlayersController {
     };
   }
 
+  /*
+   * 구글 로그인
+   *
+   */
+
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
@@ -155,14 +157,16 @@ export class PlayersController {
     return req;
   }
 
+  /* 구글 리다이렉트 부분 */
   @Get('redirect')
   @UseGuards(GoogleAuthGuard)
   googleAuthRedirect(@Request() req, @Res() res) {
-    // return this.authService.googleLogin(req);
-    // return res.status(302).redirect('http://localhost:3005');
     return res.writeHead(301, { Location: 'http://localhost:3005' });
   }
 
+  /*
+   * 카카오 로그인
+   */
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoauth')
   async kakaoAuth(@Request() req) {
@@ -171,6 +175,7 @@ export class PlayersController {
     return { ok: true };
   }
 
+  /* 카카오 리다이렉트 부분 */
   @Get('kakaoredirect')
   @UseGuards(KakaoAuthGuard)
   kakaopage(@Request() req, @Res() res) {
@@ -209,11 +214,19 @@ export class PlayersController {
     const result = await this.playersService.findByEmail(nickname);
     return { ok: true, row: result };
   }
-  // edit
+
+  // 이메일을 받아서 닉네임을 수정
+  @UseGuards(JwtAuthGuard)
   @Patch('edit')
-  async editPlayers(@Body() { email, nickname }: UpdateNickname) {
+  async editPlayers(
+    @Body() { profileImg, nickname }: UpdateNickname,
+    @Request() req
+  ) {
+    const { email } = req.user.player;
+    console.log(nickname);
     const result = await this.playersService.updateNickname({
       email,
+      profileImg,
       nickname,
     });
     return { ok: true, row: result };

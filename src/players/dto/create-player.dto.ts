@@ -67,5 +67,6 @@ export class SigninDto extends PickType(CreatePlayerDto, [
 
 export class UpdateNickname extends PickType(CreatePlayerDto, [
   'email',
+  'profileImg',
   'nickname',
 ] as const) {}
