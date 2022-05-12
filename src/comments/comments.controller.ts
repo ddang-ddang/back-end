@@ -97,11 +97,11 @@ export class CommentsController {
   ) {
     const { playerId } = req['user'].player;
     const feedId = params['feedId'];
+    const commentId = params['commentId'];
     this.logger.verbose(
-      `trying to update comment feedId: ${feedId} userId: ${playerId}`
+      `trying to update comment commentId: ${commentId} userId: ${playerId}`
     );
     try {
-      const commentId = params['commentId'];
       await this.commentsService.updateComment(
         playerId,
         feedId,
@@ -122,10 +122,17 @@ export class CommentsController {
   /* 댓글 삭제 */
   @Delete(':commentId')
   @ApiOperation({ summary: '댓글 삭제 API' })
-  removeComment(@Param('commentId') commentId: number) {
-    this.logger.verbose(`trying to delete comment feedId:  userId: `);
+  @UseGuards(JwtAuthGuard)
+  async removeComment(
+    @Req() req: Request,
+    @Param('commentId') commentId: number
+  ) {
+    const { playerId } = req['user'].player;
+    this.logger.verbose(
+      `trying to delete commentId: ${commentId} userId: ${playerId}`
+    );
     try {
-      this.commentsService.removeComment(commentId);
+      await this.commentsService.removeComment(playerId, commentId);
       return {
         ok: true,
       };

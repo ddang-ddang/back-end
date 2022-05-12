@@ -55,7 +55,11 @@ export class FeedsService {
       relations: ['player'],
     });
     if (!content) {
-      throw new NotFoundException(`content id ${feedId} not found`);
+      // throw new NotFoundException(`content id ${feedId} not found`);
+      throw new NotFoundException({
+        ok: false,
+        message: `피드 id ${feedId}를 찾을 수 없습니다.`,
+      });
     }
     return content;
   }

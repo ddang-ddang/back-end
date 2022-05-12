@@ -51,7 +51,11 @@ export class CommentsService {
       relations: ['player'],
     });
     if (!comment) {
-      throw new NotFoundException(`comment not found id ${commentId}`);
+      // throw new NotFoundException(`comment not found id ${commentId}`);
+      throw new NotFoundException({
+        ok: false,
+        message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
+      });
     }
     return comment;
   }
@@ -95,14 +99,23 @@ export class CommentsService {
   }
 
   /* 댓글 삭제 */
-  removeComment(commentId: number) {
-    const comment = this.findOneComment(commentId);
-    if (!comment) {
-      return {
+  async removeComment(playerId: number, commentId: number) {
+    const comment = await this.findOneComment(commentId);
+    const match = await this.matchPlayerComment(playerId, comment);
+    if (comment) {
+      if (match) {
+        return this.commentRepository.deleteComment(commentId);
+      } else {
+        throw new BadRequestException({
+          ok: false,
+          message: `댓글 작성자만 삭제할 수 있습니다.`,
+        });
+      }
+    } else {
+      throw new NotFoundException({
         ok: false,
-        message: `not found`,
-      };
+        message: `댓글 id ${commentId} 를 찾을 수 없습니다.`,
+      });
     }
-    return this.commentRepository.deleteComment(commentId);
   }
 }
