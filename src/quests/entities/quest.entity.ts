@@ -25,6 +25,21 @@ export class Quest extends BaseEntity {
   @Column()
   type: number;
 
+  @Column()
+  title: string;
+
+  @Column()
+  description: string;
+
+  @Column()
+  difficulty: number;
+
+  @Column()
+  reward: number;
+
+  @Column({ nullable: true })
+  timeUntil: Date;
+
   @OneToMany(() => Feed, (feed) => feed.quest)
   feeds: Feed[];
 
