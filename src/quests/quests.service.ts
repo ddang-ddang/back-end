@@ -201,29 +201,58 @@ export class QuestsService {
       ];
     }
 
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const date = today.getDate();
+    let type, title, description, reward, difficulty, timeUntil;
+    let category;
+    let hour;
+
     /* 좌표별로 퀘스트 만들어서 return */
     return questsCoords.map((coords) => {
-      const type = Math.floor(Math.random() * 3);
-      // TODO: 퀘스트 상세 추가
-      const dong = address.split(' ')[-1];
-      let title, description, reward, difficulty, timeUntil;
-      switch (type) {
-        case 0:
+      category = Math.floor(Math.random() * 9) + 1;
+      switch (category) {
+        case 1:
+        case 2:
+        case 3:
+          type = 0;
           title = '타임어택';
-          description = `${dong}에서 `;
+          if (category === 1) {
+            hour = 9 + 9;
+          } else {
+            hour = category * 7 + 9;
+          }
+          description = `${hour}시까지 도착해서 땅땅 도장을 찍어주세요.`;
           difficulty = 1;
           reward = 5;
-          timeUntil = new Date();
+          timeUntil = new Date(year, month, date, hour);
           break;
-        case 1:
+        case 4:
+        case 5:
+        case 6:
+          if (category === 4) {
+            description =
+              '특별한 기억이 있는 장소인가요? 여러분의 경험을 들려주세요. 낯선 곳이라면 첫번째 기억을 담으러 가볼까요?';
+          } else if (category === 5) {
+            description =
+              '동네 사람들에게 추천해 주고 싶은 장소인가요? 여러분의 리뷰를 남겨주세요.';
+          } else {
+            description =
+              '오늘 하루는 어떠셨나요? 무심코 지나친 무채색의 장소를 여러분의 감정으로 채워주세요.';
+          }
+          type = 1;
           title = '땅땅 쓰기';
-          description = `${dong}에서 `;
           difficulty = 2;
           reward = 8;
           break;
-        case 2:
+        case 7:
+        case 8:
+        case 9:
+          type = 2;
           title = '몬스터 대결';
-          description = `${dong}에서 `;
+          description =
+            '대결에서 승리하여 몬스터로부터 우리 동네를 지켜주세요.';
           difficulty = 3;
           reward = 10;
           break;
