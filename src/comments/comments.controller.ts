@@ -9,8 +9,9 @@ import {
   Logger,
   UseGuards,
   Req,
-  Request
+  Request,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { CommentsService } from './comments.service';
@@ -30,7 +31,19 @@ export class CommentsController {
     @Param('feedId') feedId: number,
     @Body() createCommentDto: CreateCommentDto
   ) {
-    return this.commentsService.createComment(feedId, createCommentDto);
+    const { playerId } = req['user'].player;
+    try {
+      return this.commentsService.createComment(
+        playerId,
+        feedId,
+        createCommentDto
+      );
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 
   /* 특정 게시글 댓글 조회 */
@@ -76,15 +89,25 @@ export class CommentsController {
   /* 댓글 수정 */
   @Patch(':commentId')
   @ApiOperation({ summary: '댓글 수정 API' })
-  updateComment(
+  @UseGuards(JwtAuthGuard)
+  async updateComment(
+    @Req() req: Request,
     @Param() params: number,
     @Body() updateCommentDto: UpdateCommentDto
   ) {
-    this.logger.verbose(`trying to update comment feedId:  userId: `);
+    const { playerId } = req['user'].player;
+    const feedId = params['feedId'];
+    const commentId = params['commentId'];
+    this.logger.verbose(
+      `trying to update comment commentId: ${commentId} userId: ${playerId}`
+    );
     try {
-      const feedId = params['feedId'];
-      const commentId = params['commentId'];
-      this.commentsService.updateComment(feedId, commentId, updateCommentDto);
+      await this.commentsService.updateComment(
+        playerId,
+        feedId,
+        commentId,
+        updateCommentDto
+      );
       return {
         ok: true,
       };
@@ -99,10 +122,17 @@ export class CommentsController {
   /* 댓글 삭제 */
   @Delete(':commentId')
   @ApiOperation({ summary: '댓글 삭제 API' })
-  removeComment(@Param('commentId') commentId: number) {
-    this.logger.verbose(`trying to delete comment feedId:  userId: `);
+  @UseGuards(JwtAuthGuard)
+  async removeComment(
+    @Req() req: Request,
+    @Param('commentId') commentId: number
+  ) {
+    const { playerId } = req['user'].player;
+    this.logger.verbose(
+      `trying to delete commentId: ${commentId} userId: ${playerId}`
+    );
     try {
-      this.commentsService.removeComment(commentId);
+      await this.commentsService.removeComment(playerId, commentId);
       return {
         ok: true,
       };

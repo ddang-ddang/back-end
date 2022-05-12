@@ -3,18 +3,22 @@ import { Comment } from './entities/comment.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 import { Feed } from 'src/feeds/entities/feed.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @EntityRepository(Comment)
 export class CommentRepository extends Repository<Comment> {
   /* 댓글 업로드 퀘스트 수행 */
-  async commentQuest(
-    // user: User,
-    feed: Feed,
-    comment: string
-  ) {
+  async createComment(playerId: number, feed: Feed, comment: string) {
+    const player = await Player.findOne({
+      where: {
+        Id: playerId,
+      },
+    });
+
     const newComment = this.create({
       comment,
       feed,
+      player,
     });
     await this.save(newComment);
 

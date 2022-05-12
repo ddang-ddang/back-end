@@ -59,10 +59,10 @@ export class QuestsController {
     @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto
   ) {
-    const { email } = req['user'].player;
+    const { playerId } = req['user'].player;
     console.log(req['user']);
     if (questType === 'feed') {
-      return this.questsService.feedQuest(id, email, createFeedDto);
+      return this.questsService.feedQuest(id, playerId, createFeedDto);
     } else if (questType === 'time' || questType === 'mob') {
       return this.questsService.questComplete(id);
     }
