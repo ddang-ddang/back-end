@@ -23,12 +23,15 @@ export class CommentsService {
     feedId: number,
     createCommentDto: CreateCommentDto
   ) {
-    const comment = createCommentDto.comment;
+    const commentText = createCommentDto.comment;
     const feed: Feed = await Feed.findOne(feedId);
-    if (!feed) {
-      throw new NotFoundException(`feed not found`);
+    if (feed) {
+      return this.commentRepository.commentQuest(playerId, feed, commentText);
     }
-    return this.commentRepository.commentQuest(playerId, feed, comment);
+    throw new NotFoundException({
+      ok: false,
+      message: `피드 id ${feedId} 존재하지 않는 피드입니다.`,
+    });
   }
 
   /* 특정 게시글의 모든 댓글 조회 */

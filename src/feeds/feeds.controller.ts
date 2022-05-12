@@ -14,6 +14,7 @@ import { FeedsService } from './feeds.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 
 @Controller('api/feeds')
 @ApiTags('피드 API')
@@ -22,12 +23,12 @@ export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
 
   /* 모든 피드에 대한 정보 */
-  @Get()
+  @Get() // 여기에 AuthGuard넣으면 안될 듯
   @ApiOperation({ summary: '주변 피드 조회 API' })
-  async findAllFeeds() {
+  async findAllFeeds(@Body() playerId: number) {
     this.logger.verbose(`trying to get all feeds user id by `);
     try {
-      const feeds = await this.feedsService.findAllFeeds();
+      const feeds = await this.feedsService.findAllFeeds(playerId);
       return {
         ok: true,
         rows: feeds,

@@ -18,13 +18,8 @@ export class LikesController {
   @Put()
   @ApiOperation({ summary: '좋아요 API' })
   @UseGuards(JwtAuthGuard)
-  chkLike(
-    @Req() req: Request,
-    @Param('feedId') feedId: number,
-    // @Body() playerId: any
-  ) {
+  chkLike(@Req() req: Request, @Param('feedId') feedId: number) {
     const { playerId } = req['user'].player;
-    // const { player } = playerId;
     return this.likesService.chkLike(feedId, playerId);
   }
 }

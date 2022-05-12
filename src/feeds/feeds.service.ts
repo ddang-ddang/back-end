@@ -10,39 +10,47 @@ import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
 import { Likes } from '../likes/entities/like.entity';
 import { LikeRepository } from 'src/likes/likes.repository';
+import { CommentRepository } from 'src/comments/comments.repository';
 
 @Injectable()
 export class FeedsService {
   constructor(
     @InjectRepository(FeedRepository)
     private feedRepository: FeedRepository,
-    private likeRepository: LikeRepository
+    private likeRepository: LikeRepository,
+    private commentRepository: CommentRepository
   ) {}
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds() {
-    const playerId = 3; // 현재 접속 유저
+  async findAllFeeds(player: any) {
+    // const playerId = 2; // 현재 접속 유저
+    const { playerId } = player;
     const feeds = await Feed.find({
       where: {
         deletedAt: null,
       },
-      relations: ['player', 'likes'],
+      relations: ['player', 'likes', 'comments'],
     });
 
     const likeLst = await this.likeRepository.find({
       relations: ['player', 'feed'],
     });
 
+    const commentLst = await this.commentRepository.find({
+      relations: ['feed', 'player'],
+    });
+
     let liked;
     return feeds.map((feed) => {
       const likeCnt = feed.likes.length;
+      const commentCnt = feed.comments.length;
       liked = false;
       likeLst.map((like) => {
         if (like.player.Id === playerId && feed.id === like.feed.id) {
           liked = true;
         }
       });
-      return { ...feed, likeCnt, liked };
+      return { ...feed, likeCnt, liked, commentCnt };
     });
   }
 
