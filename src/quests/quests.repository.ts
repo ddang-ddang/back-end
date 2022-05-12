@@ -33,4 +33,23 @@ export class QuestsRepository extends Repository<Quest> {
   async findOneBy(id: number): Promise<Quest> {
     return await this.findOne({ id });
   }
+
+  /* 특정 퀘스트 조회 (조건 포함) */
+  async findOneWithCompletes(
+    id: number,
+    playerId: number | null
+  ): Promise<Object> {
+    const quest = await this.findOne({
+      where: { id },
+      relations: ['completes', 'completes.player'],
+    });
+    const completed = !!quest.completes.find(
+      ({ player }) => player.Id === playerId
+    );
+    return {
+      ...quest,
+      completed,
+      completes: quest.completes.length,
+    };
+  }
 }

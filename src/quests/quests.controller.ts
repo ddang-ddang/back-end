@@ -48,8 +48,16 @@ export class QuestsController {
   /* 특정 퀘스트 조회 API */
   @Get(':questId')
   @ApiOperation({ summary: '특정 퀘스트 조회 API' })
-  getOne(@Param('questId') id: number) {
-    return this.questsService.getOne(id);
+  getOne(@Param('questId') id: number, @Request() req: any) {
+    let playerId = null;
+    if (req.headers.authorization) {
+      const token = req.headers.authorization.split(' ')[1];
+      const encodedPayload = token.split('.')[1];
+      const payload = Buffer.from(encodedPayload, 'base64');
+      playerId = JSON.parse(payload.toString()).Id;
+    }
+
+    return this.questsService.getOne(id, playerId);
   }
 
   /**

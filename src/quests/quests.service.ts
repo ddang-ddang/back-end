@@ -322,8 +322,11 @@ export class QuestsService {
     }
   }
 
-  async getOne(id: number) {
-    const quest = await this.questsRepository.findOneBy(id);
+  async getOne(id: number, playerId: number | null) {
+    const quest = await this.questsRepository.findOneWithCompletes(
+      id,
+      playerId
+    );
     if (!quest) {
       throw new NotFoundException({
         ok: false,
