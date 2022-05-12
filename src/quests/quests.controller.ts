@@ -58,7 +58,7 @@ export class QuestsController {
     if (questType === 'feed') {
       return this.questsService.feedQuest(id, playerId, createFeedDto);
     } else if (questType === 'time' || questType === 'mob') {
-      return this.questsService.questComplete(id, email);
+      return this.questsService.questComplete(id, playerId);
     }
     return;
   }
