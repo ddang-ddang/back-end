@@ -89,10 +89,14 @@ export class FeedsController {
   /* 피드 삭제 */
   @Delete(':feedId')
   @ApiOperation({ summary: '특정 피드 삭제 API' })
-  remove(@Param('feedId') feedId: number) {
-    this.logger.verbose(`trying to delete feed id ${feedId}`);
+  @UseGuards(AuthGuard('jwt'))
+  remove(@Req() req: Request, @Param('feedId') feedId: number) {
+    const { playerId } = req['user'].player;
+    this.logger.verbose(
+      `trying to delete feed id ${feedId} by user ${playerId}`
+    );
     try {
-      return this.feedsService.removeQuest(feedId);
+      return this.feedsService.removeQuest(playerId, feedId);
     } catch (error) {
       return {
         ok: false,

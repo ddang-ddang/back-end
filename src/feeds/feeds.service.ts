@@ -95,14 +95,22 @@ export class FeedsService {
   }
 
   /* 피드 삭제 */
-  async removeQuest(feedId: number): Promise<void | object> {
+  async removeQuest(playerId: number, feedId: number): Promise<void | object> {
     const feed = await this.feedRepository.findOne(feedId);
-    if (!feed) {
-      return {
-        ok: false,
-        message: `not found`,
-      };
+    const match = await this.matchPlayerFeed(playerId, feed);
+    if (feed) {
+      if (match) {
+        return this.feedRepository.deleteFeed(feedId);
+      } else {
+        throw new BadRequestException({
+          ok: false,
+          message: `피드 작성자만 삭제할 수 있습니다.`,
+        });
+      }
     }
-    return this.feedRepository.deleteFeed(feedId);
+    throw new NotFoundException({
+      ok: false,
+      message: `피드 id ${feedId} 를 찾을 수 없습니다.`,
+    });
   }
 }
