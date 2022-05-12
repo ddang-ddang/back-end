@@ -13,13 +13,17 @@ export class CommentsService {
   ) {}
 
   /* 댓글 작성 */
-  async createComment(feedId: number, createCommentDto: CreateCommentDto) {
+  async createComment(
+    playerId: number,
+    feedId: number,
+    createCommentDto: CreateCommentDto
+  ) {
     const comment = createCommentDto.comment;
     const feed: Feed = await Feed.findOne(feedId);
     if (!feed) {
       throw new NotFoundException(`feed not found`);
     }
-    return this.commentRepository.commentQuest(feed, comment);
+    return this.commentRepository.commentQuest(playerId, feed, comment);
   }
 
   /* 특정 게시글의 모든 댓글 조회 */

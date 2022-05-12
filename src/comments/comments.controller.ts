@@ -11,6 +11,7 @@ import {
   Req,
   Request
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { CommentsService } from './comments.service';
@@ -30,7 +31,12 @@ export class CommentsController {
     @Param('feedId') feedId: number,
     @Body() createCommentDto: CreateCommentDto
   ) {
-    return this.commentsService.createComment(feedId, createCommentDto);
+    const { playerId } = req['user'].player;
+    return this.commentsService.createComment(
+      playerId,
+      feedId,
+      createCommentDto
+    );
   }
 
   /* 특정 게시글 댓글 조회 */
@@ -76,6 +82,7 @@ export class CommentsController {
   /* 댓글 수정 */
   @Patch(':commentId')
   @ApiOperation({ summary: '댓글 수정 API' })
+  @UseGuards(AuthGuard('jwt'))
   updateComment(
     @Param() params: number,
     @Body() updateCommentDto: UpdateCommentDto
