@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
@@ -48,6 +48,7 @@ export class FeedsService {
       where: {
         id: feedId,
       },
+      relations: ['player'],
     });
     if (!content) {
       throw new NotFoundException(`content id ${feedId} not found`);
@@ -55,13 +56,42 @@ export class FeedsService {
     return content;
   }
 
-  /* 피드 수정 */
-  async updateFeed(feedId: number, img: string[], feedContent: string) {
-    const feed = await this.findOneFeed(feedId);
-    if (feed) {
-      return this.feedRepository.updateFeed(feedId, img, feedContent);
+  /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
+  async matchPlayerFeed(playerId: number, feed: Feed) {
+    if (playerId === feed.player.Id) {
+      return true;
     }
-    return `feed not found id ${feedId}`;
+    return false;
+  }
+
+  /* 피드 수정 */
+  async updateFeed(
+    playerId: number,
+    feedId: number,
+    img: string[],
+    feedContent: string
+  ) {
+    const feed = await this.findOneFeed(feedId);
+    const match = await this.matchPlayerFeed(playerId, feed);
+    if (feed) {
+      if (match) {
+        return this.feedRepository.updateFeed(
+          playerId,
+          feedId,
+          img,
+          feedContent
+        );
+      } else {
+        throw new BadRequestException({
+          ok: false,
+          message: `피드 작성자만 수정할 수 있습니다.`,
+        });
+      }
+    }
+    throw new BadRequestException({
+      ok: false,
+      message: `피드 id ${feedId} 를 찾을 수 없습니다.`,
+    });
   }
 
   /* 피드 삭제 */

@@ -6,10 +6,14 @@ import {
   Param,
   Delete,
   Logger,
+  UseGuards,
+  Req,
+  Request,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateFeedDto } from './dto/update-feed.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('api/feeds')
 @ApiTags('피드 API')
@@ -58,14 +62,19 @@ export class FeedsController {
   /* 피드 수정 */
   @Patch(':feedId')
   @ApiOperation({ summary: '특정 피드 수정 API' })
+  @UseGuards(AuthGuard('jwt'))
   async updateFeed(
+    @Req() req: Request,
     @Param('feedId') feedId: number,
     @Body() updateFeedDto: UpdateFeedDto
   ) {
-    this.logger.verbose(`trying to update feed id ${feedId}`);
+    const { playerId } = req['user'].player;
+    this.logger.verbose(
+      `trying to update feed id ${feedId} by user ${playerId}`
+    );
     const { content, img } = { ...updateFeedDto };
     try {
-      await this.feedsService.updateFeed(feedId, img, content);
+      await this.feedsService.updateFeed(playerId, feedId, img, content);
       return {
         ok: true,
       };

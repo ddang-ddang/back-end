@@ -40,7 +40,12 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 수정 */
-  async updateFeed(feedId: number, img: string[], content: string) {
+  async updateFeed(
+    playerId: number,
+    feedId: number,
+    img: string[],
+    content: string
+  ) {
     console.log(feedId, img, content);
     return this.update(
       { id: feedId },
