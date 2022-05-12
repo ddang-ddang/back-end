@@ -26,7 +26,7 @@ export class CommentsService {
     const commentText = createCommentDto.comment;
     const feed: Feed = await Feed.findOne(feedId);
     if (feed) {
-      return this.commentRepository.commentQuest(playerId, feed, commentText);
+      return this.commentRepository.createComment(playerId, feed, commentText);
     }
     throw new NotFoundException({
       ok: false,
