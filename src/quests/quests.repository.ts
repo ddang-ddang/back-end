@@ -6,13 +6,8 @@ import { Region } from './entities/region.entity';
 @EntityRepository(Quest)
 export class QuestsRepository extends Repository<Quest> {
   /* 퀘스트 생성 */
-  async createAndSave({ lat, lng, type, region }: CreateQuestDto) {
-    return await this.save({
-      lat,
-      lng,
-      type,
-      region,
-    });
+  async createAndSave({ region, ...quests }: CreateQuestDto) {
+    return await this.save({ region, ...quests });
   }
 
   /* 전체 퀘스트 조회 */

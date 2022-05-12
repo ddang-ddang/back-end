@@ -37,7 +37,7 @@ export class PlayersService {
   async findByNickname(nickname: string): Promise<any> {
     try {
       const result = await this.playersRepository.findByNickname(nickname);
-      console.log(result)
+      console.log(result);
       if (!result) {
         return false;
       }
@@ -98,8 +98,4 @@ export class PlayersService {
       console.log(err);
     }
   }
-
-  
-
-
 }
