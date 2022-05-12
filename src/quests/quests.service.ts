@@ -35,20 +35,9 @@ export class QuestsService {
   }
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
-  async questComplete(questId: number) {
-    // TODO: 토큰에서 플레이어 데이터(email) 가져오기
-    await this.playersRepository.createPlayer({
-      email: 'nature9th@gmail.com',
-      password: 'pass',
-      nickname: 'nick',
-      mbti: 'mbti',
-      profileImg: 'path',
-      provider: 'df',
-    });
-    const player = await this.playersRepository.findByEmail(
-      'nature9th@gmail.com'
-    );
-    const quest = await this.getOne(questId);
+  async questComplete(questId: number, email: string) {
+    const player = await this.playersRepository.findByEmail(email);
+    const quest = await this.questsRepository.findOneBy(questId);
     if (!quest) {
       throw new NotFoundException({
         ok: false,
@@ -68,6 +57,7 @@ export class QuestsService {
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number) {
     // TODO: 토큰에서 플레이어 데이터(email) 가져오기
+
     await this.playersRepository.createPlayer({
       email: 'nature9th@gmail.com',
       password: 'pass',
@@ -219,9 +209,9 @@ export class QuestsService {
           type = 0;
           title = '타임어택';
           if (category === 1) {
-            hour = 9 + 9;
+            hour = 9;
           } else {
-            hour = category * 7 + 9;
+            hour = category * 7;
           }
           description = `${hour}시까지 도착해서 땅땅 도장을 찍어주세요.`;
           difficulty = 1;
@@ -245,6 +235,7 @@ export class QuestsService {
           title = '땅땅 쓰기';
           difficulty = 2;
           reward = 8;
+          timeUntil = null;
           break;
         case 7:
         case 8:
@@ -255,6 +246,7 @@ export class QuestsService {
             '대결에서 승리하여 몬스터로부터 우리 동네를 지켜주세요.';
           difficulty = 3;
           reward = 10;
+          timeUntil = null;
           break;
       }
 
