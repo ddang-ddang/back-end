@@ -34,7 +34,9 @@ import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 import { Player } from './entities/player.entity';
 import {
   CreateBodyDto,
+  EmailDto,
   InputPlayerDto,
+  NicknameDto,
   UpdateInfoDto,
 } from './dto/create-player.dto';
 
@@ -90,17 +92,20 @@ export class PlayersController {
 
   /* 닉네임 중복확인 */
   @Post('dupNickname')
-  async duplicateNicknameCheck(@Body() nickname: string) {
-    const result = await this.playersService.findByNickname(nickname);
+  async duplicateNicknameCheck(@Body() nicknameDto: NicknameDto) {
+    const { nickname } = nicknameDto;
+
+    const result = await this.playersService.findByNickname({ nickname });
     console.log(result);
     return { ok: true, row: result };
   }
 
   /* 이메일 중복확인 */
   @Post('dupEmail')
-  async duplicateEmailCheck(@Body() nickname: string) {
-    console.log(nickname);
-    const result = await this.playersService.findByEmail(nickname);
+  async duplicateEmailCheck(@Body() emailDto: EmailDto) {
+    const { email } = emailDto;
+
+    const result = await this.playersService.findByEmail({ email });
     return { ok: true, row: result };
   }
 
