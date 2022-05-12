@@ -67,9 +67,9 @@ export class QuestsService {
       profileImg: 'path',
       provider: 'df',
     });
-    const player = await this.playersRepository.findByEmail(
-      'nature9th@gmail.com'
-    );
+    const player = await this.playersRepository.findByEmail({
+      email: 'nature9th@gmail.com',
+    });
 
     const kakaoAddress = await this.getAddressName(lat, lng);
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;

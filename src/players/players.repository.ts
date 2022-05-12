@@ -3,18 +3,22 @@ import {
   CreateBodyDto,
   CreateLocalDto,
   CreatePlayerDto,
+  EmailDto,
+  NicknameDto,
   UpdateInfoDto,
 } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 
 @EntityRepository(Player)
 export class PlayerRepository extends Repository<Player> {
-  async findByEmail(email: string): Promise<Player> {
-    return this.findOne({ where: email });
+  async findByEmail(emailDto: EmailDto): Promise<Player> {
+    const { email } = emailDto;
+    return this.findOne({ where: { email } });
   }
 
-  async findByNickname(nickname: string): Promise<Player> {
-    const result = await this.findOne({ where: nickname });
+  async findByNickname(nicknameDto: NicknameDto): Promise<Player> {
+    const { nickname } = nicknameDto;
+    const result = await this.findOne({ where: { nickname } });
     console.log(result);
     return result;
   }
@@ -29,6 +33,13 @@ export class PlayerRepository extends Repository<Player> {
 
     return result;
   }
+
+  // async findAll(region: Region, id?: number): Promise<Object[]> {
+  //   const quests = await this.find({
+  //     where: { region },
+  //     relations: ['completes', 'completes.player'],
+  //   });
+  // }
 
   async createPlayer(createBodyDto: CreateBodyDto): Promise<Player> {
     const {

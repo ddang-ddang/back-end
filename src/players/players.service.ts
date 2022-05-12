@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateBodyDto, UpdateInfoDto } from './dto/create-player.dto';
+import {
+  CreateBodyDto,
+  EmailDto,
+  NicknameDto,
+  UpdateInfoDto,
+} from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 import { PlayerRepository } from './players.repository';
 import * as bcrypt from 'bcrypt';
@@ -34,10 +39,12 @@ export class PlayersService {
     }
   }
 
-  async findByNickname(nickname: string): Promise<any> {
+  async findByNickname(nicknameDto: NicknameDto): Promise<any> {
     try {
-      const result = await this.playersRepository.findByNickname(nickname);
-      console.log(result)
+      const { nickname } = nicknameDto;
+
+      const result = await this.playersRepository.findByNickname({ nickname });
+      console.log(result);
       if (!result) {
         return false;
       }
@@ -48,9 +55,10 @@ export class PlayersService {
   }
 
   // 이멜일로 찾기
-  async findByEmail(email: string): Promise<boolean> {
+  async findByEmail(emailDto: EmailDto): Promise<boolean> {
     try {
-      const players = await this.playersRepository.findByEmail(email);
+      const { email } = emailDto;
+      const players = await this.playersRepository.findByEmail({ email });
       console.log(players);
       if (!players) {
         return false;
@@ -98,8 +106,4 @@ export class PlayersService {
       console.log(err);
     }
   }
-
-  
-
-
 }

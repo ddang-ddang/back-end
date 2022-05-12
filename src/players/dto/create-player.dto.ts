@@ -70,3 +70,9 @@ export class UpdateInfoDto extends PickType(CreatePlayerDto, [
   'profileImg',
   'nickname',
 ] as const) {}
+
+export class EmailDto extends PickType(CreatePlayerDto, ['email'] as const) {}
+
+export class NicknameDto extends PickType(CreatePlayerDto, [
+  'nickname',
+] as const) {}
