@@ -9,7 +9,7 @@ export class LikesService {
     private likeRepository: LikeRepository
   ) {}
 
-  chkLike(feedId: number, playerId: any) {
+  chkLike(feedId: number, playerId: number) {
     this.likeRepository.chkLike(feedId, playerId);
   }
 }

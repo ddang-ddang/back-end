@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateFeedDto } from './dto/create-feed.dto';
 import { UpdateFeedDto } from './dto/update-feed.dto';
@@ -6,39 +10,47 @@ import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
 import { Likes } from '../likes/entities/like.entity';
 import { LikeRepository } from 'src/likes/likes.repository';
+import { CommentRepository } from 'src/comments/comments.repository';
 
 @Injectable()
 export class FeedsService {
   constructor(
     @InjectRepository(FeedRepository)
     private feedRepository: FeedRepository,
-    private likeRepository: LikeRepository
+    private likeRepository: LikeRepository,
+    private commentRepository: CommentRepository
   ) {}
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds() {
-    const playerId = 3; // 현재 접속 유저
+  async findAllFeeds(player: any) {
+    // const playerId = 2; // 현재 접속 유저
+    const { playerId } = player;
     const feeds = await Feed.find({
       where: {
         deletedAt: null,
       },
-      relations: ['player', 'likes'],
+      relations: ['player', 'likes', 'comments'],
     });
 
     const likeLst = await this.likeRepository.find({
       relations: ['player', 'feed'],
     });
 
+    const commentLst = await this.commentRepository.find({
+      relations: ['feed', 'player'],
+    });
+
     let liked;
     return feeds.map((feed) => {
       const likeCnt = feed.likes.length;
+      const commentCnt = feed.comments.length;
       liked = false;
       likeLst.map((like) => {
         if (like.player.Id === playerId && feed.id === like.feed.id) {
           liked = true;
         }
       });
-      return { ...feed, likeCnt, liked };
+      return { ...feed, likeCnt, liked, commentCnt };
     });
   }
 
@@ -48,31 +60,73 @@ export class FeedsService {
       where: {
         id: feedId,
       },
+      relations: ['player'],
     });
     if (!content) {
-      throw new NotFoundException(`content id ${feedId} not found`);
+      // throw new NotFoundException(`content id ${feedId} not found`);
+      throw new NotFoundException({
+        ok: false,
+        message: `피드 id ${feedId}를 찾을 수 없습니다.`,
+      });
     }
     return content;
   }
 
-  /* 피드 수정 */
-  async updateFeed(feedId: number, img: string[], feedContent: string) {
-    const feed = await this.findOneFeed(feedId);
-    if (feed) {
-      return this.feedRepository.updateFeed(feedId, img, feedContent);
+  /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
+  async matchPlayerFeed(playerId: number, feed: Feed) {
+    if (playerId === feed.player.Id) {
+      return true;
     }
-    return `feed not found id ${feedId}`;
+    return false;
+  }
+
+  /* 피드 수정 */
+  async updateFeed(
+    playerId: number,
+    feedId: number,
+    img: string[],
+    feedContent: string
+  ) {
+    const feed = await this.findOneFeed(feedId);
+    const match = await this.matchPlayerFeed(playerId, feed);
+    if (feed) {
+      if (match) {
+        return this.feedRepository.updateFeed(
+          playerId,
+          feedId,
+          img,
+          feedContent
+        );
+      } else {
+        throw new BadRequestException({
+          ok: false,
+          message: `피드 작성자만 수정할 수 있습니다.`,
+        });
+      }
+    }
+    throw new BadRequestException({
+      ok: false,
+      message: `피드 id ${feedId} 를 찾을 수 없습니다.`,
+    });
   }
 
   /* 피드 삭제 */
-  async removeQuest(feedId: number): Promise<void | object> {
+  async removeQuest(playerId: number, feedId: number): Promise<void | object> {
     const feed = await this.feedRepository.findOne(feedId);
-    if (!feed) {
-      return {
-        ok: false,
-        message: `not found`,
-      };
+    const match = await this.matchPlayerFeed(playerId, feed);
+    if (feed) {
+      if (match) {
+        return this.feedRepository.deleteFeed(feedId);
+      } else {
+        throw new BadRequestException({
+          ok: false,
+          message: `피드 작성자만 삭제할 수 있습니다.`,
+        });
+      }
     }
-    return this.feedRepository.deleteFeed(feedId);
+    throw new NotFoundException({
+      ok: false,
+      message: `피드 id ${feedId} 를 찾을 수 없습니다.`,
+    });
   }
 }

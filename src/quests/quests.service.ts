@@ -29,9 +29,9 @@ export class QuestsService {
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 로직 */
-  feedQuest(questId: number, email: string, createFeedDto: CreateFeedDto) {
+  feedQuest(questId: number, playerId: number, createFeedDto: CreateFeedDto) {
     const { img, content } = createFeedDto;
-    return this.feedRepository.feedQuest(questId, email, img, content);
+    return this.feedRepository.feedQuest(questId, playerId, img, content);
   }
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */

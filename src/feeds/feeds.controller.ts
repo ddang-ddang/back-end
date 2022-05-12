@@ -6,10 +6,15 @@ import {
   Param,
   Delete,
   Logger,
+  UseGuards,
+  Req,
+  Request,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateFeedDto } from './dto/update-feed.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 
 @Controller('api/feeds')
 @ApiTags('피드 API')
@@ -18,12 +23,12 @@ export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
 
   /* 모든 피드에 대한 정보 */
-  @Get()
+  @Get() // 여기에 AuthGuard넣으면 안될 듯
   @ApiOperation({ summary: '주변 피드 조회 API' })
-  async findAllFeeds() {
+  async findAllFeeds(@Body() playerId: number) {
     this.logger.verbose(`trying to get all feeds user id by `);
     try {
-      const feeds = await this.feedsService.findAllFeeds();
+      const feeds = await this.feedsService.findAllFeeds(playerId);
       return {
         ok: true,
         rows: feeds,
@@ -58,14 +63,19 @@ export class FeedsController {
   /* 피드 수정 */
   @Patch(':feedId')
   @ApiOperation({ summary: '특정 피드 수정 API' })
+  @UseGuards(AuthGuard('jwt'))
   async updateFeed(
+    @Req() req: Request,
     @Param('feedId') feedId: number,
     @Body() updateFeedDto: UpdateFeedDto
   ) {
-    this.logger.verbose(`trying to update feed id ${feedId}`);
+    const { playerId } = req['user'].player;
+    this.logger.verbose(
+      `trying to update feed id ${feedId} by user ${playerId}`
+    );
     const { content, img } = { ...updateFeedDto };
     try {
-      await this.feedsService.updateFeed(feedId, img, content);
+      await this.feedsService.updateFeed(playerId, feedId, img, content);
       return {
         ok: true,
       };
@@ -80,10 +90,14 @@ export class FeedsController {
   /* 피드 삭제 */
   @Delete(':feedId')
   @ApiOperation({ summary: '특정 피드 삭제 API' })
-  remove(@Param('feedId') feedId: number) {
-    this.logger.verbose(`trying to delete feed id ${feedId}`);
+  @UseGuards(AuthGuard('jwt'))
+  remove(@Req() req: Request, @Param('feedId') feedId: number) {
+    const { playerId } = req['user'].player;
+    this.logger.verbose(
+      `trying to delete feed id ${feedId} by user ${playerId}`
+    );
     try {
-      return this.feedsService.removeQuest(feedId);
+      return this.feedsService.removeQuest(playerId, feedId);
     } catch (error) {
       return {
         ok: false,
