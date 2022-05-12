@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateBodyDto, UpdateNickname } from './dto/create-player.dto';
+import { CreateBodyDto, UpdateInfoDto } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 import { CreateIdDto, CreatePlayerDto } from './dto/create-player.dto';
 import { PlayerRepository } from './players.repository';
@@ -84,7 +84,7 @@ export class PlayersService {
     email,
     profileImg,
     nickname,
-  }: UpdateNickname): Promise<any> {
+  }: UpdateInfoDto): Promise<any> {
     try {
       const result = await this.playersRepository.updateNickname({
         email,

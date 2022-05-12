@@ -3,7 +3,7 @@ import {
   CreateBodyDto,
   CreateLocalDto,
   CreatePlayerDto,
-  UpdateNickname,
+  UpdateInfoDto,
 } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
 
@@ -17,7 +17,7 @@ export class PlayerRepository extends Repository<Player> {
     return this.findOne({ where: nickname });
   }
 
-  async updateNickname(updateNickname: UpdateNickname): Promise<any> {
+  async updateNickname(updateNickname: UpdateInfoDto): Promise<any> {
     const { nickname, profileImg, email } = updateNickname;
     const result = await this.update(
       { email: email },

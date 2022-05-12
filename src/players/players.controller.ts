@@ -35,7 +35,7 @@ import { Player } from './entities/player.entity';
 import {
   CreateBodyDto,
   InputPlayerDto,
-  UpdateNickname,
+  UpdateInfoDto,
 } from './dto/create-player.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 
@@ -219,7 +219,7 @@ export class PlayersController {
   @UseGuards(JwtAuthGuard)
   @Patch('edit')
   async editPlayers(
-    @Body() { profileImg, nickname }: UpdateNickname,
+    @Body() { profileImg, nickname }: UpdateInfoDto,
     @Request() req
   ) {
     const { email } = req.user.player;
