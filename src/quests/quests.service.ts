@@ -86,7 +86,13 @@ export class QuestsService {
     let region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
     if (region) {
-      return await this.questsRepository.findAll(region, player.Id);
+      const allQuests = await this.questsRepository.findAll(region, player.Id);
+
+      return {
+        ok: true,
+        currentRegion: `${region.regionSi} ${region.regionGu} ${region.regionDong}`,
+        rows: allQuests,
+      };
     }
 
     /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
@@ -111,7 +117,11 @@ export class QuestsService {
 
     const allQuests = await this.questsRepository.findAll(region, player.Id);
 
-    return { ok: true, rows: allQuests };
+    return {
+      ok: true,
+      currentRegion: `${region.regionSi} ${region.regionGu} ${region.regionDong}`,
+      rows: allQuests,
+    };
   }
 
   /* 주소 데이터 얻어오기 */
