@@ -14,7 +14,9 @@ export class PlayerRepository extends Repository<Player> {
   }
 
   async findByNickname(nickname: string): Promise<Player> {
-    return this.findOne({ where: nickname });
+    const result = await this.findOne({ where: nickname });
+    console.log(result);
+    return result;
   }
 
   async updateNickname(updateNickname: UpdateInfoDto): Promise<any> {
