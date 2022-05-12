@@ -9,7 +9,7 @@ import {
   Logger,
   UseGuards,
   Req,
-  Request
+  Request,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -32,11 +32,18 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto
   ) {
     const { playerId } = req['user'].player;
-    return this.commentsService.createComment(
-      playerId,
-      feedId,
-      createCommentDto
-    );
+    try {
+      return this.commentsService.createComment(
+        playerId,
+        feedId,
+        createCommentDto
+      );
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 
   /* 특정 게시글 댓글 조회 */
@@ -82,16 +89,25 @@ export class CommentsController {
   /* 댓글 수정 */
   @Patch(':commentId')
   @ApiOperation({ summary: '댓글 수정 API' })
-  @UseGuards(AuthGuard('jwt'))
-  updateComment(
+  @UseGuards(JwtAuthGuard)
+  async updateComment(
+    @Req() req: Request,
     @Param() params: number,
     @Body() updateCommentDto: UpdateCommentDto
   ) {
-    this.logger.verbose(`trying to update comment feedId:  userId: `);
+    const { playerId } = req['user'].player;
+    const feedId = params['feedId'];
+    this.logger.verbose(
+      `trying to update comment feedId: ${feedId} userId: ${playerId}`
+    );
     try {
-      const feedId = params['feedId'];
       const commentId = params['commentId'];
-      this.commentsService.updateComment(feedId, commentId, updateCommentDto);
+      await this.commentsService.updateComment(
+        playerId,
+        feedId,
+        commentId,
+        updateCommentDto
+      );
       return {
         ok: true,
       };
