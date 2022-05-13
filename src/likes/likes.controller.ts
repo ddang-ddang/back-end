@@ -18,8 +18,26 @@ export class LikesController {
   @Put()
   @ApiOperation({ summary: '좋아요 API' })
   @UseGuards(JwtAuthGuard)
-  chkLike(@Req() req: Request, @Param('feedId') feedId: number) {
-    const { playerId } = req['user'].player;
-    return this.likesService.chkLike(feedId, playerId);
+  async chkLike(@Req() req: Request, @Param('feedId') feedId: number) {
+    try {
+      const { playerId } = req['user'].player;
+      const likeClk = await this.likesService.chkLike(feedId, playerId);
+      if (likeClk) {
+        return {
+          ok: true,
+          message: `좋아요 클릭!`,
+        };
+      } else {
+        return {
+          ok: true,
+          message: `좋아요 취소!`,
+        };
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 }

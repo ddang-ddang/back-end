@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { EntityRepository, Repository } from 'typeorm';
@@ -12,6 +13,13 @@ export class LikeRepository extends Repository<Likes> {
       Player.findOne(playerId),
     ]);
 
+    if (!feed) {
+      throw new NotFoundException({
+        ok: false,
+        message: `게시글 id ${feedId} 를 찾을 수 없습니다.`,
+      });
+    }
+
     const liked = await this.likedOrNot(feed, player);
 
     if (!liked) {
@@ -20,8 +28,14 @@ export class LikeRepository extends Repository<Likes> {
         player,
       });
       this.save(newLike);
+      return {
+        likeClk: true,
+      };
     } else {
       this.delete({ feed, player });
+      return {
+        likeClk: false,
+      };
     }
   }
 
