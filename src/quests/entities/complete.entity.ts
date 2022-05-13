@@ -1,5 +1,6 @@
 import {
   BaseEntity,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -12,6 +13,9 @@ import { Player } from '../../players/entities/player.entity';
 export class Complete extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'completeId' })
   id: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   @ManyToOne(() => Player, (player) => player.completes)
   @JoinColumn()
