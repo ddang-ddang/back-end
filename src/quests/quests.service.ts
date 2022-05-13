@@ -186,7 +186,7 @@ export class QuestsService {
         case 1:
         case 2:
         case 3:
-          type = 0;
+          type = 'time';
           title = '타임어택';
           if (category === 1) {
             hour = 9;
@@ -211,7 +211,7 @@ export class QuestsService {
             description =
               '오늘 하루는 어떠셨나요? 무심코 지나친 무채색의 장소를 여러분의 감정으로 채워주세요.';
           }
-          type = 1;
+          type = 'feed';
           title = '땅땅 쓰기';
           difficulty = 2;
           reward = 8;
@@ -220,7 +220,7 @@ export class QuestsService {
         case 7:
         case 8:
         case 9:
-          type = 2;
+          type = 'mob';
           title = '몬스터 대결';
           description =
             '대결에서 승리하여 몬스터로부터 우리 동네를 지켜주세요.';
