@@ -3,7 +3,7 @@ import { PickType } from '@nestjs/swagger';
 
 export class CreatePlayerDto {
   @IsNotEmpty()
-  Id: number;
+  id: number;
 
   @IsEmail()
   email: string;
@@ -60,7 +60,7 @@ export class CreateIdDto extends PickType(CreatePlayerDto, [
 ] as const) {}
 
 export class SigninDto extends PickType(CreatePlayerDto, [
-  'Id',
+  'id',
   'email',
   'nickname',
 ] as const) {}

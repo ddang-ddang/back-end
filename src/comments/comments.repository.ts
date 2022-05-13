@@ -11,7 +11,7 @@ export class CommentRepository extends Repository<Comment> {
   async createComment(playerId: number, feed: Feed, comment: string) {
     const player = await Player.findOne({
       where: {
-        Id: playerId,
+        id: playerId,
       },
     });
 

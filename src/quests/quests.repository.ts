@@ -19,7 +19,7 @@ export class QuestsRepository extends Repository<Quest> {
     /* 플레이어의 완료여부(completed), 전체 완료 횟수(completes) 추가 */
     return quests.map((quest) => {
       const completed = !!quest.completes.find(
-        ({ player }) => player.Id === id
+        ({ player }) => player.id === id
       );
       return {
         ...quest,

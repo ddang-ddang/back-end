@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
-import { SigninDto } from 'src/players/dto/create-player.dto';
+import { CreateIdDto, SigninDto } from 'src/players/dto/create-player.dto';
 
 @Injectable()
 export class AuthService {
@@ -13,32 +13,38 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async validatePlayer(email: string, password: string): Promise<SigninDto> {
-    const player = await this.playersRepository.findOne({ email: email });
+  // 1. 유져 인증단계
+  //로그인을 하게 되면 입력한  이메일 주소와 비밀번호를 받아 인증을 한다.
+  async validatePlayer(createIdDto: CreateIdDto): Promise<SigninDto> {
+    const { email, password } = createIdDto;
+    const player = await this.playersRepository.findByEmail({
+      email: email,
+    });
+
     const valid = await bcrypt.compare(password, player.password);
     if (email && valid) {
-      const { Id, email, nickname } = player;
-      console.log(Id, email, nickname);
-      return { Id, email, nickname };
+      const { id, email, nickname } = player;
+      console.log(id, email, nickname);
+      return { id, email, nickname };
     }
     return null;
   }
-
-  async login(email: string, nickname: string): Promise<any> {
+  // 2. 토큰 생성
+  // 위 이메일 주소와 비밀번호가 일치하면 토크을 생성한다.
+  // jwt로 생성한 토큰은 (id, email, nickname)를 담고 있다.
+  async login(email: string, nickname: string): Promise<string> {
     try {
-      const player = await this.playersRepository.findOne({ email: email });
+      const player = await this.playersRepository.findOne({ email });
 
       const payload = {
-        Id: player.Id,
+        id: player.id,
         email: email,
         nickname: nickname,
       };
 
       const accessToken = this.jwtService.sign(payload);
 
-      return {
-        accessToken,
-      };
+      return accessToken;
     } catch (err) {
       console.log(err);
     }

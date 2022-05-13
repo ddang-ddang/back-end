@@ -10,17 +10,17 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   // 인증이 되어 있나 감시
-  async validate(email: string, password: string): Promise<any> {
+  async validate(email: string, password: string): Promise<object> {
     try {
-      const player = await this.authService.validatePlayer(email, password);
-      console.log('local validate');
+      const player = await this.authService.validatePlayer({ email, password });
       console.log(player);
-      const { nickname, Id } = player;
+      const { nickname, id } = player;
+
       if (!player) {
         console.log('error');
         throw new UnauthorizedException();
       }
-      return { email, nickname, Id };
+      return { email, nickname, id };
     } catch (err) {
       console.log('error');
     }

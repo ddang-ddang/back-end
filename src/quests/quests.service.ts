@@ -12,6 +12,7 @@ import { PlayerRepository } from '../players/players.repository';
 import { Player } from '../players/entities/player.entity';
 
 const mapConfig = config.get('map');
+
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
 const REST_API_KEY = mapConfig.kakaoApiKey;
 const JUSO_BASE_URL = mapConfig.jusoBaseUrl;
@@ -37,7 +38,7 @@ export class QuestsService {
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
   async questComplete(questId: number, playerId: number) {
-    const player: Player = await Player.findOne({ where: { Id: playerId } });
+    const player: Player = await Player.findOne({ where: { id: playerId } });
     const quest = await this.questsRepository.findOneBy(questId);
     if (!quest) {
       throw new NotFoundException({
@@ -77,7 +78,7 @@ export class QuestsService {
     let region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
     if (region) {
-      const allQuests = await this.questsRepository.findAll(region, player.Id);
+      const allQuests = await this.questsRepository.findAll(region, player.id);
 
       return {
         ok: true,
@@ -106,7 +107,7 @@ export class QuestsService {
       }),
     ]);
 
-    const allQuests = await this.questsRepository.findAll(region, player.Id);
+    const allQuests = await this.questsRepository.findAll(region, player.id);
 
     return {
       ok: true,
