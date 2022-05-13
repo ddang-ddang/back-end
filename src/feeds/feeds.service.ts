@@ -12,6 +12,8 @@ import { Likes } from '../likes/entities/like.entity';
 import { LikeRepository } from 'src/likes/likes.repository';
 import { CommentRepository } from 'src/comments/comments.repository';
 import { Region } from 'src/quests/entities/region.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
+import { QuestsRepository } from 'src/quests/quests.repository';
 
 @Injectable()
 export class FeedsService {
@@ -23,23 +25,47 @@ export class FeedsService {
   ) {}
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds(playerId: number) {
-    const feeds = await Feed.find({
-      where: {
-        deletedAt: null,
-        region: {
-          regionDong: '삼성동',
-        },
-      },
-      relations: ['player', 'likes', 'comments', 'region'],
-    });
+  async findAllFeeds(playerId: number, regionData: any) {
+    const { regionSi, regionGu, regionDong } = regionData;
+
+    // const feeds = await Feed.find({
+    //   where: {
+    //     deletedAt: null,
+    //     region: {
+    //       regionSi: '서울시',
+    //       regionGu: '강남구',
+    //       regionDong: '삼성동',
+    //     },
+    //   },
+    //   relations: ['player', 'likes', 'comments', 'region'],
+    // });
+
+    /* queryBuilder */
+    const feeds = await Feed.createQueryBuilder('feed')
+      .select([
+        'feed',
+        'player.id',
+        'player.email',
+        'player.nickname',
+        'player.mbti',
+        'player.profileImg',
+        'player.level',
+        'player.exp',
+      ])
+      .where({ deletedAt: null })
+      .leftJoinAndSelect('feed.quest', 'quest')
+      .leftJoin('feed.player', 'player')
+      .leftJoinAndSelect('feed.comments', 'comment')
+      .leftJoinAndSelect('feed.likes', 'likes')
+      .leftJoinAndSelect('feed.region', 'region')
+      .where(
+        'region.regionSi = :si and region.regionGu = :gu and region.regionDong = :dong',
+        { si: '서울시', gu: '강남구', dong: '삼성동' }
+      )
+      .getMany();
 
     const likeLst = await this.likeRepository.find({
       relations: ['player', 'feed'],
-    });
-
-    const commentLst = await this.commentRepository.find({
-      relations: ['feed', 'player'],
     });
 
     let liked;
