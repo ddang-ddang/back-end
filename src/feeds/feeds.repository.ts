@@ -50,6 +50,7 @@ export class FeedRepository extends Repository<Feed> {
       await Complete.save(newComplete);
     }
 
+    /* complete 테이블에 insert */
     const newContent = this.create({
       content: feedText,
       image1_url: img[0],
@@ -58,10 +59,7 @@ export class FeedRepository extends Repository<Feed> {
       player,
       quest,
     });
-
     await this.save(newContent);
-
-    /* complete 테이블에 insert */
 
     return newContent;
   }
