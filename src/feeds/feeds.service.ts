@@ -11,6 +11,7 @@ import { FeedRepository } from './feeds.repository';
 import { Likes } from '../likes/entities/like.entity';
 import { LikeRepository } from 'src/likes/likes.repository';
 import { CommentRepository } from 'src/comments/comments.repository';
+import { Region } from 'src/quests/entities/region.entity';
 
 @Injectable()
 export class FeedsService {
@@ -28,8 +29,11 @@ export class FeedsService {
     const feeds = await Feed.find({
       where: {
         deletedAt: null,
+        region: {
+          regionDong: '삼성동',
+        },
       },
-      relations: ['player', 'likes', 'comments'],
+      relations: ['player', 'likes', 'comments', 'region'],
     });
 
     const likeLst = await this.likeRepository.find({

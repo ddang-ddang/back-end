@@ -84,7 +84,7 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 삭제 */
-  async deleteFeed(feedId: number) {
+  async deleteFeed(feedId: number): Promise<void> {
     await this.update({ id: feedId }, { deletedAt: new Date() });
     return;
   }

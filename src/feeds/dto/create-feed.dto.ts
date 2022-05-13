@@ -1,4 +1,4 @@
-import { IsOptional, Length, Max } from 'class-validator';
+import { IsOptional, Length } from 'class-validator';
 
 export class CreateFeedDto {
   @IsOptional()
