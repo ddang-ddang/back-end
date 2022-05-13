@@ -9,7 +9,9 @@ export class LikesService {
     private likeRepository: LikeRepository
   ) {}
 
-  chkLike(feedId: number, playerId: number) {
-    this.likeRepository.chkLike(feedId, playerId);
+  async chkLike(feedId: number, playerId: number) {
+    const liked = await this.likeRepository.chkLike(feedId, playerId);
+    const { likeClk } = liked;
+    return likeClk;
   }
 }

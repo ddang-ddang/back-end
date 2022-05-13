@@ -65,7 +65,11 @@ export class QuestsService {
 
       return {
         ok: true,
-        currentRegion: `${region.regionSi} ${region.regionGu} ${region.regionDong}`,
+        currentRegion: {
+          regionSi: region.regionSi,
+          regionGu: region.regionGu,
+          regionDong: region.regionDong,
+        },
         rows: allQuests,
       };
     }
@@ -90,7 +94,11 @@ export class QuestsService {
 
     return {
       ok: true,
-      currentRegion: `${region.regionSi} ${region.regionGu} ${region.regionDong}`,
+      currentRegion: {
+        regionSi: region.regionSi,
+        regionGu: region.regionGu,
+        regionDong: region.regionDong,
+      },
       rows: allQuests,
     };
   }

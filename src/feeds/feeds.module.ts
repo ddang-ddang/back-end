@@ -8,6 +8,7 @@ import { LikeRepository } from 'src/likes/likes.repository';
 import { Likes } from 'src/likes/entities/like.entity';
 import { LikesService } from 'src/likes/likes.service';
 import { CommentRepository } from 'src/comments/comments.repository';
+import { QuestsRepository } from 'src/quests/quests.repository';
 
 @Module({
   imports: [
