@@ -46,7 +46,7 @@ export class QuestsRepository extends Repository<Quest> {
       relations: ['completes', 'completes.player'],
     });
     const complete = quest.completes.find(
-      ({ player }) => player.Id === playerId
+      ({ player }) => player.id === playerId
     );
     const completed = !!complete;
     const completionDate = completed ? complete.createdAt : null;
