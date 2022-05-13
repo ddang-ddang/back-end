@@ -23,7 +23,7 @@ export class Quest extends BaseEntity {
   lng: number;
 
   @Column()
-  type: number;
+  type: string;
 
   @Column()
   title: string;

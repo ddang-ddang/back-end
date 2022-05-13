@@ -8,7 +8,6 @@ import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
 import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
-import { PlayerRepository } from '../players/players.repository';
 import { Player } from '../players/entities/player.entity';
 
 const mapConfig = config.get('map');
@@ -26,8 +25,7 @@ export class QuestsService {
     private commentRepository: CommentRepository,
     private questsRepository: QuestsRepository,
     private regionsRepository: RegionsRepository,
-    private completesRepository: CompletesRepository,
-    private playersRepository: PlayerRepository
+    private completesRepository: CompletesRepository
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 로직 */
@@ -53,32 +51,17 @@ export class QuestsService {
   /*
    * 퀘스트 조회 프로세스: player의 좌표 값으로 region 테이블 조회
    * DB에 데이터 있으면, 퀘스트 + 완료여부 조인해서 응답
-   * DB에 데이터 없으면, 지역 + 퀘스트 데이터 DB에 생성하고 응답
+   * DB에 데이터 없으면, 지역(동) + 퀘스트 데이터 DB에 생성하고 응답
    */
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
-  async getAll(lat: number, lng: number) {
-    // TODO: 토큰에서 플레이어 데이터(email) 가져오기
-
-    await this.playersRepository.createPlayer({
-      email: 'nature9th@gmail.com',
-      password: 'pass',
-      nickname: 'nick',
-      mbti: 'mbti',
-      profileImg: 'path',
-      provider: 'df',
-    });
-    const player = await this.playersRepository.findByEmail({
-      email: 'nature9th@gmail.com',
-    });
-
+  async getAll(lat: number, lng: number, playerId: number | null) {
     const kakaoAddress = await this.getAddressName(lat, lng);
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
     let region = await this.regionsRepository.findByAddrs(kakaoAddress);
-
     if (region) {
-      const allQuests = await this.questsRepository.findAll(region, player.id);
+      const allQuests = await this.questsRepository.findAll(region, playerId);
 
       return {
         ok: true,
@@ -87,27 +70,23 @@ export class QuestsService {
       };
     }
 
-    /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
+    // 지역(동), 좌표 값으로 퀘스트 만들기
     const { totalCount, pageCount } = await this.getRegionData(address);
     console.time('API req-res time');
     const quests = await this.createQuests(totalCount, pageCount, address);
     console.timeEnd('API req-res time');
 
-    // 동 DB를 생성합니다
-    // return region 객체 (id 불포함)
+    // 지역(동) 데이터 DB에 추가 및 조회
     await this.regionsRepository.createAndSave(kakaoAddress);
-
-    // return region 모델 (id 포함)
     region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
-    // 퀘스트 DB 생성 하고 결과 return
+    // 퀘스트 데이터 DB에 추가 및 조회
     await Promise.all([
       ...quests.map(async (quest) => {
         return await this.questsRepository.createAndSave({ region, ...quest });
       }),
     ]);
-
-    const allQuests = await this.questsRepository.findAll(region, player.id);
+    const allQuests = await this.questsRepository.findAll(region, playerId);
 
     return {
       ok: true,
@@ -208,7 +187,7 @@ export class QuestsService {
         case 1:
         case 2:
         case 3:
-          type = 0;
+          type = 'time';
           title = '타임어택';
           if (category === 1) {
             hour = 9;
@@ -225,7 +204,7 @@ export class QuestsService {
         case 6:
           if (category === 4) {
             description =
-              '특별한 기억이 있는 장소인가요? 여러분의 경험을 들려주세요. 낯선 곳이라면 첫번째 기억을 담으러 가볼까요?';
+              '특별한 기억이 있는 장소인가요? 여러분의 경험을 들려주세요. 낯선 곳이라면 첫번째 기억을 담으러 나서볼까요?';
           } else if (category === 5) {
             description =
               '동네 사람들에게 추천해 주고 싶은 장소인가요? 여러분의 리뷰를 남겨주세요.';
@@ -233,7 +212,7 @@ export class QuestsService {
             description =
               '오늘 하루는 어떠셨나요? 무심코 지나친 무채색의 장소를 여러분의 감정으로 채워주세요.';
           }
-          type = 1;
+          type = 'feed';
           title = '땅땅 쓰기';
           difficulty = 2;
           reward = 8;
@@ -242,7 +221,7 @@ export class QuestsService {
         case 7:
         case 8:
         case 9:
-          type = 2;
+          type = 'mob';
           title = '몬스터 대결';
           description =
             '대결에서 승리하여 몬스터로부터 우리 동네를 지켜주세요.';
@@ -339,8 +318,12 @@ export class QuestsService {
     }
   }
 
-  async getOne(id: number) {
-    const quest = await this.questsRepository.findOneBy(id);
+  /* 특정 퀘스트 조회 */
+  async getOne(id: number, playerId: number | null) {
+    const quest = await this.questsRepository.findOneWithCompletes(
+      id,
+      playerId
+    );
     if (!quest) {
       throw new NotFoundException({
         ok: false,
