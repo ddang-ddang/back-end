@@ -33,7 +33,7 @@ export class QuestsController {
       const token = req.headers.authorization.split(' ')[1];
       const encodedPayload = token.split('.')[1];
       const payload = Buffer.from(encodedPayload, 'base64');
-      playerId = JSON.parse(payload.toString()).Id;
+      playerId = JSON.parse(payload.toString()).id;
     }
 
     if (!lat || !lng) {

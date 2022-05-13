@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Quest } from './quest.entity';
+import { Feed } from 'src/feeds/entities/feed.entity';
 
 @Entity()
 export class Region extends BaseEntity {
@@ -26,4 +27,7 @@ export class Region extends BaseEntity {
 
   @OneToMany((type) => Quest, (quest) => quest.region)
   quests: Quest[];
+
+  @OneToMany((type) => Feed, (feed) => feed.region)
+  feeds: Feed[];
 }

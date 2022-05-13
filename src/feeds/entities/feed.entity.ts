@@ -15,6 +15,7 @@ import {
 } from 'typeorm';
 import { Player } from 'src/players/entities/player.entity';
 import { Quest } from '../../quests/entities/quest.entity';
+import { Region } from 'src/quests/entities/region.entity';
 
 @Entity()
 export class Feed extends BaseEntity {
@@ -56,4 +57,7 @@ export class Feed extends BaseEntity {
 
   @OneToMany((type) => Likes, (like) => like.feed)
   likes: Likes[];
+
+  @ManyToOne((type) => Region, (region) => region.feeds)
+  region: Region;
 }

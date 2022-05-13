@@ -4,6 +4,8 @@ import { UpdateFeedDto } from './dto/update-feed.dto';
 import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 import { Quest } from 'src/quests/entities/quest.entity';
 import { Player } from 'src/players/entities/player.entity';
+import { Complete } from 'src/quests/entities/complete.entity';
+import { ConflictException } from '@nestjs/common';
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
@@ -14,18 +16,41 @@ export class FeedRepository extends Repository<Feed> {
     img: string[],
     feedText: string
   ): Promise<Feed> {
-    const quest: Quest = await Quest.findOne({
+    const [quest, player] = await Promise.all([
+      Quest.findOne({
+        where: {
+          id: questId,
+        },
+      }),
+      Player.findOne({
+        where: {
+          Id: playerId,
+        },
+      }),
+    ]);
+
+    const completeOne = await Complete.find({
       where: {
-        id: questId,
+        quest,
+        player,
       },
     });
 
-    const player: Player = await Player.findOne({
-      where: {
-        id: playerId,
-      },
-    });
+    if (completeOne.length !== 0) {
+      throw new ConflictException({
+        ok: false,
+        message: '퀘스트를 이미 완료하였습니다.',
+      });
+    } else {
+      const newComplete = Complete.create({
+        quest,
+        player,
+      });
 
+      await Complete.save(newComplete);
+    }
+
+    /* complete 테이블에 insert */
     const newContent = this.create({
       content: feedText,
       image1_url: img[0],
@@ -34,8 +59,8 @@ export class FeedRepository extends Repository<Feed> {
       player,
       quest,
     });
-
     await this.save(newContent);
+
     return newContent;
   }
 
@@ -59,7 +84,7 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 삭제 */
-  async deleteFeed(feedId: number) {
+  async deleteFeed(feedId: number): Promise<void> {
     await this.update({ id: feedId }, { deletedAt: new Date() });
     return;
   }
