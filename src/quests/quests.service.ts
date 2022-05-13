@@ -50,7 +50,7 @@ export class QuestsService {
   /*
    * 퀘스트 조회 프로세스: player의 좌표 값으로 region 테이블 조회
    * DB에 데이터 있으면, 퀘스트 + 완료여부 조인해서 응답
-   * DB에 데이터 없으면, 지역 + 퀘스트 데이터 DB에 생성하고 응답
+   * DB에 데이터 없으면, 지역(동) + 퀘스트 데이터 DB에 생성하고 응답
    */
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
@@ -59,7 +59,6 @@ export class QuestsService {
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
     let region = await this.regionsRepository.findByAddrs(kakaoAddress);
-
     if (region) {
       const allQuests = await this.questsRepository.findAll(region, playerId);
 
@@ -70,26 +69,22 @@ export class QuestsService {
       };
     }
 
-    /* 동 및 퀘스트 데이터 DB에 추가하고 클라이언트로 발송 */
+    // 지역(동), 좌표 값으로 퀘스트 만들기
     const { totalCount, pageCount } = await this.getRegionData(address);
     console.time('API req-res time');
     const quests = await this.createQuests(totalCount, pageCount, address);
     console.timeEnd('API req-res time');
 
-    // 동 DB를 생성합니다
-    // return region 객체 (id 불포함)
+    // 지역(동) 데이터 DB에 추가 및 조회
     await this.regionsRepository.createAndSave(kakaoAddress);
-
-    // return region 모델 (id 포함)
     region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
-    // 퀘스트 DB 생성 하고 결과 return
+    // 퀘스트 데이터 DB에 추가 및 조회
     await Promise.all([
       ...quests.map(async (quest) => {
         return await this.questsRepository.createAndSave({ region, ...quest });
       }),
     ]);
-
     const allQuests = await this.questsRepository.findAll(region, playerId);
 
     return {
@@ -322,6 +317,7 @@ export class QuestsService {
     }
   }
 
+  /* 특정 퀘스트 조회 */
   async getOne(id: number, playerId: number | null) {
     const quest = await this.questsRepository.findOneWithCompletes(
       id,

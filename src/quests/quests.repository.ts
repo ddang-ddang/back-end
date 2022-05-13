@@ -16,15 +16,17 @@ export class QuestsRepository extends Repository<Quest> {
       where: { region },
       relations: ['completes', 'completes.player'],
     });
-    /* 플레이어의 완료여부(completed), 전체 완료 횟수(completes) 추가 */
+    /* 퀘스트의 전체 완료 횟수(completes), 플레이어의 완료여부(completed), 완료날짜(completionDate) 추가 */
     return quests.map((quest) => {
-      const completed = !!quest.completes.find(
-        ({ player }) => player.Id === id
-      );
+      const complete = quest.completes.find(({ player }) => player.Id === id);
+      const completed = !!complete;
+      const completionDate = completed ? complete.createdAt : null;
+
       return {
         ...quest,
-        completed,
         completes: quest.completes.length,
+        completed,
+        completionDate,
       };
     });
   }
@@ -43,13 +45,16 @@ export class QuestsRepository extends Repository<Quest> {
       where: { id },
       relations: ['completes', 'completes.player'],
     });
-    const completed = !!quest.completes.find(
+    const complete = quest.completes.find(
       ({ player }) => player.Id === playerId
     );
+    const completed = !!complete;
+    const completionDate = completed ? complete.createdAt : null;
     return {
       ...quest,
-      completed,
       completes: quest.completes.length,
+      completed,
+      completionDate,
     };
   }
 }
