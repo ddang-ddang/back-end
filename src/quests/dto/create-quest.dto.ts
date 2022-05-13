@@ -18,7 +18,7 @@ export class CreateQuestDto {
   lng: number;
 
   @IsNumber()
-  type: number;
+  type: string;
 
   @IsString()
   title: string;

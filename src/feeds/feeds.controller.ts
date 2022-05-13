@@ -25,9 +25,17 @@ export class FeedsController {
   /* 모든 피드에 대한 정보 */
   @Get() // 여기에 AuthGuard넣으면 안될 듯
   @ApiOperation({ summary: '주변 피드 조회 API' })
-  async findAllFeeds(@Body() playerId: number) {
+  // async findAllFeeds(@Body() playerId: number) {
+  async findAllFeeds(@Request() req: any) {
     this.logger.verbose(`trying to get all feeds user id by `);
     try {
+      let playerId = null;
+      if (req.headers.authorization) {
+        const token = req.headers.authorization.split(' ')[1];
+        const encodedPayload = token.split('.')[1];
+        const payload = Buffer.from(encodedPayload, 'base64');
+        playerId = JSON.parse(payload.toString()).id;
+      }
       const feeds = await this.feedsService.findAllFeeds(playerId);
       return {
         ok: true,

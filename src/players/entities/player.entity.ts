@@ -16,7 +16,7 @@ import { Complete } from '../../quests/entities/complete.entity';
 @Entity()
 export class Player extends BaseEntity {
   /* 플레이어 순번*/
-  @PrimaryGeneratedColumn({ name: 'playerId' }) Id: number;
+  @PrimaryGeneratedColumn({ name: 'playerId' }) id: number;
 
   /* 플레이어 이메일 */
   @IsEmail()

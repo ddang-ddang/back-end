@@ -1,8 +1,6 @@
 import { EntityRepository, Repository } from 'typeorm';
 import {
   CreateBodyDto,
-  CreateLocalDto,
-  CreatePlayerDto,
   EmailDto,
   NicknameDto,
   UpdateInfoDto,
@@ -17,50 +15,68 @@ export class PlayerRepository extends Repository<Player> {
   }
 
   async findByNickname(nicknameDto: NicknameDto): Promise<Player> {
-    const { nickname } = nicknameDto;
-    const result = await this.findOne({ where: { nickname } });
-    console.log(result);
-    return result;
+    try {
+      const { nickname } = nicknameDto;
+      const result = await this.findOne({ where: { nickname } });
+
+      return result;
+    } catch (err) {
+      return err.message;
+    }
   }
 
   async updateNickname(updateNickname: UpdateInfoDto): Promise<any> {
-    const { nickname, profileImg, email } = updateNickname;
-    const result = await this.update(
-      { email: email },
-      { nickname, profileImg }
-    );
-    // const result2 = await this.update({ email: email }, { profileImg });
+    try {
+      const { nickname, profileImg, email } = updateNickname;
+      const result = await this.update(
+        { email: email },
+        { nickname, profileImg }
+      );
 
-    return result;
+      return result;
+    } catch (err) {
+      return err.message;
+    }
   }
 
-  // async findAll(region: Region, id?: number): Promise<Object[]> {
-  //   const quests = await this.find({
-  //     where: { region },
-  //     relations: ['completes', 'completes.player'],
-  //   });
-  // }
+  // 경도 위도 가져와서 mypage에 보내줄거
+  async loadLatLng(playerId: number): Promise<any> {
+    try {
+      const id = { id: playerId };
+      const locations = await this.find({
+        where: id,
+        relations: ['completes', 'completes.quest'],
+      });
+      return locations;
+    } catch (err) {
+      return err.message;
+    }
+  }
 
   async createPlayer(createBodyDto: CreateBodyDto): Promise<Player> {
-    const {
-      email,
-      password,
-      nickname,
-      mbti,
-      profileImg,
-      provider,
-      // providerId,
-    } = createBodyDto;
+    try {
+      const {
+        email,
+        password,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        // providerId,
+      } = createBodyDto;
 
-    const result = await this.create({
-      email,
-      password,
-      nickname,
-      mbti,
-      profileImg,
-      provider,
-    });
+      const result = await this.create({
+        email,
+        password,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+      });
 
-    return await this.save(result);
+      return await this.save(result);
+    } catch (err) {
+      return err.message;
+    }
   }
 }

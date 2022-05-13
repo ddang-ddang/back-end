@@ -11,20 +11,22 @@ export class QuestsRepository extends Repository<Quest> {
   }
 
   /* 전체 퀘스트 조회 */
-  async findAll(region: Region, id?: number): Promise<Object[]> {
+  async findAll(region: Region, id: number | null): Promise<Object[]> {
     const quests = await this.find({
       where: { region },
       relations: ['completes', 'completes.player'],
     });
-    /* 플레이어의 완료여부(completed), 전체 완료 횟수(completes) 추가 */
+    /* 퀘스트의 전체 완료 횟수(completes), 플레이어의 완료여부(completed), 완료날짜(completionDate) 추가 */
     return quests.map((quest) => {
-      const completed = !!quest.completes.find(
-        ({ player }) => player.Id === id
-      );
+      const complete = quest.completes.find(({ player }) => player.id === id);
+      const completed = !!complete;
+      const completionDate = completed ? complete.createdAt : null;
+
       return {
         ...quest,
-        completed,
         completes: quest.completes.length,
+        completed,
+        completionDate,
       };
     });
   }
@@ -32,5 +34,27 @@ export class QuestsRepository extends Repository<Quest> {
   /* 특정 퀘스트 조회 */
   async findOneBy(id: number): Promise<Quest> {
     return await this.findOne({ id });
+  }
+
+  /* 특정 퀘스트 조회 (조건 포함) */
+  async findOneWithCompletes(
+    id: number,
+    playerId: number | null
+  ): Promise<Object> {
+    const quest = await this.findOne({
+      where: { id },
+      relations: ['completes', 'completes.player'],
+    });
+    const complete = quest.completes.find(
+      ({ player }) => player.id === playerId
+    );
+    const completed = !!complete;
+    const completionDate = completed ? complete.createdAt : null;
+    return {
+      ...quest,
+      completes: quest.completes.length,
+      completed,
+      completionDate,
+    };
   }
 }

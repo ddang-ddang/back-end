@@ -23,9 +23,7 @@ export class FeedsService {
   ) {}
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds(player: any) {
-    // const playerId = 2; // 현재 접속 유저
-    const { playerId } = player;
+  async findAllFeeds(playerId: number) {
     const feeds = await Feed.find({
       where: {
         deletedAt: null,
@@ -50,7 +48,7 @@ export class FeedsService {
       const commentCnt = feed.comments.length;
       liked = false;
       likeLst.map((like) => {
-        if (like.player.Id === playerId && feed.id === like.feed.id) {
+        if (like.player.id === playerId && feed.id === like.feed.id) {
           liked = true;
         }
       });
@@ -78,7 +76,7 @@ export class FeedsService {
 
   /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
   async matchPlayerFeed(playerId: number, feed: Feed) {
-    if (playerId === feed.player.Id) {
+    if (playerId === feed.player.id) {
       return true;
     }
     return false;

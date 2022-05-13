@@ -23,21 +23,41 @@ export class QuestsController {
   /* 퀘스트 전체 조회 API */
   @Get()
   @ApiOperation({ summary: '전체 퀘스트 조회 API' })
-  getAll(@Query('lat') lat: number, @Query('lng') lng: number) {
+  getAll(
+    @Query('lat') lat: number,
+    @Query('lng') lng: number,
+    @Request() req: any
+  ) {
+    let playerId = null;
+    if (req.headers.authorization) {
+      const token = req.headers.authorization.split(' ')[1];
+      const encodedPayload = token.split('.')[1];
+      const payload = Buffer.from(encodedPayload, 'base64');
+      playerId = JSON.parse(payload.toString()).id;
+    }
+
     if (!lat || !lng) {
       throw new BadRequestException({
         ok: false,
         message: '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/',
       });
     }
-    return this.questsService.getAll(lat, lng);
+    return this.questsService.getAll(lat, lng, playerId);
   }
 
   /* 특정 퀘스트 조회 API */
   @Get(':questId')
   @ApiOperation({ summary: '특정 퀘스트 조회 API' })
-  getOne(@Param('questId') id: number) {
-    return this.questsService.getOne(id);
+  getOne(@Param('questId') id: number, @Request() req: any) {
+    let playerId = null;
+    if (req.headers.authorization) {
+      const token = req.headers.authorization.split(' ')[1];
+      const encodedPayload = token.split('.')[1];
+      const payload = Buffer.from(encodedPayload, 'base64');
+      playerId = JSON.parse(payload.toString()).Id;
+    }
+
+    return this.questsService.getOne(id, playerId);
   }
 
   /**
