@@ -35,22 +35,23 @@ export class PlayersService {
       });
       return createPlayer;
     } catch (err) {
+      return err.message;
       console.log(err);
     }
   }
 
-  async findByNickname(nicknameDto: NicknameDto): Promise<any> {
+  async findByNickname(nicknameDto: NicknameDto): Promise<boolean> {
     try {
       const { nickname } = nicknameDto;
 
       const result = await this.playersRepository.findByNickname({ nickname });
-      console.log(result);
+
       if (!result) {
         return false;
       }
       return true;
     } catch (err) {
-      console.log(err);
+      return err.message;
     }
   }
 
@@ -59,7 +60,7 @@ export class PlayersService {
     try {
       const { email } = emailDto;
       const players = await this.playersRepository.findByEmail({ email });
-      console.log(players);
+
       if (!players) {
         return false;
       }
@@ -69,15 +70,16 @@ export class PlayersService {
     }
   }
 
-  async getDataByEmail(email: string): Promise<any> {
+  async getDataByEmail(emailDto: EmailDto): Promise<any> {
     try {
+      const { email } = emailDto;
       const result = await this.playersRepository.findOne({
         where: { email },
         select: ['profileImg'],
       });
-      console.log(result);
+
       if (!result) {
-        return { ok: false };
+        return { ok: false, message: result };
       }
       return result;
     } catch (err) {
@@ -86,24 +88,24 @@ export class PlayersService {
   }
 
   // nickname 변경하기
-  async updateNickname({
-    email,
-    profileImg,
-    nickname,
-  }: UpdateInfoDto): Promise<any> {
+  async editPlayer(updateInforDto: UpdateInfoDto): Promise<object> {
     try {
+      const { email, nickname, profileImg } = updateInforDto;
+
       const result = await this.playersRepository.updateNickname({
         email,
         profileImg,
         nickname,
       });
-      console.log(result);
-      if (!result) {
-        return false;
-      }
-      return true;
+      return result;
     } catch (err) {
       console.log(err);
     }
+  }
+
+  async loadLatLng(playerId: number): Promise<object> {
+    const result = await this.playersRepository.loadLatLng(playerId);
+    console.log(result);
+    return result;
   }
 }

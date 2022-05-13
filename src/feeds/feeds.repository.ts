@@ -22,7 +22,7 @@ export class FeedRepository extends Repository<Feed> {
 
     const player: Player = await Player.findOne({
       where: {
-        Id: playerId,
+        id: playerId,
       },
     });
 

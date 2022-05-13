@@ -18,7 +18,7 @@ export class QuestsRepository extends Repository<Quest> {
     });
     /* 퀘스트의 전체 완료 횟수(completes), 플레이어의 완료여부(completed), 완료날짜(completionDate) 추가 */
     return quests.map((quest) => {
-      const complete = quest.completes.find(({ player }) => player.Id === id);
+      const complete = quest.completes.find(({ player }) => player.id === id);
       const completed = !!complete;
       const completionDate = completed ? complete.createdAt : null;
 
