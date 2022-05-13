@@ -103,6 +103,7 @@ export class Player extends BaseEntity {
   @OneToMany((type) => Likes, (like) => like.player)
   likes: Likes[];
 
-  @OneToMany((type) => Complete, (complete) => complete.quest)
+  @OneToMany((type) => Complete, (complete) => complete.player)
+  @JoinColumn({ name: 'id' })
   completes: Complete[];
 }

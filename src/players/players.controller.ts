@@ -1,3 +1,5 @@
+import { Complete } from 'src/quests/entities/complete.entity';
+import { CompletesRepository } from './../quests/completes.repository';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -248,21 +250,30 @@ export class PlayersController {
       const { email, nickname, playerId } = req.user.player;
       this.logger.verbose(`${email}님이 마이페이지를 이용 하려고 합니다`);
       const player = await this.playersService.getDataByEmail({ email });
-      // console.log(player)
+      console.log(player);
 
-      const { profileImg } = player;
+      const { profileImg, mbti, level, exp } = player;
 
       const locations = await this.playersService.loadLatLng(playerId);
+      // const test = await this.playersService.
+
+      // const { comments } = locations;
 
       console.log(locations);
 
       return {
         ok: true,
+        // locations,
         profile: {
           playerId: playerId,
           email: email,
           nickname: nickname,
           profileImg: profileImg,
+          mbti: mbti,
+          level: level,
+          exp: exp,
+          occupiedPlaces: locations,
+
         },
       };
     } catch (err) {

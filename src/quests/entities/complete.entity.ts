@@ -18,10 +18,8 @@ export class Complete extends BaseEntity {
   createdAt: Date;
 
   @ManyToOne(() => Player, (player) => player.completes)
-  @JoinColumn()
   player: Player;
 
   @ManyToOne(() => Quest, (quest) => quest.completes)
-  @JoinColumn()
   quest: Quest;
 }
