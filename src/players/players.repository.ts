@@ -1,4 +1,5 @@
 import { EntityRepository, Repository } from 'typeorm';
+import { Complete } from 'src/quests/entities/complete.entity';
 import {
   CreateBodyDto,
   EmailDto,
@@ -39,20 +40,6 @@ export class PlayerRepository extends Repository<Player> {
     }
   }
 
-  // 경도 위도 가져와서 mypage에 보내줄거
-  async loadLatLng(playerId: number): Promise<any> {
-    try {
-      const id = { id: playerId };
-      const locations = await this.find({
-        where: id,
-        relations: ['completes', 'completes.quest'],
-      });
-      return locations;
-    } catch (err) {
-      return err.message;
-    }
-  }
-
   async createPlayer(createBodyDto: CreateBodyDto): Promise<Player> {
     try {
       const {
@@ -75,6 +62,50 @@ export class PlayerRepository extends Repository<Player> {
       });
 
       return await this.save(result);
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  // 경도 위도 가져와서 mypage에 보내줄거
+  async loadLatLng(id: number): Promise<any> {
+    try {
+      // const locations = await this.find({
+      //   where: { id },
+      //   relations: ['completes', 'completes.quest'],
+      //   select: ['completes'],
+      // });
+      // someRepository.find({
+      //   order: { id: 'DESC' },
+      //   relations: ['createdBy'],
+      //   select: [
+      //     'id',
+      //     'firstName',
+      //     'lastName',
+      //     'active',
+      //     'createdAt',
+      //     'lastLogin',
+      //     'phoneNumber',
+      //     'createdBy.email',
+      //   ],
+      // });
+
+      const locations = await this.find({
+        order: { id: 'DESC' },
+        relations: ['completes', 'completes.quest'],
+        select: [
+          'id',
+          'nickname',
+          'profileImg',
+          'mbti',
+          'level',
+          'exp',
+          'completes',
+          // 'completes.quest.id',
+        ],
+      });
+
+      return locations;
     } catch (err) {
       return err.message;
     }
