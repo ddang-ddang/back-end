@@ -146,7 +146,7 @@ export class FeedsService {
         id: feedId,
         deletedAt: null,
       },
-      relations: ['player'],
+      relations: ['player', 'quest'],
     });
     const match = await this.matchPlayerFeed(playerId, feed);
     if (feed) {
