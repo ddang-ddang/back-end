@@ -21,10 +21,10 @@ const JUSO_CONFIRM_KEY = mapConfig.josoConfirmKey;
 @Injectable()
 export class QuestsService {
   constructor(
-    @InjectRepository(FeedRepository)
-    private readonly feedRepository: FeedRepository,
     @InjectRepository(Complete)
     private readonly completes: Repository<Complete>,
+    @InjectRepository(FeedRepository)
+    private readonly feedRepository: FeedRepository,
     private readonly commentRepository: CommentRepository,
     private readonly questsRepository: QuestsRepository,
     private readonly regionsRepository: RegionsRepository
@@ -39,22 +39,22 @@ export class QuestsService {
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number) {
     try {
-      const player = await Player.findOne({ where: { id: playerId } });
-      if (!player)
-        return { ok: false, message: '플레이어님의 정보를 찾을 수 없습니다.' };
-
       const quest = await this.questsRepository.findOneBy(questId);
       if (!quest)
         return { ok: false, message: '요청하신 퀘스트를 찾을 수 없습니다.' };
 
-      const isCompleted = await this.completes.findOne({ player, quest });
+      const player = await Player.findOne({ where: { id: playerId } });
+      if (!player)
+        return { ok: false, message: '플레이어님의 정보를 찾을 수 없습니다.' };
+
+      const isCompleted = await this.completes.findOne({ quest, player });
       if (isCompleted) {
         return { ok: false, message: '퀘스트를 이미 완료하였습니다.' };
-      } else {
-        const complete = Complete.create({ quest, player });
-        await this.completes.save(complete);
-        return { ok: true };
       }
+
+      const complete = Complete.create({ quest, player });
+      await this.completes.save(complete);
+      return { ok: true };
     } catch (error) {
       return { ok: false, message: error.message };
     }
