@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - 'npm'
+  # pre_build:
+  #   commands:
+  #     - printenv > .env
+  build:
+    commands:
+      - 'npm run deploy'
+artifacts:
+  files:
+    - package.json
+    - dist/**/*
+    - node_modules
