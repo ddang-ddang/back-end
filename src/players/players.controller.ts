@@ -1,5 +1,3 @@
-import { Complete } from 'src/quests/entities/complete.entity';
-import { CompletesRepository } from './../quests/completes.repository';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -273,7 +271,6 @@ export class PlayersController {
           level: level,
           exp: exp,
           occupiedPlaces: locations,
-
         },
       };
     } catch (err) {

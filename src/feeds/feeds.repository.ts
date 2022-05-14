@@ -84,8 +84,20 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 삭제 */
-  async deleteFeed(feedId: number): Promise<void> {
+  async deleteFeed(
+    playerId: number,
+    feedId: number,
+    feed: Feed
+  ): Promise<void> {
+    const player = await Player.findOne({ where: { id: playerId } });
+    const quest = await Quest.findOne({
+      where: {
+        id: feed.quest.id,
+      },
+    });
     await this.update({ id: feedId }, { deletedAt: new Date() });
+    // complete 테이블 데이터 삭제
+    await Complete.delete({ player, quest }); // player quest
     return;
   }
 }
