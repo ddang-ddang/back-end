@@ -4,9 +4,9 @@ phases:
   install:
     commands:
       - 'npm'
-  # pre_build:
-  #   commands:
-  #     - printenv > .env
+  pre_build:
+    commands:
+      - 'npm install' 
   build:
     commands:
       - 'npm run deploy'
