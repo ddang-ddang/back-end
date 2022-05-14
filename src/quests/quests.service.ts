@@ -6,10 +6,10 @@ import axios from 'axios';
 import * as config from 'config';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
-import { RegionsRepository } from './regions.repository';
 import { Player } from '../players/entities/player.entity';
 import { Repository } from 'typeorm';
 import { Complete } from './entities/complete.entity';
+import { Region } from './entities/region.entity';
 
 const mapConfig = config.get('map');
 
@@ -23,11 +23,12 @@ export class QuestsService {
   constructor(
     @InjectRepository(Complete)
     private readonly completes: Repository<Complete>,
+    @InjectRepository(Region)
+    private readonly regions: Repository<Region>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
     private readonly commentRepository: CommentRepository,
-    private readonly questsRepository: QuestsRepository,
-    private readonly regionsRepository: RegionsRepository
+    private readonly questsRepository: QuestsRepository
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 */
@@ -74,8 +75,16 @@ export class QuestsService {
       const kakaoAddress = await this.getAddressName(lat, lng);
       console.timeEnd('카카오API - getAddressName');
       const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
+      const today = new Date();
+      const date =
+        today.getFullYear() +
+        '-' +
+        ('0' + (today.getMonth() + 1)).slice(-2) +
+        '-' +
+        ('0' + today.getDate()).slice(-2);
 
-      let region = await this.regionsRepository.findByAddrs(kakaoAddress);
+      /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
+      let region = await this.regions.findOne({ date, ...kakaoAddress });
       if (region) {
         const allQuests = await this.questsRepository.findAll(region, playerId);
         return {
@@ -89,6 +98,11 @@ export class QuestsService {
         };
       }
 
+      // 지역(동) 데이터 DB에 추가 및 조회
+      region = Region.create({ date, ...kakaoAddress });
+      await this.regions.save(region);
+      region = await this.regions.findOne({ date, ...kakaoAddress });
+
       // 지역(동), 좌표 값으로 퀘스트 만들기
       console.time('주소API - getRegionData');
       const { totalCount, pageCount } = await this.getRegionData(address);
@@ -96,10 +110,6 @@ export class QuestsService {
       console.time('createQuests');
       const quests = await this.createQuests(totalCount, pageCount, address);
       console.timeEnd('createQuests');
-
-      // 지역(동) 데이터 DB에 추가 및 조회
-      await this.regionsRepository.createAndSave(kakaoAddress);
-      region = await this.regionsRepository.findByAddrs(kakaoAddress);
 
       // 퀘스트 데이터 DB에 추가 및 조회
       await Promise.all([

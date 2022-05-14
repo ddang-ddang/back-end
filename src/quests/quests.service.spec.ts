@@ -3,10 +3,10 @@ import { QuestsService } from './quests.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CommentRepository } from '../comments/comments.repository';
 import { QuestsRepository } from './quests.repository';
-import { RegionsRepository } from './regions.repository';
 import { Repository } from 'typeorm';
 import { Complete } from './entities/complete.entity';
 import { FeedRepository } from '../feeds/feeds.repository';
+import { Region } from './entities/region.entity';
 
 const mockFeedRepository = {
   feedQuest: jest.fn(),
@@ -14,6 +14,8 @@ const mockFeedRepository = {
   deleteFeed: jest.fn(),
 };
 const mockCompleteRepository = {
+  create: jest.fn(),
+  save: jest.fn(),
   findOne: jest.fn(),
 };
 const mockCommentRepository = {};
@@ -24,8 +26,9 @@ const mockQuestsRepository = {
   findOneWithCompletes: jest.fn(),
 };
 const mockRegionsRepository = {
-  createAndSave: jest.fn(),
-  findByAddrs: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  findOne: jest.fn(),
 };
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
@@ -35,6 +38,7 @@ describe('QuestsService', () => {
   let questsRepository;
   let feedRepository;
   let completeRepository: MockRepository<Complete>;
+  let regionsRepository: MockRepository<Region>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -59,7 +63,7 @@ describe('QuestsService', () => {
           useValue: mockQuestsRepository,
         },
         {
-          provide: RegionsRepository,
+          provide: getRepositoryToken(Region),
           useValue: mockRegionsRepository,
         },
       ],
@@ -68,6 +72,7 @@ describe('QuestsService', () => {
     questsRepository = module.get(QuestsRepository);
     feedRepository = module.get(FeedRepository);
     completeRepository = module.get(getRepositoryToken(Complete));
+    regionsRepository = module.get(getRepositoryToken(Region));
   });
 
   it('should be defined', () => {
