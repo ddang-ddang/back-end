@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
@@ -7,8 +7,9 @@ import * as config from 'config';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
 import { RegionsRepository } from './regions.repository';
-import { CompletesRepository } from './completes.repository';
 import { Player } from '../players/entities/player.entity';
+import { Repository } from 'typeorm';
+import { Complete } from './entities/complete.entity';
 
 const mapConfig = config.get('map');
 
@@ -21,31 +22,42 @@ const JUSO_CONFIRM_KEY = mapConfig.josoConfirmKey;
 export class QuestsService {
   constructor(
     @InjectRepository(FeedRepository)
-    private feedRepository: FeedRepository,
-    private commentRepository: CommentRepository,
-    private questsRepository: QuestsRepository,
-    private regionsRepository: RegionsRepository,
-    private completesRepository: CompletesRepository
+    private readonly feedRepository: FeedRepository,
+    @InjectRepository(Complete)
+    private readonly completes: Repository<Complete>,
+    private readonly commentRepository: CommentRepository,
+    private readonly questsRepository: QuestsRepository,
+    private readonly regionsRepository: RegionsRepository
   ) {}
 
-  /* 피드작성 퀘스트 완료 요청 로직 */
+  /* 피드작성 퀘스트 완료 요청 */
   feedQuest(questId: number, playerId: number, createFeedDto: CreateFeedDto) {
     const { img, content } = createFeedDto;
     return this.feedRepository.feedQuest(questId, playerId, img, content);
   }
 
-  /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 로직 */
+  /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number) {
-    const player: Player = await Player.findOne({ where: { id: playerId } });
-    const quest = await this.questsRepository.findOneBy(questId);
-    if (!quest) {
-      throw new NotFoundException({
-        ok: false,
-        message: '해당 게시글을 찾을 수 없습니다.',
-      });
+    try {
+      const player = await Player.findOne({ where: { id: playerId } });
+      if (!player)
+        return { ok: false, message: '플레이어님의 정보를 찾을 수 없습니다.' };
+
+      const quest = await this.questsRepository.findOneBy(questId);
+      if (!quest)
+        return { ok: false, message: '요청하신 퀘스트를 찾을 수 없습니다.' };
+
+      const isCompleted = await this.completes.findOne({ player, quest });
+      if (isCompleted) {
+        return { ok: false, message: '퀘스트를 이미 완료하였습니다.' };
+      } else {
+        const complete = Complete.create({ quest, player });
+        await this.completes.save(complete);
+        return { ok: true };
+      }
+    } catch (error) {
+      return { ok: false, message: error.message };
     }
-    await this.completesRepository.complete(player, quest);
-    return { ok: true };
   }
 
   /*
@@ -56,11 +68,44 @@ export class QuestsService {
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number, playerId: number | null) {
-    const kakaoAddress = await this.getAddressName(lat, lng);
-    const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
+    try {
+      const kakaoAddress = await this.getAddressName(lat, lng);
+      const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
-    let region = await this.regionsRepository.findByAddrs(kakaoAddress);
-    if (region) {
+      let region = await this.regionsRepository.findByAddrs(kakaoAddress);
+      if (region) {
+        const allQuests = await this.questsRepository.findAll(region, playerId);
+
+        return {
+          ok: true,
+          currentRegion: {
+            regionSi: region.regionSi,
+            regionGu: region.regionGu,
+            regionDong: region.regionDong,
+          },
+          rows: allQuests,
+        };
+      }
+
+      // 지역(동), 좌표 값으로 퀘스트 만들기
+      const { totalCount, pageCount } = await this.getRegionData(address);
+      console.time('API req-res time');
+      const quests = await this.createQuests(totalCount, pageCount, address);
+      console.timeEnd('API req-res time');
+
+      // 지역(동) 데이터 DB에 추가 및 조회
+      await this.regionsRepository.createAndSave(kakaoAddress);
+      region = await this.regionsRepository.findByAddrs(kakaoAddress);
+
+      // 퀘스트 데이터 DB에 추가 및 조회
+      await Promise.all([
+        ...quests.map(async (quest) => {
+          return await this.questsRepository.createAndSave({
+            region,
+            ...quest,
+          });
+        }),
+      ]);
       const allQuests = await this.questsRepository.findAll(region, playerId);
 
       return {
@@ -72,35 +117,9 @@ export class QuestsService {
         },
         rows: allQuests,
       };
+    } catch (error) {
+      return { ok: false, message: error.message };
     }
-
-    // 지역(동), 좌표 값으로 퀘스트 만들기
-    const { totalCount, pageCount } = await this.getRegionData(address);
-    console.time('API req-res time');
-    const quests = await this.createQuests(totalCount, pageCount, address);
-    console.timeEnd('API req-res time');
-
-    // 지역(동) 데이터 DB에 추가 및 조회
-    await this.regionsRepository.createAndSave(kakaoAddress);
-    region = await this.regionsRepository.findByAddrs(kakaoAddress);
-
-    // 퀘스트 데이터 DB에 추가 및 조회
-    await Promise.all([
-      ...quests.map(async (quest) => {
-        return await this.questsRepository.createAndSave({ region, ...quest });
-      }),
-    ]);
-    const allQuests = await this.questsRepository.findAll(region, playerId);
-
-    return {
-      ok: true,
-      currentRegion: {
-        regionSi: region.regionSi,
-        regionGu: region.regionGu,
-        regionDong: region.regionDong,
-      },
-      rows: allQuests,
-    };
   }
 
   /* 주소 데이터 얻어오기 */
@@ -328,16 +347,17 @@ export class QuestsService {
 
   /* 특정 퀘스트 조회 */
   async getOne(id: number, playerId: number | null) {
-    const quest = await this.questsRepository.findOneWithCompletes(
-      id,
-      playerId
-    );
-    if (!quest) {
-      throw new NotFoundException({
-        ok: false,
-        message: '해당 게시글을 찾을 수 없습니다.',
-      });
+    try {
+      const quest = await this.questsRepository.findOneWithCompletes(
+        id,
+        playerId
+      );
+      if (!quest)
+        return { ok: false, message: '해당 게시글을 찾을 수 없습니다.' };
+
+      return { ok: true, row: quest };
+    } catch (error) {
+      return { ok: false, message: error.message };
     }
-    return { ok: true, row: quest };
   }
 }
