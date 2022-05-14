@@ -104,7 +104,7 @@ export class PlayersService {
   }
 
   async loadLatLng(playerId: number): Promise<object> {
-    const result = await this.playersRepository.loadLatLng(playerId);
+    const result = await this.playersRepository.locations(playerId);
     console.log(result);
     return result;
   }

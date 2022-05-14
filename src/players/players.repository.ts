@@ -68,46 +68,53 @@ export class PlayerRepository extends Repository<Player> {
   }
 
   // 경도 위도 가져와서 mypage에 보내줄거
-  async loadLatLng(id: number): Promise<any> {
+  async locations(id2: number): Promise<any> {
+    const id = 2;
     try {
-      // const locations = await this.find({
-      //   where: { id },
-      //   relations: ['completes', 'completes.quest'],
-      //   select: ['completes'],
-      // });
-      // someRepository.find({
-      //   order: { id: 'DESC' },
-      //   relations: ['createdBy'],
-      //   select: [
-      //     'id',
-      //     'firstName',
-      //     'lastName',
-      //     'active',
-      //     'createdAt',
-      //     'lastLogin',
-      //     'phoneNumber',
-      //     'createdBy.email',
-      //   ],
-      // });
-
-      const locations = await this.find({
-        order: { id: 'DESC' },
-        relations: ['completes', 'completes.quest'],
-        select: [
-          'id',
-          'nickname',
-          'profileImg',
-          'mbti',
-          'level',
-          'exp',
-          'completes',
-          // 'completes.quest.id',
-        ],
-      });
-
-      return locations;
+      const result = await this.createQueryBuilder('player')
+        // .select([
+        //   'player',
+        //   'player.id',
+        //   'player.email',
+        //   'player.nickname',
+        //   'player.mbti',
+        //   'player.profileImg',
+        //   'player.level',
+        //   'player.exp',
+        // ])
+        .where('player.id = :id', { id })
+        // .innerJoinAndSelect('player.completes', 'complete')
+        .leftJoinAndSelect('player.completes', 'complete')
+        // .leftJoinAndSelect('player.quests', 'quest')
+        // .select(['complete.id', 'complete.questId'])
+        // .leftJoin('complete.quest', 'quest')
+        // .select(['quest.lat', 'quest.lng'])
+        .getMany();
+      console.log(result);
+      return result;
     } catch (err) {
       return err.message;
     }
   }
+
+  //     const locations = await this.find({
+  //       order: { id: 'DESC' },
+  //       relations: ['completes', 'completes.quest'],
+  //       select: [
+  //         'id',
+  //         'nickname',
+  //         'profileImg',
+  //         'mbti',
+  //         'level',
+  //         'exp',
+  //         'completes',
+  //         // 'completes.quest.id',
+  //       ],
+  //     });
+
+  //     return locations;
+  //   } catch (err) {
+  //     return err.message;
+  //   }
+  // }
 }
