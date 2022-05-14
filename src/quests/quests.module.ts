@@ -8,7 +8,6 @@ import { QuestsService } from './quests.service';
 import { Quest } from './entities/quest.entity';
 import { Region } from './entities/region.entity';
 import { RegionsRepository } from './regions.repository';
-import { CompletesRepository } from './completes.repository';
 import { Complete } from './entities/complete.entity';
 import { PlayerRepository } from '../players/players.repository';
 
@@ -17,7 +16,6 @@ import { PlayerRepository } from '../players/players.repository';
     TypeOrmModule.forFeature([Quest, Region, Complete]),
     TypeOrmModule.forFeature([QuestsRepository]),
     TypeOrmModule.forFeature([RegionsRepository]),
-    TypeOrmModule.forFeature([CompletesRepository]),
     TypeOrmModule.forFeature([FeedRepository]),
     TypeOrmModule.forFeature([CommentRepository]),
     TypeOrmModule.forFeature([PlayerRepository]),
