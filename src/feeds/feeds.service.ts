@@ -102,7 +102,7 @@ export class FeedsService {
 
   /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
   async matchPlayerFeed(playerId: number, feed: Feed) {
-    if (playerId === feed.player.id) {
+    if (feed && playerId === feed.player.id) {
       return true;
     }
     return false;
@@ -140,11 +140,18 @@ export class FeedsService {
 
   /* 피드 삭제 */
   async removeQuest(playerId: number, feedId: number): Promise<void | object> {
-    const feed = await this.feedRepository.findOne(feedId);
+    // const feed = await this.feedRepository.findOne(feedId);
+    const feed = await this.feedRepository.findOne({
+      where: {
+        id: feedId,
+        deletedAt: null,
+      },
+      relations: ['player'],
+    });
     const match = await this.matchPlayerFeed(playerId, feed);
     if (feed) {
       if (match) {
-        return this.feedRepository.deleteFeed(feedId);
+        return this.feedRepository.deleteFeed(playerId, feedId, feed);
       } else {
         throw new BadRequestException({
           ok: false,
