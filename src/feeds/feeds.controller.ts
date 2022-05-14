@@ -100,13 +100,16 @@ export class FeedsController {
   @Delete(':feedId')
   @ApiOperation({ summary: '특정 피드 삭제 API' })
   @UseGuards(AuthGuard('jwt'))
-  remove(@Req() req: Request, @Param('feedId') feedId: number) {
+  async remove(@Req() req: Request, @Param('feedId') feedId: number) {
     const { playerId } = req['user'].player;
     this.logger.verbose(
       `trying to delete feed id ${feedId} by user ${playerId}`
     );
     try {
-      return this.feedsService.removeQuest(playerId, feedId);
+      await this.feedsService.removeQuest(playerId, feedId);
+      return {
+        ok: true,
+      };
     } catch (error) {
       return {
         ok: false,

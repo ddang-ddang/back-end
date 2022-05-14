@@ -36,12 +36,29 @@ export class CommentsService {
 
   /* 특정 게시글의 모든 댓글 조회 */
   findAllComments(feedId: number) {
-    return this.commentRepository.find({
-      where: {
-        feed: feedId,
-        deletedAt: null,
-      },
-    });
+    // return this.commentRepository.find({
+    //   where: {
+    //     feed: feedId,
+    //     deletedAt: null,
+    //   },
+    //   relations: ['player'],
+    // });
+    /* queryBuilder */
+    return this.commentRepository
+      .createQueryBuilder('comment')
+      .select([
+        'comment',
+        'player.id',
+        'player.nickname',
+        'player.mbti',
+        'player.profileImg',
+        'player.level',
+        'player.exp',
+      ])
+      .leftJoin('comment.player', 'player')
+      .leftJoinAndSelect('comment.feed', 'feed')
+      .where('feed.id = :feedId', { feedId })
+      .getMany();
   }
 
   /* 특정 댓글 조회 */
