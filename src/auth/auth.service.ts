@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PlayerRepository } from 'src/players/players.repository';
-import { CreateIdDto, SigninDto } from 'src/players/dto/create-player.dto';
+import { PlayerRepository } from '../players/players.repository';
+import { CreateIdDto, SigninDto } from '../players/dto/create-player.dto';
 
 @Injectable()
 export class AuthService {

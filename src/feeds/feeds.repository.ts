@@ -1,11 +1,9 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Feed } from './entities/feed.entity';
-import { UpdateFeedDto } from './dto/update-feed.dto';
-import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
-import { Quest } from 'src/quests/entities/quest.entity';
-import { Player } from 'src/players/entities/player.entity';
-import { Complete } from 'src/quests/entities/complete.entity';
 import { ConflictException } from '@nestjs/common';
+import { Complete } from "../quests/entities/complete.entity";
+import { Quest } from "../quests/entities/quest.entity";
+import { Player } from "../players/entities/player.entity";
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {

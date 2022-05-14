@@ -1,5 +1,4 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { Complete } from 'src/quests/entities/complete.entity';
 import {
   CreateBodyDto,
   EmailDto,

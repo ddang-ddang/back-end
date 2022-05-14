@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
+import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
 import { QuestsService } from './quests.service';
 
 @Controller('/api/quests')

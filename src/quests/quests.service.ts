@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { FeedRepository } from 'src/feeds/feeds.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CommentRepository } from 'src/comments/comments.repository';
 import axios from 'axios';
 import * as config from 'config';
-import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestsRepository } from './quests.repository';
 import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
 import { Player } from '../players/entities/player.entity';
+import { FeedRepository } from '../feeds/feeds.repository';
+import { CommentRepository } from '../comments/comments.repository';
+import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
 
 const mapConfig = config.get('map');
 

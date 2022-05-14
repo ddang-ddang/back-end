@@ -1,8 +1,5 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CommentRepository } from 'src/comments/comments.repository';
-import { FeedRepository } from 'src/feeds/feeds.repository';
-import { QuestsRepository } from 'src/quests/quests.repository';
 import { QuestsController } from './quests.controller';
 import { QuestsService } from './quests.service';
 import { Quest } from './entities/quest.entity';
@@ -11,6 +8,9 @@ import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
 import { Complete } from './entities/complete.entity';
 import { PlayerRepository } from '../players/players.repository';
+import { QuestsRepository } from './quests.repository';
+import { FeedRepository } from '../feeds/feeds.repository';
+import { CommentRepository } from '../comments/comments.repository';
 
 @Module({
   imports: [

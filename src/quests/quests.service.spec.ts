@@ -1,12 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { QuestsService } from './quests.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Feed } from 'src/feeds/entities/feed.entity';
 import { FeedRepository } from '../feeds/feeds.repository';
 import { CommentRepository } from '../comments/comments.repository';
 import { QuestsRepository } from './quests.repository';
 import { RegionsRepository } from './regions.repository';
 import { CompletesRepository } from './completes.repository';
+import { Feed } from '../feeds/entities/feed.entity';
 
 const mockRepository = {
   createAndSave: jest.fn(),

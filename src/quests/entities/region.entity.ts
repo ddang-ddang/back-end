@@ -5,8 +5,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Feed } from '../../feeds/entities/feed.entity';
 import { Quest } from './quest.entity';
-import { Feed } from 'src/feeds/entities/feed.entity';
 
 @Entity()
 export class Region extends BaseEntity {
