@@ -86,14 +86,11 @@ export class QuestsService {
       /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
       let region = await this.regions.findOne({ date, ...kakaoAddress });
       if (region) {
+        const { regionSi, regionGu, regionDong } = region;
         const allQuests = await this.questsRepository.findAll(region, playerId);
         return {
           ok: true,
-          currentRegion: {
-            regionSi: region.regionSi,
-            regionGu: region.regionGu,
-            regionDong: region.regionDong,
-          },
+          currentRegion: { regionSi, regionGu, regionDong },
           rows: allQuests,
         };
       }
@@ -120,15 +117,13 @@ export class QuestsService {
           });
         }),
       ]);
+
+      const { regionSi, regionGu, regionDong } = region;
       const allQuests = await this.questsRepository.findAll(region, playerId);
       console.timeEnd('getAll');
       return {
         ok: true,
-        currentRegion: {
-          regionSi: region.regionSi,
-          regionGu: region.regionGu,
-          regionDong: region.regionDong,
-        },
+        currentRegion: { regionSi, regionGu, regionDong },
         rows: allQuests,
       };
     } catch (error) {
@@ -149,15 +144,11 @@ export class QuestsService {
         { headers: { Authorization: `KakaoAK ${REST_API_KEY}` } }
       );
       const { address } = res.data.documents[0];
-      const region_1depth = address.region_1depth_name;
-      const region_2depth = address.region_2depth_name;
-      const region_3depth = address.region_3depth_name;
+      const regionSi = address.region_1depth_name;
+      const regionGu = address.region_2depth_name;
+      const regionDong = address.region_3depth_name;
 
-      return {
-        regionSi: region_1depth,
-        regionGu: region_2depth,
-        regionDong: region_3depth,
-      };
+      return { regionSi, regionGu, regionDong };
     } catch (error) {
       console.log(error.message);
     }
