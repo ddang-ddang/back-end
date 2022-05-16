@@ -89,6 +89,9 @@ export class Player extends BaseEntity {
   })
   providerId?: number;
 
+  @Column({ type: 'varchar', default: null, length: 128 })
+  currentHashedRefreshToken?: string;
+
   /* 테이블 관계 */
 
   /*   */
