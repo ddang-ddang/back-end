@@ -7,6 +7,7 @@ import {
   UpdateInfoDto,
 } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
+import * as bcrypt from 'bcrypt';
 
 @EntityRepository(Player)
 export class PlayerRepository extends Repository<Player> {
@@ -62,6 +63,29 @@ export class PlayerRepository extends Repository<Player> {
       });
 
       return await this.save(result);
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  //토큰 관련 Repository
+  async updateRefreshToken(id: number, refreshToken: string): Promise<any> {
+    try {
+      const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+      const result = await this.update(id, { currentHashedRefreshToken });
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  async checkRefreshToken(id: number): Promise<any> {
+    try {
+      const result = await this.findOne({
+        select: ['currentHashedRefreshToken'],
+        where: { id },
+      });
+      return result;
     } catch (err) {
       return err.message;
     }

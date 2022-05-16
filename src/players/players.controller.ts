@@ -16,6 +16,7 @@ import {
   Logger,
   Res,
   BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -158,14 +159,27 @@ export class PlayersController {
   @Post('signin')
   async signIn(@Request() req, @Res({ passthrough: true }) res) {
     try {
-      const { email, nickname } = req.user;
+      const { id, email, nickname } = req.user;
+      console.log(req.use);
+      const refreshTokenFromClient = req.headers['Authorization'];
 
+      console.log(refreshTokenFromClient);
       this.logger.verbose(`${email}님이 로그인하려고 합니다`);
+      const tokens = await this.authService.signin(
+        email,
+        nickname,
+        id,
+        refreshTokenFromClient
+      );
 
-      const accessToken = await this.authService.login(email, nickname);
-      console.log(accessToken);
+      const { accessToken, refreshToken } = tokens;
 
-      res.setHeader('Authorization', `Bearer ${accessToken}`);
+      if (!refreshTokenFromClient) {
+        res.setHeader('Authorization', accessToken);
+        res.setHeader('refresh', refreshToken);
+      } else {
+        res.setHeader('Authorization', accessToken);
+      }
 
       return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
@@ -180,13 +194,75 @@ export class PlayersController {
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(JwtAuthGuard)
   @Get('auth')
-  async getHello(@Request() req): Promise<object> {
-    const { playerId, email, nickname } = req.user.player;
-    this.logger.verbose(`${email}님이 인증을 시도합니다.`);
-    return {
-      ok: true,
-      row: { playerId: playerId, email: email, nickname: nickname },
-    };
+  async getHello(@Request() req, @Res() res): Promise<object> {
+    try {
+      const { id, email, nickname } = req.user;
+      console.log(req.user);
+      const refreshTokenFromClient = req.headers['authorization'];
+      console.log(refreshTokenFromClient);
+
+      this.logger.verbose(`${email}님이 인증 하려고 합니다`);
+      const tokens = await this.authService.signin(
+        email,
+        nickname,
+        id,
+        refreshTokenFromClient
+      );
+
+      const { accessToken, refreshToken } = tokens;
+
+      if (!refreshTokenFromClient) {
+        res.setHeader('Authorization', accessToken);
+        res.setHeader('refresh', refreshToken);
+        this.logger.verbose(
+          `${email}님이 엑세스 토큰과 리프레쉬 토큰을 생성하셨습니다.`
+        );
+      } else {
+        res.setHeader('Authorization', accessToken);
+        this.logger.verbose(
+          `${email}님이 이미 리프레쉬 토큰이있어 엑세스 토큰만 생성하셨습니다.`
+        );
+      }
+
+      return { ok: true, row: { email: email, nickname: nickname } };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err.message,
+      };
+    }
+    // const data = req.get('test');
+
+    // console.log(data);
+    // const { playerId, email, nickname } = req.user.player;
+    // this.logger.verbose(`${email}님이 인증을 시도합니다.`);
+
+    // return {
+    //   ok: true,
+    //   row: { playerId: playerId, email: email, nickname: nickname },
+    // };
+  }
+
+  @Get('/auth/gettoken')
+  async getToken(@Request() req, @Res() res) {
+    const refreshTokenFromClient = req.headers['authorization'].split(' ')[1];
+    console.log(refreshTokenFromClient);
+    const { id, email, nickname } = req.user;
+    // console.log(refreshTokenFromClient);
+
+    const isCheckToken = await this.authService.checkRefreshToken(
+      id,
+      refreshTokenFromClient
+    );
+    if (!isCheckToken) {
+      throw new UnauthorizedException('refreshToken is invalid');
+    } else {
+      const tokens = await this.authService.updateToken(id, email, nickname);
+      const { accessToken, refreshToken } = tokens;
+      res.setHeader('Authorization', accessToken);
+      res.setHeader('refresh', refreshToken);
+      return { ok: true, row: { id: id } };
+    }
   }
 
   /*
