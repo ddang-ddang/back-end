@@ -5,15 +5,27 @@ import * as config from 'config';
 
 const jwtConfig = config.get('jwt');
 
+/*
+ * JWT 토큰 Decode 로직
+ *
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: jwtConfig.secret,
-    });
+    super(
+      {
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ignoreExpiration: false,
+        secretOrKey: jwtConfig.accessSecret,
+      }
+      // {
+      //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      //   ignoreExpiration: false,
+      //   secretOrKey: jwtConfig.refreshSecret,
+      // }
+    );
   }
+
   async validate(payload: any) {
 
     return {

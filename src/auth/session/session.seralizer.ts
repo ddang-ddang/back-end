@@ -12,7 +12,6 @@ export class SessionSerializer extends PassportSerializer {
     done: (err: Error, user: any) => void
   ): Promise<any> {
     const result = await this.playersService.findByEmail(user.id);
-    console.log('kaka', result);
 
     done(null, result);
   }
@@ -21,8 +20,6 @@ export class SessionSerializer extends PassportSerializer {
     payload: any,
     done: (err: Error, payload: string) => void
   ): Promise<any> {
-    const user = await this.playersService.findByEmail(payload.id);
-    console.log('deserialize', user);
 
     // done(null, user);
     done(null, 'find');
