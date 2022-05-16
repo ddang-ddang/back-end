@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsNumber, IsString } from 'class-validator';
 
 export class CreateRegionDto {
   @IsString()
@@ -9,4 +9,10 @@ export class CreateRegionDto {
 
   @IsString()
   regionDong: string;
+
+  @IsNumber()
+  totalCount: number;
+
+  @IsNumber()
+  pageCount: number;
 }

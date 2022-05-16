@@ -25,6 +25,12 @@ export class Region extends BaseEntity {
   @Column()
   regionDong: string;
 
+  @Column()
+  totalCount: number;
+
+  @Column()
+  pageCount: number;
+
   @OneToMany((type) => Quest, (quest) => quest.region)
   quests: Quest[];
 
