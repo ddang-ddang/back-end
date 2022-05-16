@@ -21,14 +21,18 @@ const jwtConfig = config.get('jwt');
     PassportModule,
     PlayersModule,
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '60s' },
+      secret: jwtConfig.accessSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
     TypeOrmModule.forFeature([PlayerRepository]),
   ],
   providers: [
     AuthService,
-    SessionSerializer,
+    // SessionSerializer,
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,

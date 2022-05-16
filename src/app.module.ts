@@ -22,7 +22,6 @@ import { FeedsService } from './feeds/feeds.service';
 import { PlayerRepository } from './players/players.repository';
 import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
-import { QuestsRepository } from './quests/quests.repository';
 
 const jwtConfig = config.get('jwt');
 
@@ -30,8 +29,12 @@ const jwtConfig = config.get('jwt');
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '3600s' },
+      secret: jwtConfig.accessTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
     TypeOrmModule.forRoot(typeORMConfig),
     TypeOrmModule.forFeature([
