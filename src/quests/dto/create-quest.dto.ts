@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Region } from '../entities/region.entity';
+import { Region } from 'src/quests/entities/region.entity';
 
 export class CreateQuestDto {
   @IsNotEmpty()

@@ -5,8 +5,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Quest } from './quest.entity';
-import { Player } from '../../players/entities/player.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @Entity()
 export class Complete extends BaseEntity {

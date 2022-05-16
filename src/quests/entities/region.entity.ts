@@ -5,7 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Quest } from './quest.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
 import { Feed } from 'src/feeds/entities/feed.entity';
 
 @Entity()
