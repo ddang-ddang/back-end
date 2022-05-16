@@ -27,7 +27,6 @@ export class FeedsController {
   @ApiOperation({ summary: '주변 피드 조회 API' })
   // async findAllFeeds(@Body() playerId: number) {
   async findAllFeeds(@Request() req: any, @Body() regionData: any) {
-    this.logger.verbose(`trying to get all feeds user id by `);
     try {
       /* token 검사 */
       let playerId = null;
@@ -36,6 +35,7 @@ export class FeedsController {
         const encodedPayload = token.split('.')[1];
         const payload = Buffer.from(encodedPayload, 'base64');
         playerId = JSON.parse(payload.toString()).id;
+        this.logger.verbose(`trying to get all feeds user id by ${playerId}`);
       }
       const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
       return {
