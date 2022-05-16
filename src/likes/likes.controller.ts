@@ -23,16 +23,19 @@ export class LikesController {
   async chkLike(@Req() req: Request, @Param('feedId') feedId: number) {
     try {
       const { playerId } = req['user'].player;
-      this.logger.verbose(
-        `trying to click button feedId: ${feedId}, by user ${playerId}`
-      );
       const likeClk = await this.likesService.chkLike(feedId, playerId);
       if (likeClk) {
+        this.logger.verbose(
+          `trying to like feedId: ${feedId}, userId: ${playerId}`
+        );
         return {
           ok: true,
           message: `좋아요 클릭!`,
         };
       } else {
+        this.logger.verbose(
+          `trying to cancel like feedId: ${feedId}, userId: ${playerId}`
+        );
         return {
           ok: true,
           message: `좋아요 취소!`,
