@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
@@ -10,6 +10,7 @@ import { Player } from '../players/entities/player.entity';
 import { Repository } from 'typeorm';
 import { Complete } from './entities/complete.entity';
 import { Region } from './entities/region.entity';
+import { Cron } from '@nestjs/schedule';
 
 const mapConfig = config.get('map');
 
@@ -346,5 +347,33 @@ export class QuestsService {
     } catch (error) {
       return { ok: false, message: error.message };
     }
+  }
+
+  private readonly logger = new Logger(QuestsService.name);
+
+  @Cron('5 * * * * *')
+  testCron() {
+    this.logger.debug('매분 5초에 한번씩 실행! 날 막을 수 없다! 1조 파이팅 :D');
+  }
+
+  @Cron('0 0 2 * * *', {
+    name: 'createQuests',
+    timeZone: 'Asia/Seoul',
+  })
+  createTomorrowQuests() {
+    this.logger.debug('Called when the current hour is 2');
+    /* 어제 생성된 지역 데이터 기반으로 오늘의 새로운 퀘스트 생성 */
+    /* 10~12시까지는 사용자가 꽤 있을지도 모르니 미리 만들지 말고,
+     * 새벽에는 사용자 많이 없으니까 아쉽지만 대기시간을 발생시키고,
+     * 새벽 2시에 일괄 퀘스트 발생시키기
+     */
+    // TODO: 1. 오늘 날짜 기준으로 db 조회
+
+    /* TODO: 2. 없으면 내일 날짜 기준으로 퀘스트 생성
+     *          - 전체 주소 개수, 페이지 수 미리 저장해두기
+     *          - (주소 API) 지역 데이터 기반으로 퀘스트 주소 랜덤하게 추출 (promise.all)
+     *          - (카카오 API) 랜덤한 주소 기반으로 좌표 추출
+     *          - 퀘스트 만들어서 저장하기
+     */
   }
 }
