@@ -91,9 +91,9 @@ export class PlayersService {
     try {
       console.log(playerId);
       const result = await this.playersRepository.checkRefreshToken(playerId);
-      console.log("-0-------")
+      console.log('-0-------');
       console.log(result);
-      console.log("-0-------")
+      console.log('-0-------');
       return result;
     } catch (err) {
       console.log(err.message);

@@ -18,7 +18,7 @@ import {
   Res,
   BadRequestException,
   UnauthorizedException,
-  Redirect,
+  HttpCode,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -34,7 +34,6 @@ import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('api/players')
 @ApiTags('플레이어 API')
@@ -164,10 +163,12 @@ export class PlayersController {
     try {
       const { id, email, nickname } = req.user;
       console.log(req.user);
+
+      //로그인할때 헤더에서 토큰을 받는다.
       const refreshTokenFromClient = req.headers['authorization'];
 
-      console.log(refreshTokenFromClient);
       this.logger.verbose(`${email}님이 로그인하려고 합니다`);
+
       const tokens = await this.authService.signin(
         email,
         nickname,
@@ -175,114 +176,65 @@ export class PlayersController {
         refreshTokenFromClient
       );
 
-      const { accessToken, refreshToken } = tokens;
+      const { accessToken, refreshToken, accessCookie } = tokens;
+      console.log(accessCookie);
 
       if (!refreshTokenFromClient) {
-        res.setHeader('Authorization', accessToken);
         res.setHeader('refresh', refreshToken);
+        req.res.setHeader('Set-Cookie', accessCookie);
+
+        return { ok: true, row: { email: email, nickname: nickname } };
       } else {
-        res.setHeader('Authorization', accessToken);
+        req.res.setHeader('Set-Cookie', accessCookie);
       }
       throw new UnauthorizedException('refreshToken is invalid');
-
-      return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
       return {
         ok: false,
         message: err.message,
       };
-    }
-  }
-
-  //원하는 곳에 JwtAuthGuard 붙이면 됨
-  @ApiOperation({ summary: 'jwt인증 API' })
-  @UseGuards(JwtAuthGuard)
-  // @UseGuards(JwtRefreshAuthGuard)
-  @Get('auth')
-  async getHello(@Request() req, @Res() res): Promise<object> {
-    try {
-      // const { playerId, email, nickname } = req.user.player;
-
-      // this.logger.verbose(`${email}님이 인증 하려고 합니다`);
-
-      // 사용자에게 토큰을 받는다.
-      // const access_token = req.headers['authorization'].split(' ')[1];
-      const refreshTokenFromClient = req.headers['refresh'].split(' ')[1];
-
-      console.log(refreshTokenFromClient);
-
-      // 토큰을 검증 한다.
-      const isTrue = await this.authService.checkRefreshToken(
-        2,
-        refreshTokenFromClient
-      );
-      console.log('-----------');
-      console.log(isTrue);
-
-      // 리프레시 토큰이 있다면 엑세스 토큰을 발행하고
-      // 두개다 없으면 두개다 발행한다.
-      if (isTrue) {
-        this.logger.verbose(
-          `님이 이미 리프레쉬 토큰이있어 엑세스 토큰만 생성하셨습니다.`
-        );
-
-        const accessToken = this.authService.getJwtAccessToken({
-          id: 2,
-          email: 'diasm5@gmail.com',
-          nickname: 'diasm5',
-        });
-
-        res.setHeader('Authorization', accessToken);
-        return { ok: true };
-      } else {
-        this.logger.verbose(`님이 다시 로그인 하셔야 합니다.`);
-        return { ok: false, message: '로그인이 필요합니다.' };
-      }
-    } catch (err) {
-      return {
-        ok: false,
-        message: err.message,
-      };
-    }
-    // const data = req.get('test');
-
-    // console.log(data);
-    // const { playerId, email, nickname } = req.user.player;
-    // this.logger.verbose(`${email}님이 인증을 시도합니다.`);
-
-    // return {
-    //   ok: true,
-    //   row: { playerId: playerId, email: email, nickname: nickname },
-    // };
-  }
-
-  @Get('/auth/gettoken')
-  async getToken(@Request() req, @Res() res) {
-    const refreshTokenFromClient = req.headers['authorization'].split(' ')[1];
-    console.log(refreshTokenFromClient);
-    const { id, email, nickname } = req.user;
-    // console.log(refreshTokenFromClient);
-
-    const isCheckToken = await this.authService.checkRefreshToken(
-      id,
-      refreshTokenFromClient
-    );
-    if (!isCheckToken) {
-      throw new UnauthorizedException('refreshToken is invalid');
-    } else {
-      const tokens = await this.authService.updateToken(id, email, nickname);
-      const { accessToken, refreshToken } = tokens;
-      res.setHeader('Authorization', accessToken);
-      res.setHeader('refresh', refreshToken);
-      return { ok: true, row: { id: id } };
     }
   }
 
   @UseGuards(JwtRefreshTokenGuard)
-  @Get('test')
-  async test(@Request() req, @Res() res) {
-    console.log(req.user);
-    return req;
+  @Get('auth')
+  async test(@Request() req) {
+    try {
+      console.log(req.user);
+      const { id, email, nickname } = req.user;
+      const createCookie = this.authService.getJwtAccessToken({
+        id,
+        email,
+        nickname,
+      });
+
+      // 쿠키를 강제로 주입한다.
+      req.res.setHeader('Set-Cookie', createCookie.accessCookie);
+
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('logout')
+  @HttpCode(200)
+  async logout(@Request() req) {
+    try {
+      const { playerId, email } = req.user.player;
+      this.logger.verbose(`${email}님이 로그아웃 하려고 합니다`);
+      // 엑세스 토큰을 삭제
+      // DB에서 리프레쉬 삭제
+      // 클라이언트에서는 localstorage에서 삭제따로 해줘야함
+      console.log(playerId);
+      const result = await this.authService.logout(playerId);
+      req.res.setHeader('Set-Cookie', result);
+
+      return { ok: true, row: result };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
   }
 
   /*
@@ -293,47 +245,24 @@ export class PlayersController {
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
-  async googleAuth(@Request() req) {
-    console.log(req.user);
-    return req;
+  async googleauth(@Request() req, @Res() res) {
+    const { nickname, email, provider, providerId } = req.user;
+
+    this.logger.verbose(`${email}님이 구글로 로그인 하려고 합니다`);
+
+    console.log( nickname, email, provider, providerId);
+
+    return res.redirect('http://localhost:3005/');
   }
 
-  /* 구글 리다이렉트 부분 */
-  @Get('redirect')
-  @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@Request() req, @Res() res) {
-    const { email, accessToken } = req.user;
-    this.logger.verbose(
-      `${email}님이 구글로그인 리다이렉트을 이용 하려고 합니다`
-    );
-    console.log(accessToken);
-    console.log(req.user);
-    return res.writeHead(301, { Location: 'http://localhost:3005' });
-  }
-
-  /*
-   * 카카오 로그인
-   */
+  /* 카카오 로그인 부분 */
   @UseGuards(KakaoAuthGuard)
-  @Get('kakaoauth')
-  async kakaoAuth(@Request() req) {
-    const { email, accessToken } = req.user;
-    this.logger.verbose(`${email}님이 카카오 로그인을 이용 하려고 합니다`);
-    console.log(accessToken);
-    console.log(req.user);
-    return { ok: true };
-  }
-
-  /* 카카오 리다이렉트 부분 */
-  @Get('kakaoredirect')
-  @UseGuards(KakaoAuthGuard)
+  @Get('kakaoAuth')
   kakaopage(@Request() req, @Res() res) {
-    const { email, accessToken } = req.user;
-    this.logger.verbose(
-      `${email}님이 카카트로그인 리다이렉트을 이용 하려고 합니다`
-    );
+    const { username } = req.user;
+    this.logger.verbose(`${username}님이 카카오로 로그인 하려고 합니다`);
 
-    return res.writeHead(301, { Location: 'http://localhost:3005' });
+    return res.redirect('http://localhost:3005/');
   }
 
   // mypage

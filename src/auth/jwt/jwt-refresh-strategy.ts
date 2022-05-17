@@ -22,39 +22,35 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     private readonly authService: AuthService,
     private readonly playersService: PlayersService
   ) {
-    console.log('hello');
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
           const token = request.headers['cookies'];
           let tokenValue = '';
           if (typeof token === 'string') tokenValue = token.split(' ')[1];
-          console.log(tokenValue);
           return tokenValue;
         },
       ]),
       secretOrKey: jwtConfig.refreshSecret,
       passReqToCallback: true,
-      // ignoreExpiration: false,
+      ignoreExpiration: false,
     });
   }
 
   // 위에서 return된 tokenValue를 통해 유저 정보를 decode 하고 payload로 반환된다.
   async validate(request: Request, payload: TokenPayloadDto) {
-    console.log(payload);
-    const { id, email, nickname } = payload;
-    const data = await this.playersService.getRefreshToken(id);
-    console.log(data);
-  }
+    const { id, nickname, email } = payload;
 
-  //   async validate(payload: any) {
-  //     return {
-  //       ok: true,
-  //       player: {
-  //         playerId: payload.id,
-  //         email: payload.email,
-  //         nickname: payload.nickname,
-  //       },
-  //     };
-  //   }
+    const token = request.headers['cookies'];
+    let tokenValue = '';
+    if (typeof token === 'string') tokenValue = token.split(' ')[1];
+
+    const getData = await this.authService.checkRefreshToken(id, tokenValue);
+
+    if (!getData) {
+      return false;
+    }
+
+    return payload;
+  }
 }
