@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { FeedRepository } from 'src/feeds/feeds.repository';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CommentRepository } from 'src/comments/comments.repository';
+import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import * as config from 'config';
-import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
-import { QuestsRepository } from './quests.repository';
-import { Player } from '../players/entities/player.entity';
 import { Repository } from 'typeorm';
-import { Complete } from './entities/complete.entity';
-import { Region } from './entities/region.entity';
-import { Cron } from '@nestjs/schedule';
+import { FeedRepository } from 'src/feeds/feeds.repository';
+import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
+import { CommentRepository } from 'src/comments/comments.repository';
+import { QuestsRepository } from 'src/quests/quests.repository';
+import { Complete } from 'src/quests/entities/complete.entity';
+import { Region } from 'src/quests/entities/region.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 const mapConfig = config.get('map');
 
@@ -50,15 +50,13 @@ export class QuestsService {
         return { ok: false, message: '플레이어님의 정보를 찾을 수 없습니다.' };
 
       const isCompleted = await this.completes.findOne({ quest, player });
-      if (isCompleted) {
+      if (isCompleted)
         return { ok: false, message: '퀘스트를 이미 완료하였습니다.' };
-      }
 
-      const complete = Complete.create({ quest, player });
-      await this.completes.save(complete);
+      await this.completes.save(this.completes.create({ quest, player }));
       return { ok: true };
     } catch (error) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: '퀘스트를 완료할 수 없습니다.' };
     }
   }
 
@@ -70,13 +68,14 @@ export class QuestsService {
   today: Date;
   todayDate: string;
 
-  @Cron('0 0 0 * * *', {
+  @Cron('20 15 1 * * *', {
     name: 'setToday',
     timeZone: 'Asia/Seoul',
   })
   setToday() {
     this.today = new Date();
     this.todayDate = this.today.toDateString();
+    console.log(`세팅: today: ${this.today} string: ${this.todayDate}`);
   }
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
@@ -114,7 +113,7 @@ export class QuestsService {
       console.timeEnd('createQuests');
 
       // 지역(동) 데이터 DB에 추가 및 조회
-      region = Region.create({
+      region = this.regions.create({
         date,
         ...kakaoAddress,
         totalCount,
@@ -368,28 +367,33 @@ export class QuestsService {
 
   @Cron('1 1 * * * *')
   testCron() {
-    this.logger.debug(
-      '매시 1분 1초마다 등장하는 날 막을 수 없다! 1조 파이팅 :D'
-    );
+    this.logger.debug('땅땅 몬스터 등장! 누구도 날 막을 수 없다!');
   }
 
-  /* 어제 생성된 지역 데이터 기반으로 오늘의 새로운 퀘스트 생성 */
-  @Cron('0 0 2 * * *', {
+  // TODO: 테스트 중이므로 수정할 것
+  /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
+  // @Cron('0 0 2 * * *', {
+  @Cron('30 15 1 * * *', {
     name: 'createQuests',
     timeZone: 'Asia/Seoul',
   })
   async preCreateQuests() {
-    /* 10~12시까지는 사용자가 꽤 있을지도 모르니 미리 만들지 말고,
-     * 새벽에는 사용자가 많이 없으니까 아쉽지만 대기시간을 발생시키고,
-     * 새벽 2시부터 미리 퀘스트 생성
+    /* 10~12시까지는 사용자가 꽤 있을 것 같으니 전날 미리 만들지 말고,
+     * 새벽에는 사용자가 많이 없으니까 새벽 2시부터 미리 퀘스트 생성
+     * 새벽 00시~02시 접속 사용자는 대기시간 발생
      */
     const yesterday = new Date();
+    console.log(`어제: ${yesterday}`);
     yesterday.setDate(this.today.getDate() - 1);
     const yesterdayDate = yesterday.toDateString();
+    console.log(`어제날짜: ${yesterdayDate}`);
     let regions = await this.regions.find({ date: yesterdayDate });
+    console.log(`region: ${regions}`);
 
     const todayDate = this.todayDate;
+    console.log(`todayDate: ${todayDate}`);
     for (const region of regions) {
+      console.log(`region: ${region}`);
       const { regionSi, regionGu, regionDong } = region;
       const isExisted = await this.regions.find({
         date: todayDate,
@@ -397,15 +401,30 @@ export class QuestsService {
         regionGu,
         regionDong,
       });
-      if (isExisted) continue;
-      const address = `${region.regionSi} ${region.regionGu} ${region.regionDong}`;
+      console.log(isExisted);
+      if (isExisted.length !== 0) continue;
+      console.log('여기까지 온다는 얘기?');
+      const kakaoAddress = {
+        regionSi: region.regionSi,
+        regionGu: region.regionGu,
+        regionDong: region.regionDong,
+      };
       const { totalCount, pageCount } = region;
-      const quests = await this.createQuests(totalCount, pageCount, address);
-
-      let newRegion = Region.create({
+      console.log(`region: ${region}`);
+      console.log(`count: ${totalCount}, ${pageCount}`);
+      const quests = await this.createQuests(
+        totalCount,
+        pageCount,
+        kakaoAddress
+      );
+      console.log(`quests: ${quests}`);
+      let newRegion = this.regions.create({
         date: todayDate,
-        ...region,
+        ...kakaoAddress,
+        totalCount,
+        pageCount,
       });
+      console.log(`newRegion: ${newRegion}`);
       await this.regions.save(newRegion);
 
       await Promise.all([
