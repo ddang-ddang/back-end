@@ -32,6 +32,21 @@ export class QuestsService {
     private readonly questsRepository: QuestsRepository
   ) {}
 
+  private readonly logger = new Logger(QuestsService.name);
+
+  private today: Date;
+  private todayDate: string;
+
+  /* 24시에 날짜 업데이트 */
+  @Cron('0 0 0 * * *', {
+    name: 'setToday',
+    timeZone: 'Asia/Seoul',
+  })
+  setToday() {
+    this.today = new Date();
+    this.todayDate = this.today.toDateString();
+  }
+
   /* 피드작성 퀘스트 완료 요청 */
   feedQuest(questId: number, playerId: number, createFeedDto: CreateFeedDto) {
     const { img, content } = createFeedDto;
@@ -65,18 +80,6 @@ export class QuestsService {
    * DB에 데이터 있으면, 퀘스트 + 완료여부 조인해서 응답
    * DB에 데이터 없으면, 지역(동) + 퀘스트 데이터 DB에 생성하고 응답
    */
-  today: Date;
-  todayDate: string;
-
-  @Cron('20 15 1 * * *', {
-    name: 'setToday',
-    timeZone: 'Asia/Seoul',
-  })
-  setToday() {
-    this.today = new Date();
-    this.todayDate = this.today.toDateString();
-    console.log(`세팅: today: ${this.today} string: ${this.todayDate}`);
-  }
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number, playerId: number | null) {
@@ -363,37 +366,21 @@ export class QuestsService {
     }
   }
 
-  private readonly logger = new Logger(QuestsService.name);
-
-  @Cron('1 1 * * * *')
-  testCron() {
-    this.logger.debug('땅땅 몬스터 등장! 누구도 날 막을 수 없다!');
-  }
-
-  // TODO: 테스트 중이므로 수정할 것
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  // @Cron('0 0 2 * * *', {
-  @Cron('30 15 1 * * *', {
+  @Cron('0 0 2 * * *', {
     name: 'createQuests',
     timeZone: 'Asia/Seoul',
   })
   async preCreateQuests() {
-    /* 10~12시까지는 사용자가 꽤 있을 것 같으니 전날 미리 만들지 말고,
-     * 새벽에는 사용자가 많이 없으니까 새벽 2시부터 미리 퀘스트 생성
-     * 새벽 00시~02시 접속 사용자는 대기시간 발생
-     */
+    this.logger.verbose('퀘스트 사전 생성');
+
     const yesterday = new Date();
-    console.log(`어제: ${yesterday}`);
     yesterday.setDate(this.today.getDate() - 1);
     const yesterdayDate = yesterday.toDateString();
-    console.log(`어제날짜: ${yesterdayDate}`);
     let regions = await this.regions.find({ date: yesterdayDate });
-    console.log(`region: ${regions}`);
 
     const todayDate = this.todayDate;
-    console.log(`todayDate: ${todayDate}`);
     for (const region of regions) {
-      console.log(`region: ${region}`);
       const { regionSi, regionGu, regionDong } = region;
       const isExisted = await this.regions.find({
         date: todayDate,
@@ -401,37 +388,31 @@ export class QuestsService {
         regionGu,
         regionDong,
       });
-      console.log(isExisted);
       if (isExisted.length !== 0) continue;
-      console.log('여기까지 온다는 얘기?');
       const kakaoAddress = {
         regionSi: region.regionSi,
         regionGu: region.regionGu,
         regionDong: region.regionDong,
       };
       const { totalCount, pageCount } = region;
-      console.log(`region: ${region}`);
-      console.log(`count: ${totalCount}, ${pageCount}`);
       const quests = await this.createQuests(
         totalCount,
         pageCount,
         kakaoAddress
       );
-      console.log(`quests: ${quests}`);
       let newRegion = this.regions.create({
         date: todayDate,
         ...kakaoAddress,
         totalCount,
         pageCount,
       });
-      console.log(`newRegion: ${newRegion}`);
       await this.regions.save(newRegion);
 
       await Promise.all([
         ...quests.map(async (quest) => {
           return await this.questsRepository.createAndSave({
             ...quest,
-            newRegion,
+            region: newRegion,
           });
         }),
       ]);
