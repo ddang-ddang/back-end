@@ -1,17 +1,14 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Quest } from 'src/quests/entities/quest.entity';
 import { Region } from 'src/quests/entities/region.entity';
-import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 
 @EntityRepository(Quest)
-export class QuestsRepository extends Repository<Quest> {
-  /* 퀘스트 생성 */
-  async createAndSave({ region, ...quests }: CreateQuestDto) {
-    return await this.save({ region, ...quests });
-  }
-
+export class QuestRepository extends Repository<Quest> {
   /* 전체 퀘스트 조회 */
-  async findAll(region: Region, id: number | null): Promise<Object[]> {
+  async findAllWithCompletes(
+    region: Region,
+    id: number | null
+  ): Promise<Object[]> {
     const quests = await this.find({
       where: { region },
       relations: ['completes', 'completes.player'],
@@ -32,11 +29,6 @@ export class QuestsRepository extends Repository<Quest> {
   }
 
   /* 특정 퀘스트 조회 */
-  async findOneBy(id: number): Promise<Quest> {
-    return await this.findOne({ id });
-  }
-
-  /* 특정 퀘스트 조회 (조건 포함) */
   async findOneWithCompletes(
     id: number,
     playerId: number | null

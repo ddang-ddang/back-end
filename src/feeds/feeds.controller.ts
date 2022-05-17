@@ -32,10 +32,13 @@ export class FeedsController {
       let playerId = null;
       if (req.headers.authorization) {
         const token = req.headers.authorization.split(' ')[1];
+        console.log(token);
         const encodedPayload = token.split('.')[1];
         const payload = Buffer.from(encodedPayload, 'base64');
         playerId = JSON.parse(payload.toString()).id;
         this.logger.verbose(`trying to get all feeds user id by ${playerId}`);
+      } else {
+        this.logger.verbose(`trying to get all feed without login`);
       }
       const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
       return {
