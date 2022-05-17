@@ -35,7 +35,7 @@ export class CommentsService {
   }
 
   /* 특정 게시글의 모든 댓글 조회 */
-  findAllComments(feedId: number) {
+  async findAllComments(feedId: number) {
     // return this.commentRepository.find({
     //   where: {
     //     feed: feedId,
@@ -43,8 +43,9 @@ export class CommentsService {
     //   },
     //   relations: ['player'],
     // });
+
     /* queryBuilder */
-    return this.commentRepository
+    return await this.commentRepository
       .createQueryBuilder('comment')
       .select([
         'comment',
