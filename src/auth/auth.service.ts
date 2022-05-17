@@ -1,3 +1,4 @@
+import { CreateLocalDto } from './../players/dto/create-player.dto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -5,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
 import {
   LoginDto,
-  PlayerIdDto,
+  // PlayerIdDto,
   SigninDto,
 } from 'src/players/dto/create-player.dto';
 import * as config from 'config';
@@ -40,6 +41,7 @@ export class AuthService {
       console.log(err.message);
     }
   }
+
   // 2. 토큰 생성
   // 위 이메일 주소와 비밀번호가 일치하면 토크을 생성한다.
   // jwt로 생성한 토큰은 (id, email, nickname)를 담고 있다.
@@ -55,50 +57,71 @@ export class AuthService {
         email,
         nickname,
       };
-      console.log(payload);
+      console.log('--------바당농는거 ');
+      // console.log(res.user);
 
+      // 리프레쉬 토큰이 없다면 두개다 생성한다.
       if (!refreshTokenFromClient) {
-        console.log('리프레쉬 토큰이 없다면 실행');
+        // 리프레쉬 토큰생성
         const refreshToken = this.getJwtRefreshToken(payload);
-        const accessToken = this.getJwtAccessToken(payload);
 
-        const refreshUpload = await this.playersRepository.updateRefreshToken(
-          id,
-          refreshToken
-        );
-        console.log(refreshToken, accessToken)
-        console.log(refreshUpload);
+        // 엑세스 토큰 생성
+        const data = this.getJwtAccessToken(payload);
+        const { accessToken, accessCookie } = data;
 
-        return { refreshToken, accessToken };
+        // refresh 토큰을 DB에 저장한다.
+        await this.playersRepository.saveRefreshToken(id, refreshToken);
+
+        // 리프레쉬, 엑세스 토큰 반환
+        return { refreshToken, accessToken, accessCookie };
       } else {
+        // 만약에 리프레쉬 토큰이 있다면 비교해서 일치하면 true, 아니면 false
         const isValid = await this.checkRefreshToken(
           id,
           refreshTokenFromClient.split(' ')[1]
         );
-        console.log(isValid);
+
+        // 반환된 값이 true이면 엑세스 토큰을 반환한다.
         if (isValid) {
           const accessToken = this.getJwtAccessToken(payload);
           return { accessToken };
         }
-        return null;
+        return { ok: false, message: 'refresh token is not valid' };
       }
     } catch (err) {
       console.log(err.message);
     }
   }
 
-  //
+  async logout(id: number) {
+    try {
+      const result = await this.playersRepository.deleteToken(id);
+      console.log(result);
+      const deleteCookie = [
+        'authorization=; HttpOnly; Path=/; Max-Age=0',
+        'Refresh=; HttpOnly; Path=/; Max-Age=0',
+      ];
+      return deleteCookie;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  // 토큰을 생성하는 함수
   getJwtAccessToken(payload: object) {
+    console.log(jwtConfig.accessTokenExp);
     const accessToken = this.jwtService.sign(payload, {
       secret: jwtConfig.accessSecret,
       expiresIn: `${jwtConfig.accessTokenExp}s`,
     });
-    console.log(accessToken);
-    // const accessCookie = `Authentication=${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
-    return accessToken;
+
+    const accessCookie = `authorization=Bearer ${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
+    return { accessToken, accessCookie };
   }
 
+  // 리프레쉬 토큰을 생성하는 함수
   getJwtRefreshToken(payload: object) {
+    console.log(jwtConfig.refreshTokenExp);
     const refreshToken = this.jwtService.sign(payload, {
       secret: jwtConfig.refreshSecret,
       expiresIn: `${jwtConfig.refreshTokenExp}s`,
@@ -108,14 +131,19 @@ export class AuthService {
   }
 
   // 사용자로 부터 받은 리프레쉬 토큰을 DB에서 검증하는 함수
-  async checkRefreshToken(id: number, refreshToken: string) {
+  async checkRefreshToken(id: number, refreshToken: string): Promise<boolean> {
     try {
+      // 리프레쉬 토큰을 DB에서 검색한다.
       const encryptToken = await this.playersRepository.checkRefreshToken(id);
+      // 리프레쉬 토큰이 일치하면 true, 아니면 false
       if (!encryptToken) {
         console.log('리프레쉬 토큰이 없다면 실행');
         return false;
       }
+      // 리프레쉬토큰 구조분해 할당
       const { currentHashedRefreshToken } = encryptToken;
+
+      // 리프레쉬 토큰을 구조분해한 값과 비교한다.
       const result = await bcrypt.compare(
         refreshToken,
         currentHashedRefreshToken
@@ -138,11 +166,7 @@ export class AuthService {
       const refreshToken = this.getJwtRefreshToken(payload);
       const accessToken = this.getJwtAccessToken(payload);
 
-      const refreshUpload = await this.playersRepository.updateRefreshToken(
-        id,
-        refreshToken
-      );
-      console.log(refreshUpload);
+      await this.playersRepository.saveRefreshToken(id, refreshToken);
 
       return { refreshToken, accessToken };
     } catch (err) {
@@ -160,14 +184,25 @@ export class AuthService {
     };
   }
 
-  kakaoLogin(req) {
-    console.log(req.user);
-    if (!req) {
-      return 'No user from kakao';
+  async kakaoLogin(
+    email: string,
+    nickname: string,
+    profileImg: string,
+    provider: string,
+    providerId: number
+  ) {
+    try {
+      const result = this.playersRepository.findOrCreatePlayer({
+        email,
+        nickname,
+        password: '',
+        mbti: '자아성적성',
+        profileImg,
+        provider,
+        providerId,
+      });
+    } catch (err) {
+      console.log(err.messagge);
     }
-    return {
-      message: 'User information from kakao',
-      data: req.user,
-    };
   }
 }

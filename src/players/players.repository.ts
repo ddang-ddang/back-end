@@ -1,7 +1,7 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { Complete } from 'src/quests/entities/complete.entity';
 import {
   CreateBodyDto,
+  CreateLocalDto,
   EmailDto,
   NicknameDto,
   UpdateInfoDto,
@@ -69,7 +69,7 @@ export class PlayerRepository extends Repository<Player> {
   }
 
   //토큰 관련 Repository
-  async updateRefreshToken(id: number, refreshToken: string): Promise<any> {
+  async saveRefreshToken(id: number, refreshToken: string): Promise<any> {
     try {
       const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
       const result = await this.update(id, { currentHashedRefreshToken });
@@ -85,7 +85,48 @@ export class PlayerRepository extends Repository<Player> {
         select: ['currentHashedRefreshToken'],
         where: { id },
       });
-      return result
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+  async deleteToken(id: number): Promise<any> {
+    try {
+      const result = await this.update(id, { currentHashedRefreshToken: null });
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  async findOrCreatePlayer(createLocalDto: CreateLocalDto): Promise<object> {
+    try {
+      const {
+        email,
+        password,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+      } = createLocalDto;
+
+      console.log('저장하나');
+      const createPlayer = await this.create({
+        email,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+      });
+      console.log('saved');
+
+      console.log(createPlayer);
+      const result = await this.save(createPlayer);
+      console.log(result);
+
+      // return await this.save(createPlayer);
     } catch (err) {
       return err.message;
     }
@@ -93,7 +134,7 @@ export class PlayerRepository extends Repository<Player> {
 
   // 경도 위도 가져와서 mypage에 보내줄거
   async locations(id2: number): Promise<any> {
-    const id = 2;
+    const id = id2;
     try {
       const result = await this.createQueryBuilder('player')
         // .select([
@@ -120,25 +161,4 @@ export class PlayerRepository extends Repository<Player> {
       return err.message;
     }
   }
-
-  //     const locations = await this.find({
-  //       order: { id: 'DESC' },
-  //       relations: ['completes', 'completes.quest'],
-  //       select: [
-  //         'id',
-  //         'nickname',
-  //         'profileImg',
-  //         'mbti',
-  //         'level',
-  //         'exp',
-  //         'completes',
-  //         // 'completes.quest.id',
-  //       ],
-  //     });
-
-  //     return locations;
-  //   } catch (err) {
-  //     return err.message;
-  //   }
-  // }
 }

@@ -24,7 +24,7 @@ export class CreatePlayerDto {
   provider: string;
 
   @IsNotEmpty()
-  providerId: string;
+  providerId: number;
 
   @IsNotEmpty()
   currentHashedRefreshToken: string;
