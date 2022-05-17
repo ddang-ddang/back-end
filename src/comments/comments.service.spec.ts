@@ -57,8 +57,6 @@ describe('commentService', () => {
   it('should be find All', async () => {
     const result = await commentsService.findAllComments(2);
 
-    console.log(result);
-
     // expect(result).toBe(Array);
 
     expect(
