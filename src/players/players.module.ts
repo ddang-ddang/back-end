@@ -14,8 +14,12 @@ const jwtConfig = config.get('jwt');
   imports: [
     TypeOrmModule.forFeature([Player, PlayerRepository]),
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '3600s' },
+      secret: jwtConfig.accessTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
   ],
   providers: [PlayersService, AuthService],

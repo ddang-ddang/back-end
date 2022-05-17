@@ -12,6 +12,7 @@ import { GoogleStrategy } from './google/google.strategy';
 import { KakaoStrategy } from './kakao/kakao-strategy';
 import { SessionSerializer } from './session/session.seralizer';
 import { PassportModule } from '@nestjs/passport';
+import { JwtRefreshTokenStrategy } from './jwt/jwt-refresh-strategy';
 
 const jwtConfig = config.get('jwt');
 
@@ -21,19 +22,24 @@ const jwtConfig = config.get('jwt');
     PassportModule,
     PlayersModule,
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '60s' },
+      secret: jwtConfig.accessSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
     TypeOrmModule.forFeature([PlayerRepository]),
   ],
   providers: [
     AuthService,
-    SessionSerializer,
+    // SessionSerializer,
     LocalStrategy,
     JwtStrategy,
+    JwtRefreshTokenStrategy,
     GoogleStrategy,
     KakaoStrategy,
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtStrategy, JwtRefreshTokenStrategy, PassportModule],
 })
 export class AuthModule {}

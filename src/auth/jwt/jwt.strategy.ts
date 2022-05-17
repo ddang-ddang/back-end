@@ -5,17 +5,21 @@ import * as config from 'config';
 
 const jwtConfig = config.get('jwt');
 
+/*
+ * JWT 토큰 Decode 로직
+ *
+ */
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtConfig.secret,
+      secretOrKey: jwtConfig.accessSecret,
     });
   }
-  async validate(payload: any) {
 
+  async validate(payload: any) {
     return {
       ok: true,
       player: {

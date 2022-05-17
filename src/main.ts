@@ -20,17 +20,17 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.use(
-    session({
-      secret: developmentConfig.secret, //get env vars
-      resave: false,
-      saveUninitialized: true,
-      cookie: { maxAge: 3600000 },
-    })
-  );
+  // app.use(
+  //   session({
+  //     secret: developmentConfig.accessSecret, //get env vars
+  //     resave: false,
+  //     saveUninitialized: true,
+  //     cookie: { maxAge: 3600000 },
+  //   })
+  // );
 
-  app.use(passport.initialize());
-  app.use(passport.session());
+  // app.use(passport.initialize());
+  // app.use(passport.session());
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -7,6 +7,7 @@ import {
   UpdateInfoDto,
 } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
+import * as bcrypt from 'bcrypt';
 
 @EntityRepository(Player)
 export class PlayerRepository extends Repository<Player> {
@@ -67,47 +68,77 @@ export class PlayerRepository extends Repository<Player> {
     }
   }
 
-  // 경도 위도 가져와서 mypage에 보내줄거
-  async loadLatLng(id: number): Promise<any> {
+  //토큰 관련 Repository
+  async updateRefreshToken(id: number, refreshToken: string): Promise<any> {
     try {
-      // const locations = await this.find({
-      //   where: { id },
-      //   relations: ['completes', 'completes.quest'],
-      //   select: ['completes'],
-      // });
-      // someRepository.find({
-      //   order: { id: 'DESC' },
-      //   relations: ['createdBy'],
-      //   select: [
-      //     'id',
-      //     'firstName',
-      //     'lastName',
-      //     'active',
-      //     'createdAt',
-      //     'lastLogin',
-      //     'phoneNumber',
-      //     'createdBy.email',
-      //   ],
-      // });
-
-      const locations = await this.find({
-        order: { id: 'DESC' },
-        relations: ['completes', 'completes.quest'],
-        select: [
-          'id',
-          'nickname',
-          'profileImg',
-          'mbti',
-          'level',
-          'exp',
-          'completes',
-          // 'completes.quest.id',
-        ],
-      });
-
-      return locations;
+      const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+      const result = await this.update(id, { currentHashedRefreshToken });
+      return result;
     } catch (err) {
       return err.message;
     }
   }
+
+  async checkRefreshToken(id: number): Promise<any> {
+    try {
+      const result = await this.findOne({
+        select: ['currentHashedRefreshToken'],
+        where: { id },
+      });
+      return result
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  // 경도 위도 가져와서 mypage에 보내줄거
+  async locations(id2: number): Promise<any> {
+    const id = 2;
+    try {
+      const result = await this.createQueryBuilder('player')
+        // .select([
+        //   'player',
+        //   'player.id',
+        //   'player.email',
+        //   'player.nickname',
+        //   'player.mbti',
+        //   'player.profileImg',
+        //   'player.level',
+        //   'player.exp',
+        // ])
+        .where('player.id = :id', { id })
+        // .innerJoinAndSelect('player.completes', 'complete')
+        .leftJoinAndSelect('player.completes', 'complete')
+        // .leftJoinAndSelect('player.quests', 'quest')
+        // .select(['complete.id', 'complete.questId'])
+        // .leftJoin('complete.quest', 'quest')
+        // .select(['quest.lat', 'quest.lng'])
+        .getMany();
+      console.log(result);
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  //     const locations = await this.find({
+  //       order: { id: 'DESC' },
+  //       relations: ['completes', 'completes.quest'],
+  //       select: [
+  //         'id',
+  //         'nickname',
+  //         'profileImg',
+  //         'mbti',
+  //         'level',
+  //         'exp',
+  //         'completes',
+  //         // 'completes.quest.id',
+  //       ],
+  //     });
+
+  //     return locations;
+  //   } catch (err) {
+  //     return err.message;
+  //   }
+  // }
 }
