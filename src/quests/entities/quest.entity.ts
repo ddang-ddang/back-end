@@ -7,9 +7,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Feed } from '../../feeds/entities/feed.entity';
-import { Region } from './region.entity';
-import { Complete } from './complete.entity';
+import { Feed } from 'src/feeds/entities/feed.entity';
+import { Region } from 'src/quests/entities/region.entity';
+import { Complete } from 'src/quests/entities/complete.entity';
 
 @Entity()
 export class Quest extends BaseEntity {

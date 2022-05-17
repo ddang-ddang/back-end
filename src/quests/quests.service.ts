@@ -1,15 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { FeedRepository } from 'src/feeds/feeds.repository';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CommentRepository } from 'src/comments/comments.repository';
+import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import * as config from 'config';
-import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
-import { QuestsRepository } from './quests.repository';
-import { RegionsRepository } from './regions.repository';
-import { Player } from '../players/entities/player.entity';
 import { Repository } from 'typeorm';
-import { Complete } from './entities/complete.entity';
+import { FeedRepository } from 'src/feeds/feeds.repository';
+import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
+import { CommentRepository } from 'src/comments/comments.repository';
+import { QuestsRepository } from 'src/quests/quests.repository';
+import { Complete } from 'src/quests/entities/complete.entity';
+import { Region } from 'src/quests/entities/region.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 const mapConfig = config.get('map');
 
@@ -23,11 +24,12 @@ export class QuestsService {
   constructor(
     @InjectRepository(Complete)
     private readonly completes: Repository<Complete>,
+    @InjectRepository(Region)
+    private readonly regions: Repository<Region>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
     private readonly commentRepository: CommentRepository,
-    private readonly questsRepository: QuestsRepository,
-    private readonly regionsRepository: RegionsRepository
+    private readonly questsRepository: QuestsRepository
   ) {}
 
   /* 피드작성 퀘스트 완료 요청 */
@@ -48,15 +50,13 @@ export class QuestsService {
         return { ok: false, message: '플레이어님의 정보를 찾을 수 없습니다.' };
 
       const isCompleted = await this.completes.findOne({ quest, player });
-      if (isCompleted) {
+      if (isCompleted)
         return { ok: false, message: '퀘스트를 이미 완료하였습니다.' };
-      }
 
-      const complete = Complete.create({ quest, player });
-      await this.completes.save(complete);
+      await this.completes.save(this.completes.create({ quest, player }));
       return { ok: true };
     } catch (error) {
-      return { ok: false, message: error.message };
+      return { ok: false, message: '퀘스트를 완료할 수 없습니다.' };
     }
   }
 
@@ -65,6 +65,18 @@ export class QuestsService {
    * DB에 데이터 있으면, 퀘스트 + 완료여부 조인해서 응답
    * DB에 데이터 없으면, 지역(동) + 퀘스트 데이터 DB에 생성하고 응답
    */
+  today: Date;
+  todayDate: string;
+
+  @Cron('20 15 1 * * *', {
+    name: 'setToday',
+    timeZone: 'Asia/Seoul',
+  })
+  setToday() {
+    this.today = new Date();
+    this.todayDate = this.today.toDateString();
+    console.log(`세팅: today: ${this.today} string: ${this.todayDate}`);
+  }
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number, playerId: number | null) {
@@ -73,52 +85,58 @@ export class QuestsService {
       console.time('카카오API - getAddressName');
       const kakaoAddress = await this.getAddressName(lat, lng);
       console.timeEnd('카카오API - getAddressName');
-      const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
 
-      let region = await this.regionsRepository.findByAddrs(kakaoAddress);
+      const date = this.today ? this.todayDate : new Date().toDateString();
+
+      /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
+      let region = await this.regions.findOne({ date, ...kakaoAddress });
       if (region) {
+        const { regionSi, regionGu, regionDong } = region;
         const allQuests = await this.questsRepository.findAll(region, playerId);
         return {
           ok: true,
-          currentRegion: {
-            regionSi: region.regionSi,
-            regionGu: region.regionGu,
-            regionDong: region.regionDong,
-          },
+          currentRegion: { regionSi, regionGu, regionDong },
           rows: allQuests,
         };
       }
 
       // 지역(동), 좌표 값으로 퀘스트 만들기
       console.time('주소API - getRegionData');
-      const { totalCount, pageCount } = await this.getRegionData(address);
+      const { totalCount, pageCount } = await this.getRegionData(kakaoAddress);
       console.timeEnd('주소API - getRegionData');
       console.time('createQuests');
-      const quests = await this.createQuests(totalCount, pageCount, address);
+      const quests = await this.createQuests(
+        totalCount,
+        pageCount,
+        kakaoAddress
+      );
       console.timeEnd('createQuests');
 
       // 지역(동) 데이터 DB에 추가 및 조회
-      await this.regionsRepository.createAndSave(kakaoAddress);
-      region = await this.regionsRepository.findByAddrs(kakaoAddress);
+      region = this.regions.create({
+        date,
+        ...kakaoAddress,
+        totalCount,
+        pageCount,
+      });
+      await this.regions.save(region);
 
       // 퀘스트 데이터 DB에 추가 및 조회
       await Promise.all([
         ...quests.map(async (quest) => {
           return await this.questsRepository.createAndSave({
-            region,
             ...quest,
+            region,
           });
         }),
       ]);
+
+      const { regionSi, regionGu, regionDong } = region;
       const allQuests = await this.questsRepository.findAll(region, playerId);
       console.timeEnd('getAll');
       return {
         ok: true,
-        currentRegion: {
-          regionSi: region.regionSi,
-          regionGu: region.regionGu,
-          regionDong: region.regionDong,
-        },
+        currentRegion: { regionSi, regionGu, regionDong },
         rows: allQuests,
       };
     } catch (error) {
@@ -139,15 +157,11 @@ export class QuestsService {
         { headers: { Authorization: `KakaoAK ${REST_API_KEY}` } }
       );
       const { address } = res.data.documents[0];
-      const region_1depth = address.region_1depth_name;
-      const region_2depth = address.region_2depth_name;
-      const region_3depth = address.region_3depth_name;
+      const regionSi: string = address.region_1depth_name;
+      const regionGu: string = address.region_2depth_name;
+      const regionDong: string = address.region_3depth_name;
 
-      return {
-        regionSi: region_1depth,
-        regionGu: region_2depth,
-        regionDong: region_3depth,
-      };
+      return { regionSi, regionGu, regionDong };
     } catch (error) {
       console.log(error.message);
     }
@@ -155,10 +169,11 @@ export class QuestsService {
 
   /* 특정 동의 개요 얻어오기 */
   /**
-   * @param {string} address - "시 구 동"
+   * @param {object} kakaoAddress - { regionSi: string, regionGu: string, regionDong: string }
    * @returns {object} - { 전체 주소 개수, 페이지수 }
    */
-  async getRegionData(address) {
+  async getRegionData(kakaoAddress) {
+    const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
     try {
       const res = await axios.get(
         `${JUSO_BASE_URL}?currentPage=1&countPerPage=10&keyword=${encodeURI(
@@ -177,10 +192,11 @@ export class QuestsService {
   /**
    * @param {number} totalCount - 전체 주소 개수
    * @param {number} pageCount - 전체 페이지 수
-   * @param {string} address - "시 구 동"
+   * @param {object} kakaoAddress - { regionSi: string, regionGu: string, regionDong: string }
    * @returns {array} - [ 퀘스트 ]
    */
-  async createQuests(totalCount, pageCount, address) {
+  async createQuests(totalCount, pageCount, kakaoAddress) {
+    const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
     const addrIndex = [];
     for (let curPage = 1; curPage < pageCount; curPage++) {
       const idx =
@@ -344,6 +360,81 @@ export class QuestsService {
       return { ok: true, row: quest };
     } catch (error) {
       return { ok: false, message: error.message };
+    }
+  }
+
+  private readonly logger = new Logger(QuestsService.name);
+
+  @Cron('1 1 * * * *')
+  testCron() {
+    this.logger.debug('땅땅 몬스터 등장! 누구도 날 막을 수 없다!');
+  }
+
+  // TODO: 테스트 중이므로 수정할 것
+  /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
+  // @Cron('0 0 2 * * *', {
+  @Cron('30 15 1 * * *', {
+    name: 'createQuests',
+    timeZone: 'Asia/Seoul',
+  })
+  async preCreateQuests() {
+    /* 10~12시까지는 사용자가 꽤 있을 것 같으니 전날 미리 만들지 말고,
+     * 새벽에는 사용자가 많이 없으니까 새벽 2시부터 미리 퀘스트 생성
+     * 새벽 00시~02시 접속 사용자는 대기시간 발생
+     */
+    const yesterday = new Date();
+    console.log(`어제: ${yesterday}`);
+    yesterday.setDate(this.today.getDate() - 1);
+    const yesterdayDate = yesterday.toDateString();
+    console.log(`어제날짜: ${yesterdayDate}`);
+    let regions = await this.regions.find({ date: yesterdayDate });
+    console.log(`region: ${regions}`);
+
+    const todayDate = this.todayDate;
+    console.log(`todayDate: ${todayDate}`);
+    for (const region of regions) {
+      console.log(`region: ${region}`);
+      const { regionSi, regionGu, regionDong } = region;
+      const isExisted = await this.regions.find({
+        date: todayDate,
+        regionSi,
+        regionGu,
+        regionDong,
+      });
+      console.log(isExisted);
+      if (isExisted.length !== 0) continue;
+      console.log('여기까지 온다는 얘기?');
+      const kakaoAddress = {
+        regionSi: region.regionSi,
+        regionGu: region.regionGu,
+        regionDong: region.regionDong,
+      };
+      const { totalCount, pageCount } = region;
+      console.log(`region: ${region}`);
+      console.log(`count: ${totalCount}, ${pageCount}`);
+      const quests = await this.createQuests(
+        totalCount,
+        pageCount,
+        kakaoAddress
+      );
+      console.log(`quests: ${quests}`);
+      let newRegion = this.regions.create({
+        date: todayDate,
+        ...kakaoAddress,
+        totalCount,
+        pageCount,
+      });
+      console.log(`newRegion: ${newRegion}`);
+      await this.regions.save(newRegion);
+
+      await Promise.all([
+        ...quests.map(async (quest) => {
+          return await this.questsRepository.createAndSave({
+            ...quest,
+            newRegion,
+          });
+        }),
+      ]);
     }
   }
 }
