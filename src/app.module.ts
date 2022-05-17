@@ -22,7 +22,7 @@ import { FeedsService } from './feeds/feeds.service';
 import { PlayerRepository } from './players/players.repository';
 import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
-import { QuestsRepository } from './quests/quests.repository';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const jwtConfig = config.get('jwt');
 
@@ -40,6 +40,7 @@ const jwtConfig = config.get('jwt');
       LikeRepository,
       CommentRepository,
     ]),
+    ScheduleModule.forRoot(),
     AuthModule,
     PlayersModule,
     FeedsModule,

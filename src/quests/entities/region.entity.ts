@@ -5,7 +5,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Quest } from './quest.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
 import { Feed } from 'src/feeds/entities/feed.entity';
 
 @Entity()
@@ -24,6 +24,12 @@ export class Region extends BaseEntity {
 
   @Column()
   regionDong: string;
+
+  @Column()
+  totalCount: number;
+
+  @Column()
+  pageCount: number;
 
   @OneToMany((type) => Quest, (quest) => quest.region)
   quests: Quest[];

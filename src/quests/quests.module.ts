@@ -1,24 +1,24 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CommentRepository } from 'src/comments/comments.repository';
-import { FeedRepository } from 'src/feeds/feeds.repository';
+import { Region } from 'src/quests/entities/region.entity';
+import { Complete } from 'src/quests/entities/complete.entity';
 import { QuestsRepository } from 'src/quests/quests.repository';
-import { QuestsController } from './quests.controller';
-import { QuestsService } from './quests.service';
-import { Quest } from './entities/quest.entity';
-import { Region } from './entities/region.entity';
-import { RegionsRepository } from './regions.repository';
-import { Complete } from './entities/complete.entity';
-import { PlayerRepository } from '../players/players.repository';
+import { FeedRepository } from 'src/feeds/feeds.repository';
+import { CommentRepository } from 'src/comments/comments.repository';
+import { PlayerRepository } from 'src/players/players.repository';
+import { QuestsController } from 'src/quests/quests.controller';
+import { QuestsService } from 'src/quests/quests.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Quest, Region, Complete]),
-    TypeOrmModule.forFeature([QuestsRepository]),
-    TypeOrmModule.forFeature([RegionsRepository]),
-    TypeOrmModule.forFeature([FeedRepository]),
-    TypeOrmModule.forFeature([CommentRepository]),
-    TypeOrmModule.forFeature([PlayerRepository]),
+    TypeOrmModule.forFeature([
+      Region,
+      Complete,
+      QuestsRepository,
+      FeedRepository,
+      CommentRepository,
+      PlayerRepository,
+    ]),
   ],
   controllers: [QuestsController],
   providers: [QuestsService],
