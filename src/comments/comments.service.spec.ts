@@ -1,14 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { JwtStrategy } from 'src/auth/jwt/jwt.strategy';
-import { Connection, createQueryBuilder, Repository } from 'typeorm';
+import { Connection, createConnections, createQueryBuilder, getConnection, Repository } from 'typeorm';
 import { CommentRepository } from './comments.repository';
 import { CommentsService } from './comments.service';
 import { Comment } from './entities/comment.entity';
 import { plainToClass } from 'class-transformer';
+import { CreateCommentDto } from './dto/create-comment.dto';
 
 const mockCommentRepository = {
   findAllComments: jest.fn(),
+  createComment: jest.fn(),
   createQueryBuilder: jest.fn().mockReturnValue({
     innerJoin: jest.fn().mockReturnThis(),
     leftJoin: jest.fn().mockReturnThis(),
@@ -27,6 +29,12 @@ const mockCommentRepository = {
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 
 describe('commentService', () => {
+  const createCommentDto: CreateCommentDto = {
+    comment: 'jest test',
+  };
+  const feedId = 1;
+  const playerId = 1;
+
   let commentsService: CommentsService;
   let commentsRepository: MockRepository<Comment>;
 
@@ -57,7 +65,7 @@ describe('commentService', () => {
   it('should be find All', async () => {
     const result = await commentsService.findAllComments(2);
 
-    // expect(result).toBe(Array);
+    expect(result).toEqual(expect.any(Object));
 
     expect(
       mockCommentRepository.createQueryBuilder().getMany
@@ -66,5 +74,17 @@ describe('commentService', () => {
     expect(
       mockCommentRepository.createQueryBuilder().leftJoinAndSelect
     ).toBeCalledTimes(1);
+  });
+
+  it('cteate comment', async () => {
+    // mockCommentRepository.createComment.mockResolvedValue('save error');
+
+    const comment = await commentsService.createComment(
+      playerId,
+      feedId,
+      createCommentDto
+    );
+
+    expect(comment).toEqual('save error');
   });
 });
