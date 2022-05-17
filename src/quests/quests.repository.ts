@@ -1,7 +1,7 @@
 import { EntityRepository, Repository } from 'typeorm';
-import { Quest } from './entities/quest.entity';
-import { CreateQuestDto } from './dto/create-quest.dto';
-import { Region } from './entities/region.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
+import { Region } from 'src/quests/entities/region.entity';
+import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 
 @EntityRepository(Quest)
 export class QuestsRepository extends Repository<Quest> {
