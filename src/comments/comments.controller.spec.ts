@@ -1,15 +1,25 @@
-import { CommentsController } from "./comments.controller";
-import { Comment } from "./entities/comment.entity";
+import { Test, TestingModule } from '@nestjs/testing';
+import { CommentsController } from './comments.controller';
+import { CommentsService } from './comments.service';
 
 describe('Comment controller', () => {
-  Comment.create = jest.fn();
+  let controller: CommentsController;
 
-  it('should have a create method', () => {
-    expect(typeof Comment.create).toBe('function');
-  })
+  const mockCommentService = {};
 
-  // it('should call medel create method when it invoked', () => {
-  //   CommentsController.createComment();
-  //   expect()
-  // });
-})
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [CommentsController],
+      providers: [CommentsService],
+    })
+      .overrideProvider(CommentsService)
+      .useValue(mockCommentService)
+      .compile();
+
+    controller = module.get<CommentsController>(CommentsController);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+});
