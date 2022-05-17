@@ -30,7 +30,6 @@ export class FeedsController {
     try {
       /* token 검사 */
       let playerId = null;
-      console.log(req);
       if (req.headers.authorization) {
         const token = req.headers.authorization.split(' ')[1];
         console.log(token);

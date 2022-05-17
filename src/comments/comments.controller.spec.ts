@@ -1,11 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Any } from 'typeorm';
 import { CommentsController } from './comments.controller';
 import { CommentsService } from './comments.service';
 
 describe('Comment controller', () => {
   let controller: CommentsController;
 
-  const mockCommentService = {};
+  const req =  createRequest();
+
+  const mockCommentService = {
+    createComment: jest.fn().mockImplementation((req, feedId, dto) => {
+      return {
+        ok: true,
+      };
+    }),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -21,5 +30,13 @@ describe('Comment controller', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  it('should create a comment', () => {
+    const dto = { comment: 'jest test' };
+
+    expect(controller.createComment(req, 1, dto));
+
+    // expect(mockCommentService.createComment).toHaveBeenCalled();
   });
 });
