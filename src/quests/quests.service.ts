@@ -6,8 +6,7 @@ import * as config from 'config';
 import { Repository } from 'typeorm';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
-import { CommentRepository } from 'src/comments/comments.repository';
-import { QuestsRepository } from 'src/quests/quests.repository';
+import { QuestRepository } from 'src/quests/repositories/quest.repository';
 import { Complete } from 'src/quests/entities/complete.entity';
 import { Region } from 'src/quests/entities/region.entity';
 import { Player } from 'src/players/entities/player.entity';
@@ -28,8 +27,7 @@ export class QuestsService {
     private readonly regions: Repository<Region>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
-    private readonly commentRepository: CommentRepository,
-    private readonly questsRepository: QuestsRepository
+    private readonly quests: QuestRepository
   ) {}
 
   private readonly logger = new Logger(QuestsService.name);
@@ -56,7 +54,7 @@ export class QuestsService {
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number) {
     try {
-      const quest = await this.questsRepository.findOneBy(questId);
+      const quest = await this.quests.findOne({ id: questId });
       if (!quest)
         return { ok: false, message: '요청하신 퀘스트를 찾을 수 없습니다.' };
 
@@ -95,7 +93,10 @@ export class QuestsService {
       let region = await this.regions.findOne({ date, ...kakaoAddress });
       if (region) {
         const { regionSi, regionGu, regionDong } = region;
-        const allQuests = await this.questsRepository.findAll(region, playerId);
+        const allQuests = await this.quests.findAllWithCompletes(
+          region,
+          playerId
+        );
         return {
           ok: true,
           currentRegion: { regionSi, regionGu, regionDong },
@@ -108,7 +109,7 @@ export class QuestsService {
       const { totalCount, pageCount } = await this.getRegionData(kakaoAddress);
       console.timeEnd('주소API - getRegionData');
       console.time('createQuests');
-      const quests = await this.createQuests(
+      const quest = await this.createQuests(
         totalCount,
         pageCount,
         kakaoAddress
@@ -126,8 +127,8 @@ export class QuestsService {
 
       // 퀘스트 데이터 DB에 추가 및 조회
       await Promise.all([
-        ...quests.map(async (quest) => {
-          return await this.questsRepository.createAndSave({
+        ...quest.map(async (quest) => {
+          return await this.quests.save({
             ...quest,
             region,
           });
@@ -135,7 +136,10 @@ export class QuestsService {
       ]);
 
       const { regionSi, regionGu, regionDong } = region;
-      const allQuests = await this.questsRepository.findAll(region, playerId);
+      const allQuests = await this.quests.findAllWithCompletes(
+        region,
+        playerId
+      );
       console.timeEnd('getAll');
       return {
         ok: true,
@@ -353,10 +357,7 @@ export class QuestsService {
   /* 특정 퀘스트 조회 */
   async getOne(id: number, playerId: number | null) {
     try {
-      const quest = await this.questsRepository.findOneWithCompletes(
-        id,
-        playerId
-      );
+      const quest = await this.quests.findOneWithCompletes(id, playerId);
       if (!quest)
         return { ok: false, message: '해당 게시글을 찾을 수 없습니다.' };
 
@@ -395,7 +396,7 @@ export class QuestsService {
         regionDong: region.regionDong,
       };
       const { totalCount, pageCount } = region;
-      const quests = await this.createQuests(
+      const quest = await this.createQuests(
         totalCount,
         pageCount,
         kakaoAddress
@@ -409,8 +410,8 @@ export class QuestsService {
       await this.regions.save(newRegion);
 
       await Promise.all([
-        ...quests.map(async (quest) => {
-          return await this.questsRepository.createAndSave({
+        ...quest.map(async (quest) => {
+          return await this.quests.save({
             ...quest,
             region: newRegion,
           });
