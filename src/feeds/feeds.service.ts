@@ -27,7 +27,7 @@ export class FeedsService {
   /* 모든 피드 가져오기 */
   async findAllFeeds(playerId: number, regionData: any) {
     const { regionSi, regionGu, regionDong } = regionData;
-
+    console.log(regionSi, regionGu, regionDong);
     // const feeds = await Feed.find({
     //   where: {
     //     deletedAt: null,
@@ -60,7 +60,7 @@ export class FeedsService {
       .leftJoinAndSelect('feed.region', 'region')
       .where(
         'region.regionSi = :si and region.regionGu = :gu and region.regionDong = :dong',
-        { si: '서울시', gu: '강남구', dong: '삼성동' }
+        { si: regionSi, gu: regionGu, dong: regionDong }
       )
       .getMany();
 
