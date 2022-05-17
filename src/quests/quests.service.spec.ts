@@ -1,37 +1,41 @@
 import { Test } from '@nestjs/testing';
-import { QuestsService } from './quests.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { QuestsRepository } from './quests.repository';
+import { QuestsService } from 'src/quests/quests.service';
+import { QuestRepository } from 'src/quests/repositories/quest.repository';
 import { Repository } from 'typeorm';
-import { Complete } from './entities/complete.entity';
-import { Player } from '../players/entities/player.entity';
-import { Quest } from './entities/quest.entity';
-import { Region } from './entities/region.entity';
-import { Comment } from '../comments/entities/comment.entity';
-import { Feed } from '../feeds/entities/feed.entity';
+import { Complete } from 'src/quests/entities/complete.entity';
+import { Player } from 'src/players/entities/player.entity';
+import { Region } from 'src/quests/entities/region.entity';
+import { FeedRepository } from 'src/feeds/feeds.repository';
 
-const mockQuestsRepository = {
-  createAndSave: jest.fn(),
-  findAll: jest.fn(),
-  findOneBy: jest.fn(),
-  findOneWithCompletes: jest.fn(),
-};
 const mockRepository = () => ({
   create: jest.fn(),
   save: jest.fn(),
   findOne: jest.fn(),
 });
+const mockQuestsRepository = {
+  save: jest.fn(),
+  findOne: jest.fn(),
+  findAllWithCompletes: jest.fn(),
+  findOneWithCompletes: jest.fn(),
+};
+const mockFeedRepository = {
+  createAndSave: jest.fn(),
+  findAll: jest.fn(),
+  findOneBy: jest.fn(),
+  findOneWithCompletes: jest.fn(),
+};
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+type MockQuestRepository = Partial<Record<keyof QuestRepository, jest.Mock>>;
 
 describe('QuestsService', () => {
   let service: QuestsService;
-  let questsRepository: MockRepository<Quest>;
   let playersRepository: MockRepository<Player>;
   let completeRepository: MockRepository<Complete>;
   let regionRepository: MockRepository<Region>;
-  let commentRepository: MockRepository<Comment>;
-  let feedRepository: MockRepository<Feed>;
+  let questsRepository: MockQuestRepository;
+  let feedRepository;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -39,10 +43,6 @@ describe('QuestsService', () => {
         // 퀘스트 서비스만 진짜, 나머지는 가짜(mock)
         QuestsService,
         // 레포지토리 필요 (독립적 테스팅)
-        {
-          provide: QuestsRepository,
-          useValue: mockQuestsRepository,
-        },
         {
           provide: getRepositoryToken(Player),
           useValue: mockRepository(),
@@ -56,23 +56,22 @@ describe('QuestsService', () => {
           useValue: mockRepository(),
         },
         {
-          provide: getRepositoryToken(Comment),
-          useValue: mockRepository(),
+          provide: QuestRepository,
+          useValue: mockQuestsRepository,
         },
         {
-          provide: getRepositoryToken(Feed),
-          useValue: mockRepository(),
+          provide: FeedRepository,
+          useValue: mockFeedRepository,
         },
       ],
     }).compile();
 
     service = module.get<QuestsService>(QuestsService);
-    questsRepository = module.get(QuestsRepository);
     playersRepository = module.get(getRepositoryToken(Player));
     completeRepository = module.get(getRepositoryToken(Complete));
-    commentRepository = module.get(getRepositoryToken(Comment));
-    feedRepository = module.get(getRepositoryToken(Feed));
     regionRepository = module.get(getRepositoryToken(Region));
+    questsRepository = module.get(QuestRepository);
+    feedRepository = module.get(FeedRepository);
   });
 
   it('should be defined', () => {
@@ -103,9 +102,9 @@ describe('QuestsService', () => {
     });
 
     it('should fail if player does not exist', async () => {
-      questsRepository.findOne.mockResolvedValue(findQuestArgs);
+      questsRepository.findOne.mockResolvedValue(true);
       playersRepository.findOne.mockResolvedValue(undefined);
-      const result = await service.questComplete(1, 1);
+      const result = await service.questComplete(questId, playerId);
 
       expect(result).toEqual({
         ok: false,

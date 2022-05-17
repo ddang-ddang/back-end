@@ -13,7 +13,6 @@ import { LikeRepository } from 'src/likes/likes.repository';
 import { CommentRepository } from 'src/comments/comments.repository';
 import { Region } from 'src/quests/entities/region.entity';
 import { Quest } from 'src/quests/entities/quest.entity';
-import { QuestsRepository } from 'src/quests/quests.repository';
 
 @Injectable()
 export class FeedsService {
