@@ -87,6 +87,19 @@ export class PlayersService {
     }
   }
 
+  async getRefreshToken(playerId: number): Promise<string> {
+    try {
+      console.log(playerId);
+      const result = await this.playersRepository.checkRefreshToken(playerId);
+      console.log("-0-------")
+      console.log(result);
+      console.log("-0-------")
+      return result;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
   // nickname 변경하기
   async editPlayer(updateInforDto: UpdateInfoDto): Promise<object> {
     try {

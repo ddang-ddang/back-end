@@ -50,7 +50,6 @@ export class AuthService {
     refreshTokenFromClient: string
   ): Promise<any> {
     try {
-      console.log('----')
       const payload = {
         id,
         email,
@@ -67,6 +66,7 @@ export class AuthService {
           id,
           refreshToken
         );
+        console.log(refreshToken, accessToken)
         console.log(refreshUpload);
 
         return { refreshToken, accessToken };
@@ -93,6 +93,7 @@ export class AuthService {
       secret: jwtConfig.accessSecret,
       expiresIn: `${jwtConfig.accessTokenExp}s`,
     });
+    console.log(accessToken);
     // const accessCookie = `Authentication=${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
     return accessToken;
   }
@@ -110,6 +111,10 @@ export class AuthService {
   async checkRefreshToken(id: number, refreshToken: string) {
     try {
       const encryptToken = await this.playersRepository.checkRefreshToken(id);
+      if (!encryptToken) {
+        console.log('리프레쉬 토큰이 없다면 실행');
+        return false;
+      }
       const { currentHashedRefreshToken } = encryptToken;
       const result = await bcrypt.compare(
         refreshToken,
@@ -121,6 +126,7 @@ export class AuthService {
     }
   }
 
+  // 리프레쉬, 엑세스 토큰을 업데이트 하는 함수
   async updateToken(id: number, email: string, nickname: string) {
     try {
       const payload = {

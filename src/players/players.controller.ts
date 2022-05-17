@@ -1,3 +1,4 @@
+import { JwtRefreshTokenGuard } from '../auth/jwt/jwt-refresh-token.guard';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -17,6 +18,7 @@ import {
   Res,
   BadRequestException,
   UnauthorizedException,
+  Redirect,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -32,6 +34,7 @@ import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('api/players')
 @ApiTags('플레이어 API')
@@ -160,8 +163,8 @@ export class PlayersController {
   async signIn(@Request() req, @Res({ passthrough: true }) res) {
     try {
       const { id, email, nickname } = req.user;
-      console.log(req.use);
-      const refreshTokenFromClient = req.headers['Authorization'];
+      console.log(req.user);
+      const refreshTokenFromClient = req.headers['authorization'];
 
       console.log(refreshTokenFromClient);
       this.logger.verbose(`${email}님이 로그인하려고 합니다`);
@@ -180,6 +183,7 @@ export class PlayersController {
       } else {
         res.setHeader('Authorization', accessToken);
       }
+      throw new UnauthorizedException('refreshToken is invalid');
 
       return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
@@ -193,38 +197,47 @@ export class PlayersController {
   //원하는 곳에 JwtAuthGuard 붙이면 됨
   @ApiOperation({ summary: 'jwt인증 API' })
   @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtRefreshAuthGuard)
   @Get('auth')
   async getHello(@Request() req, @Res() res): Promise<object> {
     try {
-      const { id, email, nickname } = req.user;
-      console.log(req.user);
-      const refreshTokenFromClient = req.headers['authorization'];
+      // const { playerId, email, nickname } = req.user.player;
+
+      // this.logger.verbose(`${email}님이 인증 하려고 합니다`);
+
+      // 사용자에게 토큰을 받는다.
+      // const access_token = req.headers['authorization'].split(' ')[1];
+      const refreshTokenFromClient = req.headers['refresh'].split(' ')[1];
+
       console.log(refreshTokenFromClient);
 
-      this.logger.verbose(`${email}님이 인증 하려고 합니다`);
-      const tokens = await this.authService.signin(
-        email,
-        nickname,
-        id,
+      // 토큰을 검증 한다.
+      const isTrue = await this.authService.checkRefreshToken(
+        2,
         refreshTokenFromClient
       );
+      console.log('-----------');
+      console.log(isTrue);
 
-      const { accessToken, refreshToken } = tokens;
-
-      if (!refreshTokenFromClient) {
-        res.setHeader('Authorization', accessToken);
-        res.setHeader('refresh', refreshToken);
+      // 리프레시 토큰이 있다면 엑세스 토큰을 발행하고
+      // 두개다 없으면 두개다 발행한다.
+      if (isTrue) {
         this.logger.verbose(
-          `${email}님이 엑세스 토큰과 리프레쉬 토큰을 생성하셨습니다.`
+          `님이 이미 리프레쉬 토큰이있어 엑세스 토큰만 생성하셨습니다.`
         );
+
+        const accessToken = this.authService.getJwtAccessToken({
+          id: 2,
+          email: 'diasm5@gmail.com',
+          nickname: 'diasm5',
+        });
+
+        res.setHeader('Authorization', accessToken);
+        return { ok: true };
       } else {
-        res.setHeader('Authorization', accessToken);
-        this.logger.verbose(
-          `${email}님이 이미 리프레쉬 토큰이있어 엑세스 토큰만 생성하셨습니다.`
-        );
+        this.logger.verbose(`님이 다시 로그인 하셔야 합니다.`);
+        return { ok: false, message: '로그인이 필요합니다.' };
       }
-
-      return { ok: true, row: { email: email, nickname: nickname } };
     } catch (err) {
       return {
         ok: false,
@@ -263,6 +276,13 @@ export class PlayersController {
       res.setHeader('refresh', refreshToken);
       return { ok: true, row: { id: id } };
     }
+  }
+
+  @UseGuards(JwtRefreshTokenGuard)
+  @Get('test')
+  async test(@Request() req, @Res() res) {
+    console.log(req.user);
+    return req;
   }
 
   /*

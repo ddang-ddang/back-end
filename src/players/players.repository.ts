@@ -85,7 +85,7 @@ export class PlayerRepository extends Repository<Player> {
         select: ['currentHashedRefreshToken'],
         where: { id },
       });
-      return result;
+      return result
     } catch (err) {
       return err.message;
     }

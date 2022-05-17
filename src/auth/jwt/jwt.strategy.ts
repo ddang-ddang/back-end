@@ -10,24 +10,16 @@ const jwtConfig = config.get('jwt');
  *
  */
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
-    super(
-      {
-        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-        ignoreExpiration: false,
-        secretOrKey: jwtConfig.accessSecret,
-      }
-      // {
-      //   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      //   ignoreExpiration: false,
-      //   secretOrKey: jwtConfig.refreshSecret,
-      // }
-    );
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: jwtConfig.accessSecret,
+    });
   }
 
   async validate(payload: any) {
-
     return {
       ok: true,
       player: {
