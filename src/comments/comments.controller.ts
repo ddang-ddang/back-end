@@ -34,11 +34,14 @@ export class CommentsController {
     const { playerId } = req['user'].player;
     this.logger.verbose(`trying to create comment by userId ${playerId}`);
     try {
-      return this.commentsService.createComment(
+      const comment = await this.commentsService.createComment(
         playerId,
         feedId,
         createCommentDto
       );
+      return {
+        ok: true,
+      };
     } catch (error) {
       return {
         ok: false,
