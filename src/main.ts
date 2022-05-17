@@ -3,14 +3,14 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as config from 'config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as session from 'express-session';
-import * as passport from 'passport';
+// import * as session from 'express-session';
+// import * as passport from 'passport';
 
 async function bootstrap() {
   const logger = new Logger();
   const app = await NestFactory.create(AppModule, { cors: true });
   const serverConfig = config.get('server');
-  const developmentConfig = config.get('jwt');
+  // const developmentConfig = config.get('jwt');
 
   app.enableCors({
     origin: '*',
@@ -31,7 +31,6 @@ async function bootstrap() {
 
   // app.use(passport.initialize());
   // app.use(passport.session());
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
