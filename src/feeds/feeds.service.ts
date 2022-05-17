@@ -50,11 +50,18 @@ export class FeedsService {
         'player.profileImg',
         'player.level',
         'player.exp',
+        'commentWriter.email',
+        'commentWriter.nickname',
+        'commentWriter.mbti',
+        'commentWriter.profileImg',
+        'commentWriter.level',
+        'commentWriter.exp',
       ])
       .where({ deletedAt: null })
       .leftJoinAndSelect('feed.quest', 'quest')
       .leftJoin('feed.player', 'player')
       .leftJoinAndSelect('feed.comments', 'comment')
+      .leftJoin('comment.player', 'commentWriter')
       .leftJoinAndSelect('feed.likes', 'likes')
       .leftJoinAndSelect('feed.region', 'region')
       .where(
