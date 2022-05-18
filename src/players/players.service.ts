@@ -20,23 +20,31 @@ export class PlayersService {
   // 플레이어 생성
   async signup(createPlayerDto: CreateBodyDto): Promise<Player> {
     try {
-      const { email, password, nickname, mbti, profileImg, provider } =
-        createPlayerDto;
+      const {
+        email,
+        password,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+        currentHashedRefreshToken,
+      } = createPlayerDto;
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const createPlayer = await this.playersRepository.createPlayer({
-        email: email,
-        nickname: nickname,
+        email,
+        nickname,
         password: hashedPassword,
-        mbti: mbti,
-        profileImg: profileImg,
-        provider: provider,
-        // providerId: providerId,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+        currentHashedRefreshToken,
       });
       return createPlayer;
     } catch (err) {
       return err.message;
-      console.log(err);
     }
   }
 
@@ -66,7 +74,7 @@ export class PlayersService {
       }
       return true;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
     }
   }
 
@@ -83,17 +91,13 @@ export class PlayersService {
       }
       return result;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
     }
   }
 
   async getRefreshToken(playerId: number): Promise<string> {
     try {
-      console.log(playerId);
       const result = await this.playersRepository.checkRefreshToken(playerId);
-      console.log('-0-------');
-      console.log(result);
-      console.log('-0-------');
       return result;
     } catch (err) {
       console.log(err.message);
@@ -112,7 +116,7 @@ export class PlayersService {
       });
       return result;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
     }
   }
 
