@@ -24,7 +24,7 @@ export class CreatePlayerDto {
   provider: string;
 
   @IsNotEmpty()
-  providerId: number;
+  providerId: string;
 
   @IsNotEmpty()
   currentHashedRefreshToken: string;
@@ -45,6 +45,17 @@ export class CreateBodyDto extends PickType(CreatePlayerDto, [
   'mbti',
   'profileImg',
   'provider',
+  'providerId',
+  'currentHashedRefreshToken',
+] as const) {}
+export class CreateKakaoDto extends PickType(CreatePlayerDto, [
+  'email',
+  'password',
+  'nickname',
+  'mbti',
+  'profileImg',
+  'provider',
+  'providerId',
 ] as const) {}
 
 export class CreateLocalDto extends PickType(CreatePlayerDto, [

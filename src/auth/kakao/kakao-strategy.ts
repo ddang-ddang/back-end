@@ -3,12 +3,19 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-kakao';
 import * as config from 'config';
 import { AuthService } from '../auth.service';
+import { PlayersService } from '../../players/players.service';
+import { Logger } from '@nestjs/common';
+import { join } from 'path';
 
 const kakaoConfig = config.get('kakao');
 
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly authService: AuthService) {
+  private logger = new Logger('KakoStrategy');
+  constructor(
+    private readonly authService: AuthService,
+    private readonly playersService: PlayersService
+  ) {
     super({
       clientID: kakaoConfig.clientId,
       clientSecret: kakaoConfig.clientSecret,
@@ -26,23 +33,6 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     const { id, username } = profile;
     const { profile_image, thumbnail_image } = profile._json.properties;
 
-    console.log(profile);
-    // DB조회 후 없으면 DB저장
-    // 저장될  provier id, provider, provider_id, email, nickname, profile_image, thumbnail_image
-    // if (id) {
-    // const hello = await this.authService.kakaoLogin(
-    //   email,
-    //   username,
-    //   profile_image,
-    //   'kakao',
-    //   id
-    // );
-
-    //   return hello;
-    // }
-
-    // const player = await this.authService.findOrCreatePlayer(
-
     const player = {
       id,
       username,
@@ -52,7 +42,25 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
       refreshToken: refreshToken,
     };
 
-    console.log(player);
+    const isJoin = await this.authService.checkSignUp(id, 'kakao');
+
+    if (!isJoin) {
+      console.log('가입해야합니다.');
+      this.logger.verbose(`${username}님이 카카오로 회원가입을 진행합니다.`);
+      //가입
+      const joinGame = await this.playersService.signup({
+        email: id + '@ddangddang.com',
+        password: id + username,
+        nickname: username,
+        mbti: null,
+        profileImg: profile_image,
+        provider: 'kakao',
+        providerId: id,
+        currentHashedRefreshToken: refreshToken,
+      });
+    }
+    //로그인 엑세스토큰과 리프레쉬 토큰 가저오기
+
     Done(null, player);
     return player;
   }

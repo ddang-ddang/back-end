@@ -47,7 +47,8 @@ export class Player extends BaseEntity {
   @IsNotEmpty()
   @Column({
     type: 'varchar',
-    length: 20,
+    default: 'mbti',
+    length: 10,
   })
   mbti: string;
 
@@ -78,18 +79,16 @@ export class Player extends BaseEntity {
   /* 플레이어 프로바이더 (local, kakao, google) */
   @IsEmpty()
   @Column({
-    default: 'local',
+    type: 'varchar',
+    default: null,
+    length: '10',
   })
   provider: string;
 
-  @Column({
-    name: 'providerId',
-    type: 'int',
-    default: null,
-  })
-  providerId?: number;
+  @Column({ type: 'varchar', length: 255, default: null })
+  providerId?: string;
 
-  @Column({ type: 'varchar', default: null, length: 128 })
+  @Column({ type: 'varchar', default: null })
   currentHashedRefreshToken?: string;
 
   /* 테이블 관계 */

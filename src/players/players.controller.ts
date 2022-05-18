@@ -59,7 +59,6 @@ export class PlayersController {
     const { email, nickname, password, mbti, profileImg } = inputBodyDto;
     this.logger.verbose(`회원을 가입하려고 합니다.: ${email}`);
 
-    console.log({ email, nickname, password, mbti, profileImg });
     try {
       await this.playersService.signup({
         email,
@@ -68,6 +67,8 @@ export class PlayersController {
         mbti,
         profileImg,
         provider: 'local',
+        providerId: null,
+        currentHashedRefreshToken: null,
       });
       return { ok: true };
     } catch (err) {
@@ -162,7 +163,6 @@ export class PlayersController {
   async signIn(@Request() req, @Res({ passthrough: true }) res) {
     try {
       const { id, email, nickname } = req.user;
-      console.log(req.user);
 
       //로그인할때 헤더에서 토큰을 받는다.
       const refreshTokenFromClient = req.headers['authorization'];
@@ -176,16 +176,18 @@ export class PlayersController {
         refreshTokenFromClient
       );
 
-      const { accessToken, refreshToken, accessCookie } = tokens;
-      console.log(accessCookie);
+      const { accessToken, refreshToken } = tokens;
+      console.log(accessToken);
 
       if (!refreshTokenFromClient) {
         res.setHeader('refresh', refreshToken);
-        req.res.setHeader('Set-Cookie', accessCookie);
+        res.setHeader('authorization', accessToken);
+        // req.res.setHeader('Set-Cookie', accessCookie);
 
         return { ok: true, row: { email: email, nickname: nickname } };
       } else {
-        req.res.setHeader('Set-Cookie', accessCookie);
+        res.setHeader('authorization', accessToken);
+        // req.res.setHeader('Set-Cookie', accessCookie);
       }
       throw new UnauthorizedException('refreshToken is invalid');
     } catch (err) {
@@ -198,9 +200,10 @@ export class PlayersController {
 
   @UseGuards(JwtRefreshTokenGuard)
   @Get('auth')
-  async test(@Request() req) {
+  async test(@Request() req, @Res({ passthrough: true }) res) {
     try {
-      console.log(req.user);
+      // console.log(req.user);
+      // console.log("1111111111111111")
       const { id, email, nickname } = req.user;
       const createCookie = this.authService.getJwtAccessToken({
         id,
@@ -209,7 +212,8 @@ export class PlayersController {
       });
 
       // 쿠키를 강제로 주입한다.
-      req.res.setHeader('Set-Cookie', createCookie.accessCookie);
+      res.setHeader('access', createCookie);
+      // req.res.setHeader('Set-Cookie', createCookie.accessCookie);
 
       return { ok: true };
     } catch (err) {
@@ -237,32 +241,42 @@ export class PlayersController {
     }
   }
 
-  /*
-   * 구글 로그인
-   *
-   */
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  async google() {}
 
-  @ApiOperation({ summary: 'jwt인증 API' })
+  @ApiOperation({ summary: '구글 로그인' })
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
-  async googleauth(@Request() req, @Res() res) {
-    const { nickname, email, provider, providerId } = req.user;
+  async googleauth(@Request() req) {
+    const { email, accessToken, refreshToken } = req.user;
 
     this.logger.verbose(`${email}님이 구글로 로그인 하려고 합니다`);
 
-    console.log( nickname, email, provider, providerId);
+    // res.redirect('http://localhost:3005');
+    // req.res.setHeader('access', accessToken);
+    // req.res.setHeader('refresh', refreshToken);
 
-    return res.redirect('http://localhost:3005/');
+    // req.res.redirect('http://localhost:3005');
+    return { ok: true, row: { accessToken, refreshToken } };
   }
 
   /* 카카오 로그인 부분 */
+  @ApiOperation({ summary: '카카오 로그인' })
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoAuth')
-  kakaopage(@Request() req, @Res() res) {
-    const { username } = req.user;
+  async kakaopage(@Request() req) {
+    const { username, refreshToken, accessToken } = req.user;
     this.logger.verbose(`${username}님이 카카오로 로그인 하려고 합니다`);
+    console.log(accessToken)
+    console.log(refreshToken)
 
-    return res.redirect('http://localhost:3005/');
+    console.log('hello');
+    // await req.res.setHeader('access', accessToken);
+    // await req.res.setHeader('refresh', refreshToken);
+    // await req.res.redirect('http://localhost:3005');
+    // return res.redirect('http://localhost:3005/');
+    return { ok: true, row: { accessToken, refreshToken } };
   }
 
   // mypage

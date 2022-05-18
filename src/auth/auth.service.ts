@@ -57,7 +57,6 @@ export class AuthService {
         email,
         nickname,
       };
-      console.log('--------바당농는거 ');
       // console.log(res.user);
 
       // 리프레쉬 토큰이 없다면 두개다 생성한다.
@@ -66,14 +65,14 @@ export class AuthService {
         const refreshToken = this.getJwtRefreshToken(payload);
 
         // 엑세스 토큰 생성
-        const data = this.getJwtAccessToken(payload);
-        const { accessToken, accessCookie } = data;
+        const accessToken = this.getJwtAccessToken(payload);
+        // const { accessToken, accessCookie } = data;
 
         // refresh 토큰을 DB에 저장한다.
         await this.playersRepository.saveRefreshToken(id, refreshToken);
 
         // 리프레쉬, 엑세스 토큰 반환
-        return { refreshToken, accessToken, accessCookie };
+        return { refreshToken, accessToken };
       } else {
         // 만약에 리프레쉬 토큰이 있다면 비교해서 일치하면 true, 아니면 false
         const isValid = await this.checkRefreshToken(
@@ -109,24 +108,24 @@ export class AuthService {
 
   // 토큰을 생성하는 함수
   getJwtAccessToken(payload: object) {
-    console.log(jwtConfig.accessTokenExp);
-    const accessToken = this.jwtService.sign(payload, {
+    const token = this.jwtService.sign(payload, {
       secret: jwtConfig.accessSecret,
       expiresIn: `${jwtConfig.accessTokenExp}s`,
     });
 
-    const accessCookie = `authorization=Bearer ${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
-    return { accessToken, accessCookie };
+    // const accessCookie = `authorization=Bearer ${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
+    const accessToken = `Bearer ${token}`;
+    return accessToken;
   }
 
   // 리프레쉬 토큰을 생성하는 함수
   getJwtRefreshToken(payload: object) {
-    console.log(jwtConfig.refreshTokenExp);
-    const refreshToken = this.jwtService.sign(payload, {
+    const token = this.jwtService.sign(payload, {
       secret: jwtConfig.refreshSecret,
       expiresIn: `${jwtConfig.refreshTokenExp}s`,
     });
     // const refreshCookie = `Refresh=${refreshToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.refreshTokenExp}`;
+    const refreshToken = `Bearer ${token}`;
     return refreshToken;
   }
 
@@ -189,7 +188,7 @@ export class AuthService {
     nickname: string,
     profileImg: string,
     provider: string,
-    providerId: number
+    providerId: string
   ) {
     try {
       const result = this.playersRepository.findOrCreatePlayer({
@@ -203,6 +202,27 @@ export class AuthService {
       });
     } catch (err) {
       console.log(err.messagge);
+    }
+  }
+
+  async checkSignUp(providerId: number, provider: string): Promise<boolean> {
+    try {
+      const result = await this.playersRepository.checkSignUp(
+        providerId,
+        provider
+      );
+      return result;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async checkById(id: number): Promise<boolean> {
+    try {
+      const result = await this.playersRepository.checkById(id);
+      return result;
+    } catch (err) {
+      console.log(err.message);
     }
   }
 }

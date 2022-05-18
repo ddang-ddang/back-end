@@ -50,7 +50,8 @@ export class PlayerRepository extends Repository<Player> {
         mbti,
         profileImg,
         provider,
-        // providerId,
+        providerId,
+        currentHashedRefreshToken,
       } = createBodyDto;
 
       const result = await this.create({
@@ -60,6 +61,8 @@ export class PlayerRepository extends Repository<Player> {
         mbti,
         profileImg,
         provider,
+        providerId,
+        currentHashedRefreshToken,
       });
 
       return await this.save(result);
@@ -159,6 +162,30 @@ export class PlayerRepository extends Repository<Player> {
       return result;
     } catch (err) {
       return err.message;
+    }
+  }
+  async checkSignUp(providerId: number, provider: string): Promise<boolean> {
+    try {
+      const result = await this.findOne({ where: { providerId } });
+      if (!result) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err.message);
+      return false;
+    }
+  }
+  async checkById(id: number): Promise<boolean> {
+    try {
+      const result = await this.findOne({ where: { id } });
+      if (!result) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err.message);
+      return false;
     }
   }
 }
