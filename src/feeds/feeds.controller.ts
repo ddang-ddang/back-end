@@ -9,6 +9,8 @@ import {
   UseGuards,
   Req,
   Request,
+  Query,
+  ConsoleLogger,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -26,7 +28,11 @@ export class FeedsController {
   @Get() // 여기에 AuthGuard넣으면 안될 듯
   @ApiOperation({ summary: '주변 피드 조회 API' })
   // async findAllFeeds(@Body() playerId: number) {
-  async findAllFeeds(@Request() req: any, @Body() regionData: any) {
+  async findAllFeeds(
+    @Request() req: any,
+    @Body() regionData: any,
+    @Query('type') feedType: string
+  ) {
     try {
       /* token 검사 */
       let playerId = null;
@@ -40,10 +46,37 @@ export class FeedsController {
       } else {
         this.logger.verbose(`trying to get all feed without login`);
       }
+      const newFeeds = [];
+      let sortedFeeds;
       const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
+
+      // const dist = await this.feedsService.measureDist(regionData);
+
+      const { lat, lng } = regionData;
+
+      for (let i = 0; i < feeds.length; i++) {
+        // newFeeds = { ...feeds[i], ...dist[i] };
+        const dist = await this.feedsService.measureDist(
+          lat,
+          lng,
+          feeds[i].quest.lat,
+          feeds[i].quest.lng
+        );
+
+        console.log(dist);
+        // newFeeds = [ {...feeds[i]}, dist: Number(dist) ];
+        newFeeds.push({ ...feeds[i], dist: dist });
+      }
+      if (feedType === 'popularity') {
+        sortedFeeds = newFeeds.sort((a, b) => b.likeCnt - a.likeCnt);
+      } else if (feedType === 'distance') {
+        sortedFeeds = newFeeds.sort((a, b) => a.dist - b.dist);
+      } else {
+        sortedFeeds = newFeeds.sort((a, b) => b.id - a.id);
+      }
       return {
         ok: true,
-        rows: feeds,
+        rows: sortedFeeds,
       };
     } catch (error) {
       return {
