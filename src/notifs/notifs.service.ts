@@ -17,17 +17,17 @@ export class NotifsService {
 
   /* 현재 위치 주변의 알림 전체 조회 */
   async getAll(currentRegion) {
-    this.logger.verbose(`${currentRegion} 주변의 알림 조회 요청`);
+    this.logger.verbose(`${currentRegion.regionDong} 주변의 알림 조회 요청`);
     try {
       const { regionSi, regionGu, regionDong } = currentRegion;
-      console.log(regionSi, regionGu, regionDong);
       const regions = await this.regions.find({
         where: { regionSi, regionGu, regionDong },
       });
       if (regions.length === 0)
         return { ok: false, message: '요청하신 지역을 찾을 수 없습니다.' };
 
-      const notifs = await Promise.all([
+      console.log(regions);
+      const [...notifs] = await Promise.all([
         ...regions.map(async (region) => {
           await this.notifs.find(region);
         }),
