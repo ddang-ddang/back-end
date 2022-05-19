@@ -20,6 +20,8 @@ import {
   UnauthorizedException,
   HttpCode,
 } from '@nestjs/common';
+import * as config from 'config';
+const jwtConfig = config.get('jwt');
 
 // 서비스 관련 모듈
 import { AuthService } from 'src/auth/auth.service';
@@ -92,10 +94,12 @@ export class PlayersController {
   @Post('dupNickname')
   async duplicateNicknameCheck(@Body() nicknameDto: NicknameDto) {
     const { nickname } = nicknameDto;
+    console.log(nickname);
 
     this.logger.verbose(`닉네임을 중복확인을 하려 합니다`);
 
     const result = await this.playersService.findByNickname({ nickname });
+    console.log(result);
 
     return { ok: true, row: result };
   }
@@ -111,6 +115,7 @@ export class PlayersController {
   @Post('dupEmail')
   async duplicateEmailCheck(@Body() emailDto: EmailDto) {
     const { email } = emailDto;
+
     this.logger.verbose(`이메일 중복확인을 하려 합니다`);
 
     const result = await this.playersService.findByEmail({ email });
@@ -160,60 +165,42 @@ export class PlayersController {
    */
   @UseGuards(LocalAuthGuard)
   @Post('signin')
-  async signIn(@Request() req, @Res({ passthrough: true }) res) {
+  async signIn(@Request() req) {
     try {
       const { id, email, nickname } = req.user;
-
-      //로그인할때 헤더에서 토큰을 받는다.
-      const refreshTokenFromClient = req.headers['authorization'];
 
       this.logger.verbose(`${email}님이 로그인하려고 합니다`);
 
-      const tokens = await this.authService.signin(
-        email,
-        nickname,
-        id,
-        refreshTokenFromClient
-      );
+      const tokens = await this.authService.signin(email, nickname, id);
 
       const { accessToken, refreshToken } = tokens;
-      console.log(accessToken);
 
-      if (!refreshTokenFromClient) {
-        res.setHeader('refresh', refreshToken);
-        res.setHeader('authorization', accessToken);
-        // req.res.setHeader('Set-Cookie', accessCookie);
+      req.res.setHeader('accessToken', accessToken);
+      req.res.setHeader('refreshToken', refreshToken);
 
-        return { ok: true, row: { email: email, nickname: nickname } };
-      } else {
-        res.setHeader('authorization', accessToken);
-        // req.res.setHeader('Set-Cookie', accessCookie);
-      }
-      throw new UnauthorizedException('refreshToken is invalid');
+      return { ok: true, row: { email, nickname } };
     } catch (err) {
-      return {
-        ok: false,
-        message: err.message,
-      };
+      throw new UnauthorizedException('refreshToken is invalid');
     }
   }
 
+  // 엑세스 토큰 발급해주는 라우터
   @UseGuards(JwtRefreshTokenGuard)
   @Get('auth')
-  async test(@Request() req, @Res({ passthrough: true }) res) {
+  async test(@Request() req) {
     try {
-      // console.log(req.user);
-      // console.log("1111111111111111")
       const { id, email, nickname } = req.user;
-      const createCookie = this.authService.getJwtAccessToken({
+
+      this.logger.verbose(`${email}님이 로그인하려고 합니다`);
+
+      const accessToken = this.authService.getJwtAccessToken({
         id,
         email,
         nickname,
       });
 
       // 쿠키를 강제로 주입한다.
-      res.setHeader('access', createCookie);
-      // req.res.setHeader('Set-Cookie', createCookie.accessCookie);
+      req.res.setHeader('accesstoken', accessToken);
 
       return { ok: true };
     } catch (err) {
@@ -234,6 +221,7 @@ export class PlayersController {
       console.log(playerId);
       const result = await this.authService.logout(playerId);
       req.res.setHeader('Set-Cookie', result);
+      console.log(result);
 
       return { ok: true, row: result };
     } catch (err) {
@@ -249,16 +237,23 @@ export class PlayersController {
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
   async googleauth(@Request() req) {
-    const { email, accessToken, refreshToken } = req.user;
+    const { id, nickname, profileImg, email, refreshToken } = req.user;
 
     this.logger.verbose(`${email}님이 구글로 로그인 하려고 합니다`);
 
-    // res.redirect('http://localhost:3005');
-    // req.res.setHeader('access', accessToken);
-    // req.res.setHeader('refresh', refreshToken);
+    const accessToken = this.authService.getJwtAccessToken({
+      id,
+      nickname,
+      profileImg,
+      email,
+    });
 
-    // req.res.redirect('http://localhost:3005');
-    return { ok: true, row: { accessToken, refreshToken } };
+    const accessCookie = `Authorization=${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
+    req.res.setHeader('Set-Cookie', accessCookie);
+    req.res.setHeader('refresh', refreshToken);
+
+    // return { ok: true };
+    return req.res.redirect('http://localhost:3005');
   }
 
   /* 카카오 로그인 부분 */
@@ -266,17 +261,24 @@ export class PlayersController {
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoAuth')
   async kakaopage(@Request() req) {
-    const { username, refreshToken, accessToken } = req.user;
-    this.logger.verbose(`${username}님이 카카오로 로그인 하려고 합니다`);
-    console.log(accessToken)
-    console.log(refreshToken)
+    const { id, username, profileImg, email, refreshToken } = req.user;
 
-    console.log('hello');
-    // await req.res.setHeader('access', accessToken);
-    // await req.res.setHeader('refresh', refreshToken);
-    // await req.res.redirect('http://localhost:3005');
-    // return res.redirect('http://localhost:3005/');
-    return { ok: true, row: { accessToken, refreshToken } };
+    const accessToken = this.authService.getJwtAccessToken({
+      id,
+      username,
+      profileImg,
+      email,
+    });
+
+    this.logger.verbose(`${email}님이 카카오로 로그인 하려고 합니다`);
+    console.log(accessToken);
+
+    const accessCookie = `Authorization=${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
+
+    req.res.setHeader('Set-Cookie', accessCookie);
+    req.res.setHeader('refresh', refreshToken);
+
+    return req.res.redirect('http://localhost:3005');
   }
 
   // mypage
@@ -292,9 +294,6 @@ export class PlayersController {
       const { profileImg, mbti, level, exp } = player;
 
       const locations = await this.playersService.loadLatLng(playerId);
-      // const test = await this.playersService.
-
-      // const { comments } = locations;
 
       console.log(locations);
 

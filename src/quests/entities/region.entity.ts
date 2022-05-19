@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Quest } from 'src/quests/entities/quest.entity';
 import { Feed } from 'src/feeds/entities/feed.entity';
+import { Notif } from 'src/notifs/entities/notif.entity';
 
 @Entity()
 export class Region extends BaseEntity {
@@ -36,4 +37,7 @@ export class Region extends BaseEntity {
 
   @OneToMany((type) => Feed, (feed) => feed.region)
   feeds: Feed[];
+
+  @OneToMany((type) => Notif, (notif) => notif.region)
+  notifs: Notif[];
 }

@@ -10,6 +10,7 @@ import { QuestRepository } from 'src/quests/repositories/quest.repository';
 import { Complete } from 'src/quests/entities/complete.entity';
 import { Region } from 'src/quests/entities/region.entity';
 import { Player } from 'src/players/entities/player.entity';
+import { Notif } from '../notifs/entities/notif.entity';
 
 const mapConfig = config.get('map');
 
@@ -25,6 +26,8 @@ export class QuestsService {
     private readonly completes: Repository<Complete>,
     @InjectRepository(Region)
     private readonly regions: Repository<Region>,
+    @InjectRepository(Notif)
+    private readonly notifs: Repository<Notif>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
     private readonly quests: QuestRepository
@@ -54,7 +57,10 @@ export class QuestsService {
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number) {
     try {
-      const quest = await this.quests.findOne({ id: questId });
+      const quest = await this.quests.findOne({
+        where: { id: questId },
+        relations: ['region'],
+      });
       if (!quest)
         return { ok: false, message: '요청하신 퀘스트를 찾을 수 없습니다.' };
 
@@ -67,6 +73,16 @@ export class QuestsService {
         return { ok: false, message: '퀘스트를 이미 완료하였습니다.' };
 
       await this.completes.save(this.completes.create({ quest, player }));
+
+      // 알림에 추가
+      await this.notifs.save(
+        this.notifs.create({
+          title: 'hello',
+          content: 'hi',
+          region: quest.region,
+        })
+      );
+
       return { ok: true };
     } catch (error) {
       return { ok: false, message: '퀘스트를 완료할 수 없습니다.' };
