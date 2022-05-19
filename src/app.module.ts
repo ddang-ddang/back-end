@@ -23,6 +23,7 @@ import { PlayerRepository } from './players/players.repository';
 import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
 import { ScheduleModule } from '@nestjs/schedule';
+import { NotifsModule } from './notifs/notifs.module';
 
 const jwtConfig = config.get('jwt');
 
@@ -51,6 +52,7 @@ const jwtConfig = config.get('jwt');
     CommentsModule,
     LikesModule,
     QuestsModule,
+    NotifsModule,
   ],
   controllers: [AppController, PlayersController, AchievementsController],
   providers: [
