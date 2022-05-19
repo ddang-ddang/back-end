@@ -34,7 +34,7 @@ export class Feed extends BaseEntity {
   @Column()
   content: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({})
   createdAt: Date;
 
   @UpdateDateColumn()

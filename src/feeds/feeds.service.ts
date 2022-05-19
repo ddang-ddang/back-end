@@ -23,9 +23,45 @@ export class FeedsService {
     private commentRepository: CommentRepository
   ) {}
 
+  async measureDist(
+    start_lat: number,
+    start_lng: number,
+    end_lat: number,
+    end_lng: number
+  ): Promise<number> {
+    // start_lat = Number(start_lat);
+    // start_lng = Number(start_lng);
+    // end_lat = Number(end_lat);
+    // end_lng = Number(end_lng);
+
+    console.log(typeof start_lat, start_lat);
+    console.log(typeof start_lng, start_lng);
+    console.log(typeof end_lat, end_lat);
+    console.log(typeof end_lng, end_lng);
+
+    if (start_lat == end_lat && start_lng == end_lng) return 0;
+
+    const radLat1 = (Math.PI * start_lat) / 180;
+    const radLat2 = (Math.PI * end_lat) / 180;
+    const theta = start_lng - end_lng;
+    const radTheta = (Math.PI * theta) / 180;
+    let dist =
+      Math.sin(radLat1) * Math.sin(radLat2) +
+      Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radTheta);
+    if (dist > 1) dist = 1;
+
+    dist = Math.acos(dist);
+    dist = (dist * 180) / Math.PI;
+    dist = dist * 60 * 1.1515 * 1.609344 * 1000;
+    if (dist < 100) dist = Math.round(dist / 10) * 10;
+    else dist = Math.round(dist / 100) * 100;
+
+    return dist;
+  }
+
   /* 모든 피드 가져오기 */
   async findAllFeeds(playerId: number, regionData: any) {
-    const { regionSi, regionGu, regionDong } = regionData;
+    const { regionSi, regionGu, regionDong, lat, lng } = regionData;
     console.log(regionSi, regionGu, regionDong);
     // const feeds = await Feed.find({
     //   where: {
@@ -43,6 +79,7 @@ export class FeedsService {
     const feeds = await Feed.createQueryBuilder('feed')
       .select([
         'feed',
+        // `date_format(feed.createdAt, '%Y-%m-%d') as ccc`,
         'player.id',
         'player.email',
         'player.nickname',
@@ -74,17 +111,25 @@ export class FeedsService {
       relations: ['player', 'feed'],
     });
 
+    // const dist = await this.measureDist(
+    //   lat,
+    //   lng,
+    //   feed.quest.lat,
+    //   feed.quest.lng
+    // );
+
     let liked;
     return feeds.map((feed) => {
       const likeCnt = feed.likes.length;
       const commentCnt = feed.comments.length;
       liked = false;
-      likeLst.map((like) => {
+      likeLst.map(async (like) => {
         if (like.player.id === playerId && feed.id === like.feed.id) {
           liked = true;
         }
       });
       return { ...feed, likeCnt, liked, commentCnt };
+      // console.log({ ...feed, likeCnt, liked, commentCnt, dist });
     });
   }
 
