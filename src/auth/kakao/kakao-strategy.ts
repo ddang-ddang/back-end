@@ -5,7 +5,6 @@ import * as config from 'config';
 import { AuthService } from '../auth.service';
 import { PlayersService } from '../../players/players.service';
 import { Logger } from '@nestjs/common';
-import { join } from 'path';
 
 const kakaoConfig = config.get('kakao');
 
@@ -19,7 +18,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     super({
       clientID: kakaoConfig.clientId,
       clientSecret: kakaoConfig.clientSecret,
-      callbackURL: '/api/players/kakaoauth',
+      callbackURL: 'http://localhost:3005/api/players/kakaoauth',
       //   scope: ['profile'],
     });
   }
@@ -31,37 +30,41 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     Done: any
   ): Promise<any> {
     const { id, username } = profile;
-    const { profile_image, thumbnail_image } = profile._json.properties;
+    const { profile_image } = profile._json.properties;
+    const email = profile._json.kakao_account.email;
 
     const player = {
       id,
       username,
+      email,
       profileImg: profile_image,
-      thumbnailImg: thumbnail_image,
-      accessToken: access_token,
-      refreshToken: refreshToken,
+      refreshToken,
     };
 
-    const isJoin = await this.authService.checkSignUp(id, 'kakao');
+    const isJoin = await this.playersService.findByEmail({
+      email,
+    });
 
     if (!isJoin) {
       console.log('가입해야합니다.');
-      this.logger.verbose(`${username}님이 카카오로 회원가입을 진행합니다.`);
+      this.logger.verbose(
+        `${player.email}님이 카카오로 회원가입을 진행합니다.`
+      );
       //가입
       const joinGame = await this.playersService.signup({
-        email: id + '@ddangddang.com',
+        email: player.email,
         password: id + username,
         nickname: username,
-        mbti: null,
+        mbti: 'mbti',
         profileImg: profile_image,
         provider: 'kakao',
         providerId: id,
         currentHashedRefreshToken: refreshToken,
       });
+      console.log(joinGame);
     }
     //로그인 엑세스토큰과 리프레쉬 토큰 가저오기
 
     Done(null, player);
-    return player;
   }
 }

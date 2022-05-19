@@ -1,4 +1,3 @@
-import { CreateLocalDto } from './../players/dto/create-player.dto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -45,12 +44,7 @@ export class AuthService {
   // 2. 토큰 생성
   // 위 이메일 주소와 비밀번호가 일치하면 토크을 생성한다.
   // jwt로 생성한 토큰은 (id, email, nickname)를 담고 있다.
-  async signin(
-    email: string,
-    nickname: string,
-    id: number,
-    refreshTokenFromClient: string
-  ): Promise<any> {
+  async signin(email: string, nickname: string, id: number): Promise<any> {
     try {
       const payload = {
         id,
@@ -59,34 +53,19 @@ export class AuthService {
       };
       // console.log(res.user);
 
-      // 리프레쉬 토큰이 없다면 두개다 생성한다.
-      if (!refreshTokenFromClient) {
-        // 리프레쉬 토큰생성
-        const refreshToken = this.getJwtRefreshToken(payload);
+      // 리프레쉬 토큰생성
+      const refreshToken = this.getJwtRefreshToken(payload);
 
-        // 엑세스 토큰 생성
-        const accessToken = this.getJwtAccessToken(payload);
-        // const { accessToken, accessCookie } = data;
+      // 엑세스 토큰 생성
+      const accessToken = this.getJwtAccessToken(payload);
 
-        // refresh 토큰을 DB에 저장한다.
-        await this.playersRepository.saveRefreshToken(id, refreshToken);
+      // refresh 토큰을 DB에 저장한다.
+      const result = await this.playersRepository.saveRefreshToken(
+        id,
+        refreshToken
+      );
 
-        // 리프레쉬, 엑세스 토큰 반환
-        return { refreshToken, accessToken };
-      } else {
-        // 만약에 리프레쉬 토큰이 있다면 비교해서 일치하면 true, 아니면 false
-        const isValid = await this.checkRefreshToken(
-          id,
-          refreshTokenFromClient.split(' ')[1]
-        );
-
-        // 반환된 값이 true이면 엑세스 토큰을 반환한다.
-        if (isValid) {
-          const accessToken = this.getJwtAccessToken(payload);
-          return { accessToken };
-        }
-        return { ok: false, message: 'refresh token is not valid' };
-      }
+      return { refreshToken, accessToken };
     } catch (err) {
       console.log(err.message);
     }
@@ -147,6 +126,7 @@ export class AuthService {
         refreshToken,
         currentHashedRefreshToken
       );
+
       return result;
     } catch (err) {
       console.log(err.message);
@@ -173,16 +153,6 @@ export class AuthService {
     }
   }
 
-  googleLogin(req) {
-    if (!req.user) {
-      return 'No user from google';
-    }
-    return {
-      message: 'User information from google',
-      user: req.user,
-    };
-  }
-
   async kakaoLogin(
     email: string,
     nickname: string,
@@ -205,7 +175,7 @@ export class AuthService {
     }
   }
 
-  async checkSignUp(providerId: number, provider: string): Promise<boolean> {
+  async checkSignUp(providerId: string, provider: string): Promise<boolean> {
     try {
       const result = await this.playersRepository.checkSignUp(
         providerId,
