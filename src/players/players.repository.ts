@@ -74,8 +74,11 @@ export class PlayerRepository extends Repository<Player> {
   //토큰 관련 Repository
   async saveRefreshToken(id: number, refreshToken: string): Promise<any> {
     try {
-      const currentHashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-      const result = await this.update(id, { currentHashedRefreshToken });
+      const token = refreshToken.split(' ')[1];
+      const currentHashedRefreshToken = await bcrypt.hash(token, 10);
+      const result = await this.update(id, {
+        currentHashedRefreshToken,
+      });
       return result;
     } catch (err) {
       return err.message;
@@ -164,7 +167,7 @@ export class PlayerRepository extends Repository<Player> {
       return err.message;
     }
   }
-  async checkSignUp(providerId: number, provider: string): Promise<boolean> {
+  async checkSignUp(providerId: string, provider: string): Promise<boolean> {
     try {
       const result = await this.findOne({ where: { providerId } });
       if (!result) {

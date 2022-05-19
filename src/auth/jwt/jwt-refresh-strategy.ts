@@ -26,7 +26,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
           // auth에는 클라이언트가 bearer 형식으로 refresh 토큰을 넣어준다.
-          const token = request.headers['authorization'];
+          const token = request.headers['refreshtoken'];
           let refreshToken = '';
           if (typeof token === 'string') refreshToken = token.split(' ')[1];
 
@@ -43,7 +43,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   async validate(request: Request, payload: TokenPayloadDto) {
     const { id } = payload;
 
-    const token = request.headers['authorization'];
+    const token = request.headers['refreshtoken'];
     let refreshToken = '';
     if (typeof token === 'string') refreshToken = token.split(' ')[1];
 

@@ -3,13 +3,10 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as config from 'config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as fs from 'fs';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import * as http from 'http';
-import * as https from 'https';
+// import * as http from 'http';
+// import * as https from 'https';
 import * as express from 'express';
-import * as session from 'express-session';
-import * as passport from 'passport';
 
 async function bootstrap() {
   const logger = new Logger();
@@ -39,22 +36,12 @@ async function bootstrap() {
   app.enableCors({
     origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    exposedHeaders: ['Authorization', 'refreshToken', 'accessToken'],
     preflightContinue: false,
     optionsSuccessStatus: 204,
     credentials: true,
   });
 
-  app.use(
-    session({
-      secret: developmentConfig.accessSecret, //get env vars
-      resave: false,
-      saveUninitialized: true,
-      cookie: { maxAge: 3600000 },
-    })
-  );
-
-  app.use(passport.initialize());
-  app.use(passport.session());
 
   app.useGlobalPipes(
     new ValidationPipe({
