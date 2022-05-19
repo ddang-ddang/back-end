@@ -113,6 +113,7 @@ export class QuestsService {
           region,
           playerId
         );
+        console.timeEnd('getAll');
         return {
           ok: true,
           currentRegion: { regionSi, regionGu, regionDong },
