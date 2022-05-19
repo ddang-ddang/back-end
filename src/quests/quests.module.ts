@@ -7,12 +7,14 @@ import { FeedRepository } from 'src/feeds/feeds.repository';
 import { PlayerRepository } from 'src/players/players.repository';
 import { QuestsController } from 'src/quests/quests.controller';
 import { QuestsService } from 'src/quests/quests.service';
+import { Notif } from 'src/notifs/entities/notif.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Region,
       Complete,
+      Notif,
       QuestRepository,
       FeedRepository,
       PlayerRepository,
