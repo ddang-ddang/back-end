@@ -15,7 +15,6 @@ export class AchievementsService {
     private playerRepository: PlayerRepository
   ) {}
   async getMyData(playerId: number) {
-
     /* 내가 완료한 퀘스트와 좌표들 */
     const myData = await this.playerRepository
       .createQueryBuilder('player')
