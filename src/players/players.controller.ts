@@ -59,10 +59,10 @@ export class PlayersController {
     inputBodyDto: InputPlayerDto
   ): Promise<object> {
     const { email, nickname, password, mbti, profileImg } = inputBodyDto;
-    this.logger.verbose(`회원을 가입하려고 합니다.: ${email}`);
 
     try {
-      await this.playersService.signup({
+      this.logger.verbose(`회원을 가입하려고 합니다.: ${email}`);
+      const result = await this.playersService.signup({
         email,
         nickname,
         password,
@@ -72,14 +72,9 @@ export class PlayersController {
         providerId: null,
         currentHashedRefreshToken: null,
       });
-      return { ok: true };
+      return { ok: true, result  };
     } catch (err) {
-      if (!err) {
-        throw new BadRequestException({
-          ok: false,
-          message: err.message,
-        });
-      }
+      return { ok: false, row: err.message };
     }
   }
 
@@ -137,7 +132,7 @@ export class PlayersController {
         profileImg,
         nickname,
       });
-      return { ok: true, row: result };
+      return { ok: true, row: { email } };
     } catch (err) {
       if (!err) {
         throw new BadRequestException({

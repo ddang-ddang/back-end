@@ -59,6 +59,7 @@ export class Player extends BaseEntity {
    */
   @IsNotEmpty()
   @Column({
+    type: 'text',
     // default: false,
   })
   profileImg: string;
