@@ -76,7 +76,12 @@ export class QuestsController {
     const { playerId } = req['user'].player;
     console.log(req['user']);
     if (questType === 'feed') {
-      return this.questsService.feedQuest(id, playerId, createFeedDto);
+      return this.questsService.feedQuest(
+        id,
+        playerId,
+        createFeedDto,
+        questType
+      );
     } else {
       return this.questsService.questComplete(id, playerId);
     }
