@@ -83,7 +83,7 @@ export class QuestsController {
         questType
       );
     } else {
-      return this.questsService.questComplete(id, playerId);
+      return this.questsService.questComplete(id, playerId, questType);
     }
   }
 }
