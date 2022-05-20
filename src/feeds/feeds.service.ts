@@ -29,16 +29,6 @@ export class FeedsService {
     end_lat: number,
     end_lng: number
   ): Promise<number> {
-    // start_lat = Number(start_lat);
-    // start_lng = Number(start_lng);
-    // end_lat = Number(end_lat);
-    // end_lng = Number(end_lng);
-
-    console.log(typeof start_lat, start_lat);
-    console.log(typeof start_lng, start_lng);
-    console.log(typeof end_lat, end_lat);
-    console.log(typeof end_lng, end_lng);
-
     if (start_lat == end_lat && start_lng == end_lng) return 0;
 
     const radLat1 = (Math.PI * start_lat) / 180;
@@ -111,25 +101,17 @@ export class FeedsService {
       relations: ['player', 'feed'],
     });
 
-    // const dist = await this.measureDist(
-    //   lat,
-    //   lng,
-    //   feed.quest.lat,
-    //   feed.quest.lng
-    // );
-
     let liked;
     return feeds.map((feed) => {
       const likeCnt = feed.likes.length;
       const commentCnt = feed.comments.length;
       liked = false;
-      likeLst.map(async (like) => {
+      likeLst.map((like) => {
         if (like.player.id === playerId && feed.id === like.feed.id) {
           liked = true;
         }
       });
       return { ...feed, likeCnt, liked, commentCnt };
-      // console.log({ ...feed, likeCnt, liked, commentCnt, dist });
     });
   }
 

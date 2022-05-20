@@ -11,6 +11,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Complete } from '../../quests/entities/complete.entity';
+import { Achievement } from 'src/achievements/entities/achievement.entity';
 
 //연결해야함
 @Entity()
@@ -108,4 +109,7 @@ export class Player extends BaseEntity {
   @OneToMany((type) => Complete, (complete) => complete.player)
   @JoinColumn({ name: 'id' })
   completes: Complete[];
+
+  @OneToMany((type) => Achievement, (achievement) => achievement.player)
+  achievements: Achievement[];
 }

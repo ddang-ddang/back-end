@@ -50,8 +50,6 @@ export class FeedsController {
       let sortedFeeds;
       const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
 
-      // const dist = await this.feedsService.measureDist(regionData);
-
       const { lat, lng } = regionData;
 
       for (let i = 0; i < feeds.length; i++) {
