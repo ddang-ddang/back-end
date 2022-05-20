@@ -8,6 +8,8 @@ import { PlayerRepository } from 'src/players/players.repository';
 import { QuestsController } from 'src/quests/quests.controller';
 import { QuestsService } from 'src/quests/quests.service';
 import { Notif } from 'src/notifs/entities/notif.entity';
+import { Achievement } from '../players/entities/achievement.entity';
+import { Mission } from '../players/entities/mission.entity';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { Notif } from 'src/notifs/entities/notif.entity';
       Region,
       Complete,
       Notif,
+      Achievement,
+      Mission,
       QuestRepository,
       FeedRepository,
       PlayerRepository,

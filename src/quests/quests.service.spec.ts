@@ -93,7 +93,7 @@ describe('QuestsService', () => {
 
     it('should fail if quest does not exist', async () => {
       questsRepository.findOne.mockResolvedValue(undefined);
-      const result = await service.questComplete(questId, playerId);
+      const result = await service.questComplete(questId, playerId, '1');
 
       expect(result).toEqual({
         ok: false,
@@ -104,7 +104,7 @@ describe('QuestsService', () => {
     it('should fail if player does not exist', async () => {
       questsRepository.findOne.mockResolvedValue(true);
       playersRepository.findOne.mockResolvedValue(undefined);
-      const result = await service.questComplete(questId, playerId);
+      const result = await service.questComplete(questId, playerId, '1');
 
       expect(result).toEqual({
         ok: false,
@@ -115,7 +115,7 @@ describe('QuestsService', () => {
     it('should fail if quest is already completed', async () => {
       questsRepository.findOne.mockResolvedValue({ quest: {} });
       completeRepository.findOne.mockResolvedValue({ quest: {}, player: {} });
-      const result = await service.questComplete(1, 1);
+      const result = await service.questComplete(1, 1, '1');
 
       expect(result).toEqual({
         ok: false,
@@ -126,14 +126,14 @@ describe('QuestsService', () => {
     it('should complete the quest', async () => {
       questsRepository.findOne.mockResolvedValue({ quest: {} });
       completeRepository.findOne.mockResolvedValue({ quest: {}, player: {} });
-      const result = await service.questComplete(1, 1);
+      const result = await service.questComplete(1, 1, '1');
 
       expect(result).toEqual({ ok: true });
     });
 
     it('should fail on exception', async () => {
       questsRepository.findOne.mockRejectedValue(new Error());
-      const result = await service.questComplete(questId, playerId);
+      const result = await service.questComplete(questId, playerId, '1');
 
       expect(result).toEqual({
         ok: false,
