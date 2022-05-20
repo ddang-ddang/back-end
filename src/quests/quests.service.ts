@@ -47,8 +47,8 @@ export class QuestsService {
       .select(['quest.type', 'count(quest.type) as cnt'])
       .leftJoin('complete.quest', 'quest')
       .where('complete.playerId = :playerId and quest.type = :questType', {
-        playerId: playerId,
-        questType: questType,
+        playerId,
+        questType,
       })
       .groupBy('quest.type')
       .getRawOne();
