@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import * as config from 'config';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 import { QuestRepository } from 'src/quests/repositories/quest.repository';
@@ -11,6 +11,8 @@ import { Complete } from 'src/quests/entities/complete.entity';
 import { Region } from 'src/quests/entities/region.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { Notif } from '../notifs/entities/notif.entity';
+import { Achievement } from '../players/entities/achievement.entity';
+import { Mission } from '../players/entities/mission.entity';
 
 const mapConfig = config.get('map');
 
@@ -28,6 +30,10 @@ export class QuestsService {
     private readonly regions: Repository<Region>,
     @InjectRepository(Notif)
     private readonly notifs: Repository<Notif>,
+    @InjectRepository(Achievement)
+    private readonly achievements: Repository<Achievement>,
+    @InjectRepository(Mission)
+    private readonly missions: Repository<Mission>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
     private readonly quests: QuestRepository
@@ -42,7 +48,7 @@ export class QuestsService {
   }
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
-  async questComplete(questId: number, playerId: number) {
+  async questComplete(questId: number, playerId: number, questType: string) {
     try {
       const quest = await this.quests.findOne({
         where: { id: questId },
@@ -61,14 +67,42 @@ export class QuestsService {
 
       await this.completes.save(this.completes.create({ quest, player }));
 
+      /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
+      const completes = await getManager()
+        .createQueryBuilder(Complete, 'complete')
+        .leftJoinAndSelect('complete.quest', 'quest')
+        .where('playerId = :id', { id: playerId })
+        .getMany();
+
+      // 현재 완료한 퀘스트 타입의 횟수 확인
+      const countFor = {};
+      completes.forEach((complete) => {
+        countFor[complete.quest.type] =
+          (countFor[complete.quest.type] || 0) + 1;
+      });
+      const setGoals = countFor[questType];
+
+      // 해당하는 미션 찾아서 업적 추가
+      const mission = await this.missions.findOne({
+        where: {
+          setGoals,
+          type: `${questType}`,
+        },
+      });
+      if (mission) {
+        await this.achievements.save(
+          this.achievements.create({ mission, player })
+        );
+      }
+
       // 알림에 추가
-      await this.notifs.save(
-        this.notifs.create({
-          title: 'hello',
-          content: 'hi',
-          region: quest.region,
-        })
-      );
+      // await this.notifs.save(
+      //   this.notifs.create({
+      //     title: 'hello',
+      //     content: 'hi',
+      //     region: quest.region,
+      //   })
+      // );
 
       return { ok: true };
     } catch (error) {
