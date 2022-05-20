@@ -1,5 +1,6 @@
 import { IsEmail, IsEmpty, IsNotEmpty } from 'class-validator';
 import { Feed } from 'src/feeds/entities/feed.entity';
+import { Achievement } from './achievement.entity';
 import { Likes } from 'src/likes/entities/like.entity';
 import { Comment } from 'src/comments/entities/comment.entity';
 import {
@@ -108,4 +109,7 @@ export class Player extends BaseEntity {
   @OneToMany((type) => Complete, (complete) => complete.player)
   @JoinColumn({ name: 'id' })
   completes: Complete[];
+
+  @OneToMany((type) => Likes, (achievement) => achievement.player)
+  achievements: Achievement[];
 }
