@@ -5,7 +5,8 @@ import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 import { Quest } from 'src/quests/entities/quest.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { Complete } from 'src/quests/entities/complete.entity';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, ConsoleLogger } from '@nestjs/common';
+import { Region } from 'src/quests/entities/region.entity';
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
@@ -21,13 +22,20 @@ export class FeedRepository extends Repository<Feed> {
         where: {
           id: questId,
         },
+        relations: ['region'],
       }),
       Player.findOne({
         where: {
-          Id: playerId,
+          id: playerId,
         },
       }),
     ]);
+
+    const region = await Region.findOne({
+      where: {
+        id: quest.region.id,
+      },
+    });
 
     const completeOne = await Complete.find({
       where: {
@@ -58,6 +66,7 @@ export class FeedRepository extends Repository<Feed> {
       image3_url: img[2],
       player,
       quest,
+      region,
     });
     await this.save(newContent);
 

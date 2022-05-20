@@ -11,6 +11,8 @@ import { Complete } from 'src/quests/entities/complete.entity';
 import { Region } from 'src/quests/entities/region.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { Notif } from '../notifs/entities/notif.entity';
+import { Mission } from 'src/players/entities/mission.entity';
+import { Achievement } from 'src/players/entities/achievement.entity';
 
 const mapConfig = config.get('map');
 
@@ -35,10 +37,78 @@ export class QuestsService {
 
   private readonly logger = new Logger(QuestsService.name);
 
+  async createAchievement(playerId: number, questType: string) {
+    /* 완료한 퀘스트 종류별 count */
+    const countFeedType = await Complete.createQueryBuilder('complete')
+      .select(['quest.type', 'count(quest.type) as cnt'])
+      .leftJoin('complete.quest', 'quest')
+      .where('complete.playerId = :playerId and quest.type = :questType', {
+        playerId: playerId,
+        questType: questType,
+      })
+      .groupBy('quest.type')
+      .getRawOne();
+
+    const player = await Player.findOne({ id: playerId });
+
+    let added = false;
+
+    /* mission list */
+    const missionList = await Mission.find({
+      where: { type: questType },
+    });
+
+    /* 현재 사용자가 성공한 achievement list */
+    const achievementList = await Achievement.find({
+      where: { player },
+    });
+
+    const userAchievement = [];
+    missionList.map((eachMission) => {
+      if (Number(countFeedType.cnt) >= eachMission.setGoals) {
+        // achievements에 없는 mission의 경우 insert
+        userAchievement.push(eachMission);
+      }
+    });
+
+    userAchievement.map(async (achievement) => {
+      const mission = await Mission.findOne({ id: achievement.id });
+
+      const search = await Achievement.find({
+        where: {
+          mission,
+          player,
+        },
+      });
+
+      if (search.length === 0) {
+        const newAchieve = await Achievement.insert({ mission, player });
+        console.log(newAchieve);
+        if (newAchieve.raw['affectedRows'] > 0) {
+          added = true;
+        }
+      }
+    });
+
+    return { countFeedType, missionList, userAchievement, added };
+  }
+
   /* 피드작성 퀘스트 완료 요청 */
-  feedQuest(questId: number, playerId: number, createFeedDto: CreateFeedDto) {
+  async feedQuest(
+    questId: number,
+    playerId: number,
+    createFeedDto: CreateFeedDto,
+    questType: string
+  ) {
     const { img, content } = createFeedDto;
-    return this.feedRepository.feedQuest(questId, playerId, img, content);
+    const newFeed = await this.feedRepository.feedQuest(
+      questId,
+      playerId,
+      img,
+      content
+    );
+    const countFeedType = await this.createAchievement(playerId, questType);
+    return newFeed;
   }
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
