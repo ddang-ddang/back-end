@@ -35,19 +35,6 @@ export class QuestsService {
 
   private readonly logger = new Logger(QuestsService.name);
 
-  private today: Date;
-  private todayDate: string;
-
-  /* 24시에 날짜 업데이트 */
-  @Cron('0 0 0 * * *', {
-    name: 'setToday',
-    timeZone: 'Asia/Seoul',
-  })
-  setToday() {
-    this.today = new Date();
-    this.todayDate = this.today.toDateString();
-  }
-
   /* 피드작성 퀘스트 완료 요청 */
   feedQuest(questId: number, playerId: number, createFeedDto: CreateFeedDto) {
     const { img, content } = createFeedDto;
@@ -103,7 +90,7 @@ export class QuestsService {
       const kakaoAddress = await this.getAddressName(lat, lng);
       console.timeEnd('카카오API - getAddressName');
 
-      const date = this.today ? this.todayDate : new Date().toDateString();
+      const date = new Date().toDateString();
 
       /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
       let region = await this.regions.findOne({ date, ...kakaoAddress });
@@ -392,12 +379,14 @@ export class QuestsService {
   async preCreateQuests() {
     this.logger.verbose('퀘스트 사전 생성');
 
+    const today = new Date();
+    const todayDate = today.toDateString();
+
     const yesterday = new Date();
-    yesterday.setDate(this.today.getDate() - 1);
+    yesterday.setDate(today.getDate() - 1);
     const yesterdayDate = yesterday.toDateString();
     let regions = await this.regions.find({ date: yesterdayDate });
 
-    const todayDate = this.todayDate;
     for (const region of regions) {
       const { regionSi, regionGu, regionDong } = region;
       const isExisted = await this.regions.find({
