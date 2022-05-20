@@ -57,7 +57,8 @@ export class PlayerRepository extends Repository<Player> {
         currentHashedRefreshToken,
       } = createBodyDto;
 
-      const result = await this.create({
+      console.log(createBodyDto);
+      const result = this.create({
         email,
         password,
         nickname,
@@ -68,7 +69,9 @@ export class PlayerRepository extends Repository<Player> {
         currentHashedRefreshToken,
       });
 
-      return await this.save(result);
+      // console.log(result);
+      await this.save(result);
+      return result;
     } catch (err) {
       return err.message;
     }
@@ -120,7 +123,6 @@ export class PlayerRepository extends Repository<Player> {
         providerId,
       } = createLocalDto;
 
-      console.log('저장하나');
       const createPlayer = await this.create({
         email,
         nickname,
@@ -129,13 +131,10 @@ export class PlayerRepository extends Repository<Player> {
         provider,
         providerId,
       });
-      console.log('saved');
 
-      console.log(createPlayer);
       const result = await this.save(createPlayer);
-      console.log(result);
 
-      // return await this.save(createPlayer);
+      return result;
     } catch (err) {
       return err.message;
     }
