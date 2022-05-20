@@ -24,6 +24,7 @@ export class RanksService {
 
     try {
       const { regionSi, regionGu, regionDong } = currentRegion; // 현재 지역 정보
+      // 모든 날짜의 현재 지역 데이터 조회
       const regions = await this.regions.find({
         where: { regionSi, regionGu, regionDong },
       });
@@ -31,10 +32,10 @@ export class RanksService {
         return { ok: false, message: '현재 위치를 찾을 수 없습니다.' };
 
       const { totalCount } = regions[0];
-      // 모든 날짜의 현재 지역 데이터 조회 (완료 테이블, 완료한 플레이어 조인)
+      // 퀘스트 조회 (완료 테이블, 완료한 플레이어 조인)
       const quests = await Promise.all([
         ...regions.map(async (region) => {
-          // TODO: relations 내에서 필요한 정보만 받을 수 있게 수정 (완료 정보가 있는, 플레이어 닉네임, 프로필이미지)
+          // TODO: relations 내에서 필요한 정보만 받을 수 있게 수정 (플레이어 닉네임, 프로필 이미지)
           return await getRepository(Quest)
             .createQueryBuilder('quest')
             .where('regionId = :id', { id: region.id })
@@ -52,24 +53,22 @@ export class RanksService {
       // 퀘스트 별로 완료한 플레이어 id 배열로 추가
       const allQuests = quests.flat();
       allQuests.forEach((quest) => {
-        if (quest.completes.length !== 0) {
-          const { type } = quest;
-          if (type === 'mob') {
-            quest.completes.forEach((complete) => {
-              mobsCompletedBy.push(complete.player.id);
-              totalCompletedBy.push(complete.player.id);
-            });
-          } else if (type === 'time') {
-            quest.completes.forEach((complete) => {
-              timeCompletedBy.push(complete.player.id);
-              totalCompletedBy.push(complete.player.id);
-            });
-          } else if (type === 'feed') {
-            quest.completes.forEach((complete) => {
-              docsCompletedBy.push(complete.player.id);
-              totalCompletedBy.push(complete.player.id);
-            });
-          }
+        const { type } = quest;
+        if (type === 'mob') {
+          quest.completes.forEach((complete) => {
+            mobsCompletedBy.push(complete.player.id);
+            totalCompletedBy.push(complete.player.id);
+          });
+        } else if (type === 'time') {
+          quest.completes.forEach((complete) => {
+            timeCompletedBy.push(complete.player.id);
+            totalCompletedBy.push(complete.player.id);
+          });
+        } else if (type === 'feed') {
+          quest.completes.forEach((complete) => {
+            docsCompletedBy.push(complete.player.id);
+            totalCompletedBy.push(complete.player.id);
+          });
         }
       });
 
