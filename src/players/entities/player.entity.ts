@@ -1,5 +1,6 @@
 import { IsEmail, IsEmpty, IsNotEmpty } from 'class-validator';
 import { Feed } from 'src/feeds/entities/feed.entity';
+import { Achievement } from './achievement.entity';
 import { Likes } from 'src/likes/entities/like.entity';
 import { Comment } from 'src/comments/entities/comment.entity';
 import {
@@ -11,7 +12,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Complete } from '../../quests/entities/complete.entity';
-import { Achievement } from 'src/achievements/entities/achievement.entity';
 
 //연결해야함
 @Entity()
@@ -110,6 +110,6 @@ export class Player extends BaseEntity {
   @JoinColumn({ name: 'id' })
   completes: Complete[];
 
-  @OneToMany((type) => Achievement, (achievement) => achievement.player)
+  @OneToMany((type) => Likes, (achievement) => achievement.player)
   achievements: Achievement[];
 }

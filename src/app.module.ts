@@ -8,8 +8,6 @@ import { LikesModule } from './likes/likes.module';
 import { QuestsModule } from './quests/quests.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeORMConfig } from '../ormconfig';
-import { AchievementsService } from './achievements/achievements.service';
-import { AchievementsController } from './achievements/achievements.controller';
 import * as config from 'config';
 import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
@@ -24,8 +22,6 @@ import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotifsModule } from './notifs/notifs.module';
-import { AchievementsModule } from './achievements/achievements.module';
-import { AchievementRepository } from './achievements/achievements.repository';
 
 const jwtConfig = config.get('jwt');
 
@@ -46,7 +42,6 @@ const jwtConfig = config.get('jwt');
       FeedRepository,
       LikeRepository,
       CommentRepository,
-      AchievementRepository,
     ]),
     ScheduleModule.forRoot(),
     AuthModule,
@@ -56,15 +51,8 @@ const jwtConfig = config.get('jwt');
     LikesModule,
     QuestsModule,
     NotifsModule,
-    AchievementsModule,
   ],
-  controllers: [AppController, PlayersController, AchievementsController],
-  providers: [
-    AppService,
-    AchievementsService,
-    PlayersService,
-    AuthService,
-    FeedsService,
-  ],
+  controllers: [AppController, PlayersController],
+  providers: [AppService, PlayersService, AuthService, FeedsService],
 })
 export class AppModule {}

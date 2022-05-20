@@ -231,29 +231,26 @@ export class PlayersController {
 
   @UseGuards(GoogleAuthGuard)
   @Get('google')
-  async google() {}
+  async google() {
+    console.log('hello');
+  }
 
   @ApiOperation({ summary: '구글 로그인' })
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
   async googleauth(@Request() req) {
-    const { id, nickname, profileImg, email, refreshToken } = req.user;
+    const { id, nickname, email } = req.user;
 
-    this.logger.verbose(`${email}님이 구글로 로그인 하려고 합니다`);
+    this.logger.verbose(`${email}님이 카카오로 로그인하려고 합니다`);
 
-    const accessToken = this.authService.getJwtAccessToken({
-      id,
-      nickname,
-      profileImg,
-      email,
-    });
+    const tokens = await this.authService.signin(email, nickname, id);
 
-    const accessCookie = `Authorization=${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
-    req.res.setHeader('Set-Cookie', accessCookie);
-    req.res.setHeader('refresh', refreshToken);
+    const { accessToken, refreshToken } = tokens;
 
-    // return { ok: true };
-    return req.res.redirect('http://localhost:3005');
+    req.res.setHeader('accessToken', accessToken);
+    req.res.setHeader('refreshToken', refreshToken);
+
+    // return req.res.redirect('http://localhost:3005');
   }
 
   /* 카카오 로그인 부분 */
@@ -261,55 +258,74 @@ export class PlayersController {
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoAuth')
   async kakaopage(@Request() req) {
-    const { id, username, profileImg, email, refreshToken } = req.user;
+    const { id, username, email } = req.user;
 
-    const accessToken = this.authService.getJwtAccessToken({
-      id,
-      username,
-      profileImg,
-      email,
-    });
+    this.logger.verbose(`${email}님이 카카오로 로그인하려고 합니다`);
 
-    this.logger.verbose(`${email}님이 카카오로 로그인 하려고 합니다`);
-    console.log(accessToken);
+    const tokens = await this.authService.signin(email, username, id);
 
-    const accessCookie = `Authorization=${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
+    const { accessToken, refreshToken } = tokens;
 
-    req.res.setHeader('Set-Cookie', accessCookie);
-    req.res.setHeader('refresh', refreshToken);
+    req.res.setHeader('accessToken', accessToken);
+    req.res.setHeader('refreshToken', refreshToken);
+    return { ok: 'ok' };
 
-    return req.res.redirect('http://localhost:3005');
+    // return req.res.redirect('http://localhost:3005');
   }
-
   // mypage
   @UseGuards(JwtAuthGuard)
   @Get('mypage')
   async loadMypage(@Request() req): Promise<object> {
     try {
-      const { email, nickname, playerId } = req.user.player;
-      this.logger.verbose(`${email}님이 마이페이지를 이용 하려고 합니다`);
-      const player = await this.playersService.getDataByEmail({ email });
-      console.log(player);
+      const mockdata = {
+        nickname: '강윤지',
+        mbti: 'ENTP',
+        badges: [
+          {
+            badge1: 'imageUrl', //
+            badge2: 'imageUrl',
+            badge3: 'imageUrl',
+          },
+        ],
+        occupiedPlaces: [
+          {
+            lat: '222.333',
+            lng: '333.444',
+          },
+        ],
+        missions: [
+          {
+            title: '동네 길냥이',
+            description: '개의 땅문서를 작성했어요.',
+            setGoalds: 20,
+            badge: 'imageUrl',
+          },
+        ],
+        achievements: [
+          {
+            title: '동네 길냥이',
+            description: '개의 땅문서를 작성했어요.',
+            setGoalds: 20,
+            badge: 'imageUrl',
+          },
+        ],
+      };
+      // const { email, nickname, playerId } = req.user.player;
+      // console.log(req.user);
+      this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
 
-      const { profileImg, mbti, level, exp } = player;
+      const test = await this.playersService.mypageInfo(2);
+      // console.log(test);
 
-      const locations = await this.playersService.loadLatLng(playerId);
+      // const player = await this.playersService.getDataByEmail({ email });
+      // console.log(player);
 
-      console.log(locations);
+      // const locations = await this.playersService.mypageInfo(playerId);
+
+      // console.log(locations);
 
       return {
         ok: true,
-        // locations,
-        profile: {
-          playerId: playerId,
-          email: email,
-          nickname: nickname,
-          profileImg: profileImg,
-          mbti: mbti,
-          level: level,
-          exp: exp,
-          occupiedPlaces: locations,
-        },
       };
     } catch (err) {
       console.log(err);
