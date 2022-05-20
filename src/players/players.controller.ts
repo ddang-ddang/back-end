@@ -191,7 +191,9 @@ export class PlayersController {
     try {
       const { id, email, nickname } = req.user;
 
-      this.logger.verbose(`${email}님이 로그인하려고 합니다`);
+      this.logger.verbose(
+        `${email}님이 새로운 엑세스 토큰을 발급하려고 합니다`
+      );
 
       const accessToken = this.authService.getJwtAccessToken({
         id,
@@ -199,10 +201,10 @@ export class PlayersController {
         nickname,
       });
 
-      // 쿠키를 강제로 주입한다.
+      // 쿠키를 보내준다 주입한다.
       req.res.setHeader('accesstoken', accessToken);
 
-      return { ok: true };
+      return { ok: true, profile: { id, email, nickname } };
     } catch (err) {
       return { ok: false, message: err.message };
     }
@@ -310,22 +312,13 @@ export class PlayersController {
           },
         ],
       };
-      // const { email, nickname, playerId } = req.user.player;
-      // console.log(req.user);
       this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
 
       const test = await this.playersService.mypageInfo(2);
-      // console.log(test);
-
-      // const player = await this.playersService.getDataByEmail({ email });
-      // console.log(player);
-
-      // const locations = await this.playersService.mypageInfo(playerId);
-
-      // console.log(locations);
 
       return {
         ok: true,
+        rows: test,
       };
     } catch (err) {
       console.log(err);
