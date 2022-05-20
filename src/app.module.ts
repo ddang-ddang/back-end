@@ -8,8 +8,6 @@ import { LikesModule } from './likes/likes.module';
 import { QuestsModule } from './quests/quests.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeORMConfig } from '../ormconfig';
-import { AchievementsService } from './achievements/achievements.service';
-import { AchievementsController } from './achievements/achievements.controller';
 import * as config from 'config';
 import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
@@ -54,13 +52,7 @@ const jwtConfig = config.get('jwt');
     QuestsModule,
     NotifsModule,
   ],
-  controllers: [AppController, PlayersController, AchievementsController],
-  providers: [
-    AppService,
-    AchievementsService,
-    PlayersService,
-    AuthService,
-    FeedsService,
-  ],
+  controllers: [AppController, PlayersController],
+  providers: [AppService, PlayersService, AuthService, FeedsService],
 })
 export class AppModule {}

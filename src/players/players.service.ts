@@ -120,9 +120,8 @@ export class PlayersService {
     }
   }
 
-  async loadLatLng(playerId: number): Promise<object> {
-    const result = await this.playersRepository.locations(playerId);
-    console.log(result);
+  async mypageInfo(playerId: number): Promise<object> {
+    const result = await this.playersRepository.mypageInfo(playerId);
     return result;
   }
 }
