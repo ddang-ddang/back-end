@@ -11,6 +11,7 @@ import {
   Request,
   Query,
   ConsoleLogger,
+  Post,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -25,7 +26,7 @@ export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
 
   /* 모든 피드에 대한 정보 */
-  @Get() // 여기에 AuthGuard넣으면 안될 듯
+  @Post() // 여기에 AuthGuard넣으면 안될 듯
   @ApiOperation({ summary: '주변 피드 조회 API' })
   // async findAllFeeds(@Body() playerId: number) {
   async findAllFeeds(

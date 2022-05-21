@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import * as config from 'config';
 import { getManager, Repository } from 'typeorm';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
@@ -13,8 +12,8 @@ import { Player } from 'src/players/entities/player.entity';
 import { Notif } from '../notifs/entities/notif.entity';
 import { Mission } from 'src/players/entities/mission.entity';
 import { Achievement } from 'src/players/entities/achievement.entity';
+import { mapConfig } from '../../configs';
 
-const mapConfig = config.get('map');
 
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
 const REST_API_KEY = mapConfig.kakaoApiKey;
@@ -47,8 +46,8 @@ export class QuestsService {
       .select(['quest.type', 'count(quest.type) as cnt'])
       .leftJoin('complete.quest', 'quest')
       .where('complete.playerId = :playerId and quest.type = :questType', {
-        playerId: playerId,
-        questType: questType,
+        playerId,
+        questType,
       })
       .groupBy('quest.type')
       .getRawOne();
@@ -359,48 +358,78 @@ export class QuestsService {
       category = Math.floor(Math.random() * 9) + 1;
       switch (category) {
         case 1:
+          type = 'time';
+          title = '땅땅! 시간이 없어요!';
+          hour = 9;
+          description = '★주목★ 9시까지 도착시 땅도장 땅땅!';
+          difficulty = 1;
+          reward = 200;
+          timeUntil = new Date(year, month, date, hour);
+          break;
         case 2:
+          type = 'time';
+          title = '2시까지 땅땅!';
+          hour = category * 7;
+          description = '2시까지 도착해서 땅땅 도장을 받으세요!';
+          difficulty = 1;
+          reward = 250;
+          timeUntil = new Date(year, month, date, hour);
+          break;
         case 3:
           type = 'time';
-          title = '타임어택';
-          if (category === 1) {
-            hour = 9;
-          } else {
-            hour = category * 7;
-          }
-          description = `${hour}시까지 도착해서 땅땅 도장을 찍어주세요.`;
+          title = '밤 9시가 되면 문이 땅!';
+          hour = category * 7;
+          description = '문이 땅 닫히기 전까지 땅땅 도장을 찍어주세요!';
           difficulty = 1;
-          reward = 5;
+          reward = 300;
           timeUntil = new Date(year, month, date, hour);
           break;
         case 4:
-        case 5:
-        case 6:
-          if (category === 4) {
-            description =
-              '특별한 기억이 있는 장소인가요? 여러분의 경험을 들려주세요. 낯선 곳이라면 첫번째 기억을 담으러 나서볼까요?';
-          } else if (category === 5) {
-            description =
-              '동네 사람들에게 추천해 주고 싶은 장소인가요? 여러분의 리뷰를 남겨주세요.';
-          } else {
-            description =
-              '오늘 하루는 어떠셨나요? 무심코 지나친 무채색의 장소를 여러분의 감정으로 채워주세요.';
-          }
+          description = '이 땅에 남겨질 여러분의 흔적을 환영합니다!';
           type = 'feed';
-          title = '땅땅 쓰기';
+          title = '땅에 대한 이야기 만땅';
           difficulty = 2;
-          reward = 8;
+          reward = 400;
+          timeUntil = null;
+          break;
+        case 5:
+          description = '여기가 어떤 땅인지 자유롭게 리뷰를 남겨주세요!';
+          type = 'feed';
+          title = '이 땅을 추천합니땅';
+          difficulty = 2;
+          reward = 500;
+          timeUntil = null;
+          break;
+        case 6:
+          description = '주변의 무채색 장소를 여러분의 생각으로 채워주세요!';
+          type = 'feed';
+          title = '땅땅한 오늘의 기분';
+          difficulty = 2;
+          reward = 600;
           timeUntil = null;
           break;
         case 7:
+          type = 'mob';
+          title = '땅개비를 이겨라';
+          description = '땅개비와의 짜릿한 한판승 어때요?';
+          difficulty = 3;
+          reward = 900;
+          timeUntil = null;
+          break;
         case 8:
+          type = 'mob';
+          title = '땅어가 나타났다';
+          description = '땅어를 물리치고 우리 동네를 지켜주세요!';
+          difficulty = 3;
+          reward = 1200;
+          timeUntil = null;
+          break;
         case 9:
           type = 'mob';
-          title = '몬스터 대결';
-          description =
-            '대결에서 승리하여 몬스터로부터 우리 동네를 지켜주세요.';
+          title = '땅수리를 잡아라';
+          description = '우리 동네를 어지럽히는 땅수리를 잡으러 가볼까요?';
           difficulty = 3;
-          reward = 10;
+          reward = 1500;
           timeUntil = null;
           break;
       }
@@ -474,7 +503,7 @@ export class QuestsService {
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 0 2 * * *', {
+  @Cron('0 0 1 * * *', {
     name: 'createQuests',
     timeZone: 'Asia/Seoul',
   })

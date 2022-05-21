@@ -1,4 +1,4 @@
-import { Body, Controller, Get } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { RanksService } from './ranks.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -7,7 +7,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 export class RanksController {
   constructor(private readonly ranksService: RanksService) {}
 
-  @Get()
+  @Post()
   @ApiOperation({ summary: '우리 지역 랭킹 조회 API' })
   getAll(@Body() body: any) {
     const { currentRegion } = body;

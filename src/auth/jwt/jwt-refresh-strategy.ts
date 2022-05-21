@@ -1,13 +1,10 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import * as config from 'config';
 import { AuthService } from '../auth.service';
 import { TokenPayloadDto } from '../../players/dto/create-player.dto';
 import { Request } from 'express';
-import { PlayersService } from '../../players/players.service';
-
-const jwtConfig = config.get('jwt');
+import { jwtConfig } from '../../../configs';
 
 /*
  * JWT 토큰 Decode 로직
@@ -18,10 +15,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh-token'
 ) {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly playersService: PlayersService
-  ) {
+  constructor(private readonly authService: AuthService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
@@ -33,7 +27,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
           return refreshToken;
         },
       ]),
-      secretOrKey: jwtConfig.refreshSecret,
+      secretOrKey: jwtConfig.refreshTokenSecret,
       passReqToCallback: true,
       ignoreExpiration: false,
     });
