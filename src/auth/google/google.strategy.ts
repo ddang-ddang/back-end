@@ -1,27 +1,18 @@
-import { JwtService } from '@nestjs/jwt';
 import { Injectable, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20';
+import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { PlayersService } from '../../players/players.service';
-import { AuthService } from '../auth.service';
-import * as config from 'config';
-const jwtConfig = config.get('jwt');
-
-const googleConfig = config.get('google');
+import { googleConfig } from '../../../configs';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   private logger = new Logger('google');
   JwtService: any;
-  constructor(
-    private readonly playersService: PlayersService,
-    private readonly authService: AuthService,
-    private readonly jwtService: JwtService
-  ) {
+  constructor(private readonly playersService: PlayersService) {
     super({
       clientID: googleConfig.clientId,
       clientSecret: googleConfig.clientSecret,
-      callbackURL: 'http://localhost:3005/api/players/googleauth',
+      callbackURL: googleConfig.callbackUrl,
       passReqToCallback: true,
       scope: ['profile', 'email'],
     });
@@ -49,7 +40,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         profileImg: photos[0].value,
         provider: 'google',
         providerId: id,
-        // providerId: Number(String(id).substring(0, 19)),
         currentHashedRefreshToken: refreshToken,
       };
 

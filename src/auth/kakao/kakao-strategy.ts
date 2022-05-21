@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-kakao';
-import * as config from 'config';
 import { AuthService } from '../auth.service';
 import { PlayersService } from '../../players/players.service';
 import { Logger } from '@nestjs/common';
-
-const kakaoConfig = config.get('kakao');
+import { kakaoConfig } from '../../../configs';
 
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy) {
@@ -18,7 +16,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     super({
       clientID: kakaoConfig.clientId,
       clientSecret: kakaoConfig.clientSecret,
-      callbackURL: 'http://localhost:3005/api/players/kakaoauth',
+      callbackURL: kakaoConfig.callbackUrl,
       //   scope: ['profile'],
     });
   }

@@ -1,4 +1,4 @@
-import { JwtRefreshTokenGuard } from '../auth/jwt/jwt-refresh-token.guard';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -15,13 +15,10 @@ import {
   UseGuards,
   Request,
   Logger,
-  Res,
   BadRequestException,
   UnauthorizedException,
   HttpCode,
 } from '@nestjs/common';
-import * as config from 'config';
-const jwtConfig = config.get('jwt');
 
 // 서비스 관련 모듈
 import { AuthService } from 'src/auth/auth.service';
@@ -43,7 +40,8 @@ export class PlayersController {
   private logger = new Logger('PlayersController');
   constructor(
     private readonly playersService: PlayersService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService
   ) {}
 
   /*
@@ -72,7 +70,7 @@ export class PlayersController {
         providerId: null,
         currentHashedRefreshToken: null,
       });
-      return { ok: true, result  };
+      return { ok: true, result };
     } catch (err) {
       return { ok: false, row: err.message };
     }
@@ -180,8 +178,30 @@ export class PlayersController {
   }
 
   // 엑세스 토큰 발급해주는 라우터
-  @UseGuards(JwtRefreshTokenGuard)
+  @ApiOperation({ summary: 'jwt인증 API' })
+  @UseGuards(JwtAuthGuard)
   @Get('auth')
+  async getHello(@Request() req): Promise<object> {
+    try {
+      const { playerId, email, nickname } = req.user.player;
+
+      this.logger.verbose(`${email}님이 인증 하려고 합니다`);
+
+      // const envData = this.configService.get('DB_PORT');
+      // console.log(envData);
+      // console.log('wlkejflkwjeflkjwef');
+
+      return { ok: true, user: { playerId, email, nickname } };
+    } catch (err) {
+      return {
+        ok: false,
+        message: err.message,
+      };
+    }
+  }
+  // 엑세스 토큰 발급해주는 라우터
+  @UseGuards(JwtAuthGuard)
+  @Get('auth/getToken')
   async test(@Request() req) {
     try {
       const { id, email, nickname } = req.user;

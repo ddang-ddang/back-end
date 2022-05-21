@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import * as config from 'config';
 import { getManager, Repository } from 'typeorm';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
@@ -13,8 +12,8 @@ import { Player } from 'src/players/entities/player.entity';
 import { Notif } from '../notifs/entities/notif.entity';
 import { Mission } from 'src/players/entities/mission.entity';
 import { Achievement } from 'src/players/entities/achievement.entity';
+import { mapConfig } from '../../configs';
 
-const mapConfig = config.get('map');
 
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
 const REST_API_KEY = mapConfig.kakaoApiKey;

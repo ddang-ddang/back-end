@@ -1,40 +1,45 @@
-import { JwtModule } from '@nestjs/jwt';
+//  모듈관련
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { JwtModule } from '@nestjs/jwt';
 import { FeedsModule } from './feeds/feeds.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { QuestsModule } from './quests/quests.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeORMConfig } from '../ormconfig';
-import * as config from 'config';
-import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
-import { FeedRepository } from './feeds/feeds.repository';
-import { PassportModule } from '@nestjs/passport';
-import { PlayersController } from './players/players.controller';
-import { PlayersService } from './players/players.service';
-import { AuthService } from './auth/auth.service';
-import { FeedsService } from './feeds/feeds.service';
-import { PlayerRepository } from './players/players.repository';
-import { LikeRepository } from './likes/likes.repository';
-import { CommentRepository } from './comments/comments.repository';
 import { ScheduleModule } from '@nestjs/schedule';
 import { NotifsModule } from './notifs/notifs.module';
 import { RanksModule } from './ranks/ranks.module';
+import { ConfigModule } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
+import { AuthModule } from './auth/auth.module';
 
-const jwtConfig = config.get('jwt');
+//  서비스 관련 모듈
+import { AppService } from './app.service';
+import { AuthService } from './auth/auth.service';
+import { FeedsService } from './feeds/feeds.service';
+import { PlayersService } from './players/players.service';
+
+import { AppController } from './app.controller';
+import { PlayersController } from './players/players.controller';
+
+import { FeedRepository } from './feeds/feeds.repository';
+import { PlayerRepository } from './players/players.repository';
+import { LikeRepository } from './likes/likes.repository';
+import { CommentRepository } from './comments/comments.repository';
+
+import { typeORMConfig, jwtConfig } from '../configs';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ envFilePath: './config/.env', isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: jwtConfig.accessTokenSecret,
-      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+      signOptions: { expiresIn: `${jwtConfig.accessTokenSecret}s` },
     }),
     JwtModule.register({
-      secret: jwtConfig.refreshSecret,
+      secret: jwtConfig.refreshTokenSecret,
       signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
     TypeOrmModule.forRoot(typeORMConfig),
