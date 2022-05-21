@@ -9,8 +9,8 @@ import {
 import { Player } from './entities/player.entity';
 import { PlayerRepository } from './players.repository';
 import * as bcrypt from 'bcrypt';
-import { Complete } from "../quests/entities/complete.entity";
-import { Mission } from "./entities/mission.entity";
+import { Complete } from '../quests/entities/complete.entity';
+import { Mission } from './entities/mission.entity';
 
 @Injectable()
 export class PlayersService {
@@ -143,7 +143,7 @@ export class PlayersService {
       const countEachType = await Complete.createQueryBuilder('complete')
         .select(['quest.type', 'count(quest.type) as cnt'])
         .leftJoin('complete.quest', 'quest')
-        .where('complete.playerId = :playerId', { playerId: playerId})
+        .where('complete.playerId = :playerId', { playerId: playerId })
         .groupBy('quest.type')
         .getRawMany();
 
