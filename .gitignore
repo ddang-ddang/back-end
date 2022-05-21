@@ -35,9 +35,10 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # etc
+config/
 uploads/
 files/
-# .env
+.env
 .gitmessage
 
 # Elastic Beanstalk Files
