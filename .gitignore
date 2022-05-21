@@ -35,7 +35,6 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # etc
-ormconfig.ts
 config/
 uploads/
 files/

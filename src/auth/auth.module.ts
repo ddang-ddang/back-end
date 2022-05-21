@@ -13,7 +13,6 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtRefreshTokenStrategy } from './jwt/jwt-refresh-strategy';
 import { jwtConfig } from '../../configs';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot(),
