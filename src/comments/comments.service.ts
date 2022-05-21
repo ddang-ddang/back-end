@@ -9,12 +9,14 @@ import { Comment } from './entities/comment.entity';
 import { CommentRepository } from './comments.repository';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { CommentException } from './comments.exception';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(CommentRepository)
-    private commentRepository: CommentRepository
+    private commentRepository: CommentRepository,
+    private commentException: CommentException
   ) {}
 
   /* 댓글 작성 */
@@ -28,22 +30,11 @@ export class CommentsService {
     if (feed) {
       return this.commentRepository.createComment(playerId, feed, commentText);
     }
-    throw new NotFoundException({
-      ok: false,
-      message: `피드 id ${feedId} 존재하지 않는 피드입니다.`,
-    });
+    this.commentException.NotFoundFeed();
   }
 
   /* 특정 게시글의 모든 댓글 조회 */
   async findAllComments(feedId: number) {
-    // return this.commentRepository.find({
-    //   where: {
-    //     feed: feedId,
-    //     deletedAt: null,
-    //   },
-    //   relations: ['player'],
-    // });
-
     /* queryBuilder */
     return await this.commentRepository
       .createQueryBuilder('comment')
@@ -63,7 +54,12 @@ export class CommentsService {
   }
 
   /* 특정 댓글 조회 */
-  async findOneComment(commentId: number) {
+  async findOneComment(commentId: number, feedId?: number) {
+    const feed = await Feed.findOne({ id: feedId });
+    if (!feed) {
+      this.commentException.NotFoundFeed();
+    }
+
     const comment = await this.commentRepository.findOne({
       where: {
         id: commentId,
@@ -72,11 +68,11 @@ export class CommentsService {
       relations: ['player'],
     });
     if (!comment) {
-      // throw new NotFoundException(`comment not found id ${commentId}`);
-      throw new NotFoundException({
-        ok: false,
-        message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
-      });
+      // throw new NotFoundException({
+      //   ok: false,
+      //   message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
+      // });
+      this.commentException.NotFoundComment();
     }
     return comment;
   }
@@ -96,7 +92,7 @@ export class CommentsService {
     commentId: number,
     updateCommentDto: UpdateCommentDto
   ) {
-    const comment = await this.findOneComment(commentId);
+    const comment = await this.findOneComment(feedId, commentId);
     const match = await this.matchPlayerComment(playerId, comment);
     if (comment) {
       if (match) {
@@ -106,16 +102,14 @@ export class CommentsService {
           updateCommentDto
         );
       } else {
-        throw new BadRequestException({
-          ok: false,
-          message: `댓글 작성자만 수정할 수 있습니다.`,
-        });
+        // throw new BadRequestException({
+        //   ok: false,
+        //   message: `댓글 작성자만 수정할 수 있습니다.`,
+        // });
+        this.commentException.CannotEditComment();
       }
     } else {
-      throw new NotFoundException({
-        ok: false,
-        message: `댓글 id ${commentId} 를 찾을 수 없습니다.`,
-      });
+      this.commentException.NotFoundComment();
     }
   }
 
@@ -127,16 +121,14 @@ export class CommentsService {
       if (match) {
         return this.commentRepository.deleteComment(commentId);
       } else {
-        throw new BadRequestException({
-          ok: false,
-          message: `댓글 작성자만 삭제할 수 있습니다.`,
-        });
+        // throw new BadRequestException({
+        //   ok: false,
+        //   message: `댓글 작성자만 삭제할 수 있습니다.`,
+        // });
+        this.commentException.CannotDeleteComment();
       }
     } else {
-      throw new NotFoundException({
-        ok: false,
-        message: `댓글 id ${commentId} 를 찾을 수 없습니다.`,
-      });
+      this.commentException.NotFoundComment();
     }
   }
 }

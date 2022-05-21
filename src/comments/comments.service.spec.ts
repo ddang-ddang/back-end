@@ -1,7 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { JwtStrategy } from 'src/auth/jwt/jwt.strategy';
-import { Connection, createConnections, createQueryBuilder, getConnection, Repository } from 'typeorm';
+import {
+  Connection,
+  createConnections,
+  createQueryBuilder,
+  getConnection,
+  Repository,
+} from 'typeorm';
 import { CommentRepository } from './comments.repository';
 import { CommentsService } from './comments.service';
 import { Comment } from './entities/comment.entity';
@@ -21,9 +27,8 @@ const mockCommentRepository = {
   }),
 };
 
-
 // const mockRepository = () => {
-  
+
 // };
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;

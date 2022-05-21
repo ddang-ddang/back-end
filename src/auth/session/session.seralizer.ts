@@ -35,7 +35,7 @@ export class SessionSerializer extends PassportSerializer {
   ): Promise<any> {
     console.log('-----------------------------------');
     const result = await this.authService.checkById(payload);
-    console.log(result)
+    console.log(result);
     console.log(payload);
     console.log('디ㅏ시리얼 라이즈 되는 부분');
     console.log('-----------------------------------');
