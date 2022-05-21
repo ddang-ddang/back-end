@@ -3,8 +3,8 @@ FROM node:16
 WORKDIR /app
 
 COPY . /app/
-COPY ./ormconfig.ts /app/
-COPY ./config/* /app/
+# COPY ./ormconfig.ts /app/
+# COPY ./config/* /app/
 
 COPY package*.json /app/
 

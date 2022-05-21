@@ -15,13 +15,10 @@ import {
   UseGuards,
   Request,
   Logger,
-  Res,
   BadRequestException,
   UnauthorizedException,
   HttpCode,
 } from '@nestjs/common';
-import * as config from 'config';
-const jwtConfig = config.get('jwt');
 
 // 서비스 관련 모듈
 import { AuthService } from 'src/auth/auth.service';
@@ -197,7 +194,7 @@ export class PlayersController {
     }
   }
   // 엑세스 토큰 발급해주는 라우터
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtRefreshTokenGuard)
   @Get('auth/getToken')
   async test(@Request() req) {
     try {
