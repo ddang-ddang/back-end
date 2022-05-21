@@ -41,6 +41,7 @@ export class CommentsController {
       );
       return {
         ok: true,
+        comment,
       };
     } catch (error) {
       return {
