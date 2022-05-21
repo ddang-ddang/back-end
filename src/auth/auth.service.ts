@@ -8,8 +8,7 @@ import {
   // PlayerIdDto,
   SigninDto,
 } from 'src/players/dto/create-player.dto';
-import * as config from 'config';
-const jwtConfig = config.get('jwt');
+import { jwtConfig } from '../../configs';
 
 @Injectable()
 export class AuthService {
@@ -88,7 +87,7 @@ export class AuthService {
   // 토큰을 생성하는 함수
   getJwtAccessToken(payload: object) {
     const token = this.jwtService.sign(payload, {
-      secret: jwtConfig.accessSecret,
+      secret: jwtConfig.accessTokenSecret,
       expiresIn: `${jwtConfig.accessTokenExp}s`,
     });
 
@@ -100,7 +99,7 @@ export class AuthService {
   // 리프레쉬 토큰을 생성하는 함수
   getJwtRefreshToken(payload: object) {
     const token = this.jwtService.sign(payload, {
-      secret: jwtConfig.refreshSecret,
+      secret: jwtConfig.refreshTokenSecret,
       expiresIn: `${jwtConfig.refreshTokenExp}s`,
     });
     // const refreshCookie = `Refresh=${refreshToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.refreshTokenExp}`;
