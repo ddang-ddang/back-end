@@ -1,4 +1,4 @@
-import { JwtRefreshTokenGuard } from '../auth/jwt/jwt-refresh-token.guard';
+import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -15,13 +15,10 @@ import {
   UseGuards,
   Request,
   Logger,
-  Res,
   BadRequestException,
   UnauthorizedException,
   HttpCode,
 } from '@nestjs/common';
-import * as config from 'config';
-const jwtConfig = config.get('jwt');
 
 // 서비스 관련 모듈
 import { AuthService } from 'src/auth/auth.service';
@@ -43,7 +40,8 @@ export class PlayersController {
   private logger = new Logger('PlayersController');
   constructor(
     private readonly playersService: PlayersService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService
   ) {}
 
   /*
@@ -186,7 +184,12 @@ export class PlayersController {
   async getHello(@Request() req): Promise<object> {
     try {
       const { playerId, email, nickname } = req.user.player;
+
       this.logger.verbose(`${email}님이 인증 하려고 합니다`);
+
+      // const envData = this.configService.get('DB_PORT');
+      // console.log(envData);
+      // console.log('wlkejflkwjeflkjwef');
 
       return { ok: true, user: { playerId, email, nickname } };
     } catch (err) {
