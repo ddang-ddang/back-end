@@ -9,12 +9,14 @@ import { Comment } from './entities/comment.entity';
 import { CommentRepository } from './comments.repository';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { CommentException } from './comments.exception';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(CommentRepository)
-    private commentRepository: CommentRepository
+    private commentRepository: CommentRepository,
+    private commentException: CommentException
   ) {}
 
   /* 댓글 작성 */
@@ -63,7 +65,7 @@ export class CommentsService {
   }
 
   /* 특정 댓글 조회 */
-  async findOneComment(commentId: number) {
+  async findOneComment(feedId: number, commentId: number) {
     const comment = await this.commentRepository.findOne({
       where: {
         id: commentId,
@@ -72,11 +74,12 @@ export class CommentsService {
       relations: ['player'],
     });
     if (!comment) {
-      // throw new NotFoundException(`comment not found id ${commentId}`);
-      throw new NotFoundException({
-        ok: false,
-        message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
-      });
+      // throw new NotFoundException({
+      //   ok: false,
+      //   message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
+      // });
+      console.log('comment not found')
+      this.commentException.NotFoundComment();
     }
     return comment;
   }
