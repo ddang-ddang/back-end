@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
-      - 'npm'
+      - 'npm install'
   pre_build:
     commands:
       - printenv > .env
