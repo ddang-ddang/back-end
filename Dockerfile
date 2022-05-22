@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY ./ ./
+COPY ./config ./
 
 RUN npm install \ 
 && npm run build
