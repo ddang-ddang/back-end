@@ -1,25 +1,40 @@
 version: '3.8'
+
 services:
- notes:
-   build:
-     context: .
-   ports:
-     - 80:80
-     - 3000:3000
-   environment:
-     - SERVER_PORT=8080
-     - DATABASE_CONNECTIONSTRING=mongodb://mongo:27017/notes
-   volumes:
-     - ./:/code
-   command: npm run debug
-  
- mongo:
-   image: mongo:4.2.8
-   ports:
-     - 27017:27017
-   volumes:
-     - mongodb:/data/db
-     - mongodb_config:/data/configdb
- volumes:
-   mongodb:
-   mongodb_config:
+  dev:
+    container_name: nestjs_api_dev
+    image: nestjs-api-dev:1.0.0
+    build:
+      context: .
+      target: development
+      dockerfile: ./Dockerfile
+    command: npm run start:debug
+    ports:
+      - 8080:8080
+      - 9229:9229
+    networks:
+      - nesjs-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+  prod:
+    container_name: nestjs_api_prod
+    image: nestjs-api-prod:1.0.0
+    build:
+      context: .
+      target: production
+      dockerfile: ./Dockerfile
+    command: npm run start:prod
+    ports:
+      - 8080:8080
+      - 9229:9229
+    networks:
+      - nesjs-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    restart: unless-stopped
+
+networks:
+  nesjs-network:
