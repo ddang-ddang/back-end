@@ -33,6 +33,7 @@ import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
+import { JwtRefreshTokenGuard } from "../auth/jwt/jwt-refresh-token.guard";
 
 @Controller('api/players')
 @ApiTags('플레이어 API')
@@ -200,7 +201,7 @@ export class PlayersController {
     }
   }
   // 엑세스 토큰 발급해주는 라우터
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtRefreshTokenGuard)
   @Get('auth/getToken')
   async test(@Request() req) {
     try {
