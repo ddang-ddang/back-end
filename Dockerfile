@@ -1,17 +1,17 @@
-FROM node:16
+FROM node:16.15-alpine3.14
 
 WORKDIR /app
 
-#nginx 테스트를 위해...
+COPY . /app/
+COPY ./ormconfig.ts /app/
+COPY ./config/* /app/
 
-COPY package*.json ./
+COPY package*.json /app/
 
-# CMD echo ls -al 
-COPY ./ ./
-RUN npm install  \
-    && npm run build 
+RUN npm ci \
+    && npm run build
 
-CMD [ "npm", "run", "start:prod" ]
+EXPOSE 3000
+EXPOSE 80
 
-EXPOSE 8080 
-EXPOSE 3306
+CMD ["npm", "run", "start:prod"]

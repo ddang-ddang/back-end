@@ -5,6 +5,7 @@ import { getRepository, Repository } from 'typeorm';
 import { Complete } from '../quests/entities/complete.entity';
 import { Player } from '../players/entities/player.entity';
 import { Quest } from '../quests/entities/quest.entity';
+import { RanksException } from './ranks.exception';
 
 @Injectable()
 export class RanksService {
@@ -14,75 +15,63 @@ export class RanksService {
     @InjectRepository(Complete)
     private readonly completes: Repository<Complete>,
     @InjectRepository(Player)
-    private readonly players: Repository<Player>
+    private readonly players: Repository<Player>,
+    private readonly exceptions: RanksException
   ) {}
 
   private readonly logger = new Logger(RanksService.name);
 
-  async getAll(currentRegion) {
-    this.logger.verbose(`${currentRegion.regionDong} 랭킹 조회`);
+  async getAll(regionSi, regionGu, regionDong) {
+    this.logger.verbose(`${regionDong} 랭킹 조회`);
 
-    try {
-      const { regionSi, regionGu, regionDong } = currentRegion; // 현재 지역 정보
-      // 모든 날짜의 현재 지역 데이터 조회
-      const regions = await this.regions.find({
-        where: { regionSi, regionGu, regionDong },
-      });
-      if (regions.length === 0)
-        return { ok: false, message: '현재 위치를 찾을 수 없습니다.' };
+    // 모든 날짜의 현재 지역 데이터 조회
+    const regions = await this.regions.find({
+      select: ['id', 'totalCount'],
+      where: { regionSi, regionGu, regionDong },
+    });
+    if (regions.length === 0) this.exceptions.notFound();
+    const { totalCount } = regions[0];
 
-      const { totalCount } = regions[0];
-      // 퀘스트 조회 (완료 테이블, 완료한 플레이어 조인)
-      const quests = await Promise.all([
-        ...regions.map(async (region) => {
-          // TODO: relations 내에서 필요한 정보만 받을 수 있게 수정 (플레이어 닉네임, 프로필 이미지)
-          return await getRepository(Quest)
-            .createQueryBuilder('quest')
-            .where('regionId = :id', { id: region.id })
-            .innerJoinAndSelect('quest.completes', 'complete')
-            .leftJoinAndSelect('complete.player', 'player')
-            .getMany();
-        }),
-      ]);
+    const completedPlayers = await Promise.all([
+      ...regions.map((region) => {
+        return getRepository(Quest)
+          .createQueryBuilder('quest')
+          .select(['type', 'player.id', 'player.nickname', 'player.profileImg'])
+          .where('regionId = :id', { id: region.id })
+          .innerJoin('quest.completes', 'complete')
+          .leftJoin('complete.player', 'player')
+          .getRawMany();
+      }),
+    ]);
 
-      const totalCompletedBy = [];
-      const mobsCompletedBy = [];
-      const timeCompletedBy = [];
-      const docsCompletedBy = [];
+    const totalCompletedPlayers = [];
+    const mobsCompletedPlayers = [];
+    const timeCompletedPlayers = [];
+    const docsCompletedPlayers = [];
 
-      // 퀘스트 별로 완료한 플레이어 id 배열로 추가
-      const allQuests = quests.flat();
-      allQuests.forEach((quest) => {
-        const { type } = quest;
-        if (type === 'mob') {
-          quest.completes.forEach((complete) => {
-            mobsCompletedBy.push(complete.player.id);
-            totalCompletedBy.push(complete.player.id);
-          });
-        } else if (type === 'time') {
-          quest.completes.forEach((complete) => {
-            timeCompletedBy.push(complete.player.id);
-            totalCompletedBy.push(complete.player.id);
-          });
-        } else if (type === 'feed') {
-          quest.completes.forEach((complete) => {
-            docsCompletedBy.push(complete.player.id);
-            totalCompletedBy.push(complete.player.id);
-          });
-        }
-      });
+    // 퀘스트 별로 완료한 플레이어 id 배열로 추가
+    completedPlayers.flat().forEach((player) => {
+      const { type, player_playerId } = player;
+      if (type === 'mob') {
+        mobsCompletedPlayers.push(player_playerId);
+        totalCompletedPlayers.push(player_playerId);
+      } else if (type === 'time') {
+        timeCompletedPlayers.push(player_playerId);
+        totalCompletedPlayers.push(player_playerId);
+      } else if (type === 'feed') {
+        docsCompletedPlayers.push(player_playerId);
+        totalCompletedPlayers.push(player_playerId);
+      }
+    });
 
-      const total = await this.rankFor(totalCompletedBy, totalCount, 3);
-      const mob = await this.rankFor(mobsCompletedBy, totalCount, 3);
-      const time = await this.rankFor(timeCompletedBy, totalCount, 1);
-      const docs = await this.rankFor(docsCompletedBy, totalCount, 2);
+    const total = await this.rankFor(totalCompletedPlayers, totalCount, 3);
+    const mob = await this.rankFor(mobsCompletedPlayers, totalCount, 3);
+    const time = await this.rankFor(timeCompletedPlayers, totalCount, 1);
+    const docs = await this.rankFor(docsCompletedPlayers, totalCount, 2);
 
-      const ranks = { total, mob, time, docs };
+    const ranks = { total, mob, time, docs };
 
-      return { ok: true, ranks };
-    } catch (error) {
-      return { ok: false, message: '랭킹을 조회할 수 없습니다.' };
-    }
+    return { ok: true, ranks };
   }
 
   /* 랭킹 데이터 만들기 */

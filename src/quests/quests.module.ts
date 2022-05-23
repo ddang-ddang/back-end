@@ -1,15 +1,16 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Region } from 'src/quests/entities/region.entity';
-import { Complete } from 'src/quests/entities/complete.entity';
-import { QuestRepository } from 'src/quests/repositories/quest.repository';
-import { FeedRepository } from 'src/feeds/feeds.repository';
-import { PlayerRepository } from 'src/players/players.repository';
-import { QuestsController } from 'src/quests/quests.controller';
-import { QuestsService } from 'src/quests/quests.service';
-import { Notif } from 'src/notifs/entities/notif.entity';
 import { Achievement } from '../players/entities/achievement.entity';
 import { Mission } from '../players/entities/mission.entity';
+import { Notif } from '../notifs/entities/notif.entity';
+import { FeedRepository } from '../feeds/feeds.repository';
+import { Complete } from './entities/complete.entity';
+import { QuestsService } from './quests.service';
+import { Region } from './entities/region.entity';
+import { QuestsController } from './quests.controller';
+import { QuestRepository } from './repositories/quest.repository';
+import { PlayerRepository } from '../players/players.repository';
+import { QuestsException } from './quests.exception';
 
 @Module({
   imports: [
@@ -25,6 +26,6 @@ import { Mission } from '../players/entities/mission.entity';
     ]),
   ],
   controllers: [QuestsController],
-  providers: [QuestsService],
+  providers: [QuestsService, QuestsException],
 })
 export class QuestsModule {}

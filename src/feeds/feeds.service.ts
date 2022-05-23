@@ -1,9 +1,18 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CreateFeedDto } from './dto/create-feed.dto';
+import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
+import { Likes } from '../likes/entities/like.entity';
 import { LikeRepository } from 'src/likes/likes.repository';
-import { FeedException } from './feeds.exception';
+import { CommentRepository } from 'src/comments/comments.repository';
+import { Region } from 'src/quests/entities/region.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
 
 @Injectable()
 export class FeedsService {
@@ -11,7 +20,7 @@ export class FeedsService {
     @InjectRepository(FeedRepository)
     private feedRepository: FeedRepository,
     private likeRepository: LikeRepository,
-    private feedException: FeedException
+    private commentRepository: CommentRepository
   ) {}
 
   async measureDist(
@@ -42,7 +51,7 @@ export class FeedsService {
 
   /* 모든 피드 가져오기 */
   async findAllFeeds(playerId: number, regionData: any) {
-    const { regionSi, regionGu, regionDong } = regionData;
+    const { regionSi, regionGu, regionDong, lat, lng } = regionData;
     console.log(regionSi, regionGu, regionDong);
     // const feeds = await Feed.find({
     //   where: {
@@ -108,16 +117,20 @@ export class FeedsService {
 
   /* 특정 피드 가저오기 */
   async findOneFeed(feedId: number): Promise<Feed> {
-    const feed = await this.feedRepository.findOne({
+    const content = await this.feedRepository.findOne({
       where: {
         id: feedId,
       },
       relations: ['player'],
     });
-    if (!feed) {
-      this.feedException.NotFoundFeed();
+    if (!content) {
+      // throw new NotFoundException(`content id ${feedId} not found`);
+      throw new NotFoundException({
+        ok: false,
+        message: `피드 id ${feedId}를 찾을 수 없습니다.`,
+      });
     }
-    return feed;
+    return content;
   }
 
   /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
@@ -146,7 +159,10 @@ export class FeedsService {
           feedContent
         );
       } else {
-        this.feedException.CannotEditFeed();
+        throw new BadRequestException({
+          ok: false,
+          message: `피드 작성자만 수정할 수 있습니다.`,
+        });
       }
     }
     throw new BadRequestException({
@@ -170,9 +186,15 @@ export class FeedsService {
       if (match) {
         return this.feedRepository.deleteFeed(playerId, feedId, feed);
       } else {
-        this.feedException.CannotDeleteFeed();
+        throw new BadRequestException({
+          ok: false,
+          message: `피드 작성자만 삭제할 수 있습니다.`,
+        });
       }
     }
-    this.feedException.NotFoundFeed();
+    throw new NotFoundException({
+      ok: false,
+      message: `피드 id ${feedId} 를 찾을 수 없습니다.`,
+    });
   }
 }

@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   HttpStatus,
+  ImATeapotException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -31,7 +32,7 @@ export class CommentException {
   // 댓글 사용자만 수정 가능
   CannotEditComment() {
     throw new BadRequestException({
-      statusCode: HttpStatus.BAD_REQUEST,
+      statusCode: HttpStatus.BAD_GATEWAY,
       ok: false,
       message: '댓글 작성자만 수정할 수 있습니다.',
       error: 'Bad Request',
@@ -41,7 +42,7 @@ export class CommentException {
   // 댓글 사용자만 삭제 가능
   CannotDeleteComment() {
     throw new BadRequestException({
-      statusCode: HttpStatus.BAD_REQUEST,
+      statusCode: HttpStatus.BAD_GATEWAY,
       ok: false,
       message: '댓글 작성자만 삭제할 수 있습니다.',
       error: 'Bad Request',

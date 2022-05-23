@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthService } from 'src/auth/auth.service';
 import { Player } from './entities/player.entity';
 import { PlayersController } from './players.controller';
 import { PlayersService } from './players.service';
 import { PlayerRepository } from './players.repository';
 import { ConfigModule } from '@nestjs/config';
 import { jwtConfig } from '../../configs';
-import { AuthService } from 'src/auth/auth.service';
 
 @Module({
   imports: [

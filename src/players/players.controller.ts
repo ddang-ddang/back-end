@@ -21,19 +21,18 @@ import {
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
+import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
 
 // 인증관련 모듈
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { GoogleAuthGuard } from 'src/auth/google/google-auth.guard';
+import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
+import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
-import { JwtRefreshTokenGuard } from '../auth/jwt/jwt-refresh-token.guard';
-import { AuthService } from 'src/auth/auth.service';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
-import { GoogleAuthGuard } from 'src/auth/google/google-auth.guard';
-import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
-import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
 
 @Controller('api/players')
 @ApiTags('플레이어 API')
@@ -201,7 +200,7 @@ export class PlayersController {
     }
   }
   // 엑세스 토큰 발급해주는 라우터
-  @UseGuards(JwtRefreshTokenGuard)
+  @UseGuards(JwtAuthGuard)
   @Get('auth/getToken')
   async test(@Request() req) {
     try {
