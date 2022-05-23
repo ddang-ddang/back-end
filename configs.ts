@@ -2,6 +2,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 dotenv.config();
 import * as config from 'config';
+import { DatabaseType } from 'typeorm';
 const dbConfig = config.get('db');
 const mapConfig2 = config.get('map');
 const kakaoConfig2 = config.get('kakao');
