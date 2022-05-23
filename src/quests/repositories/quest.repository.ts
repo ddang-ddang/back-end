@@ -5,10 +5,7 @@ import { Region } from 'src/quests/entities/region.entity';
 @EntityRepository(Quest)
 export class QuestRepository extends Repository<Quest> {
   /* 전체 퀘스트 조회 */
-  async findAllWithCompletes(
-    region: Region,
-    id: number | null
-  ): Promise<Object[]> {
+  async findAllWithCompletes(region: Region, id?: number): Promise<Object[]> {
     const quests = await this.find({
       where: { region },
       relations: ['completes', 'completes.player'],
@@ -29,10 +26,7 @@ export class QuestRepository extends Repository<Quest> {
   }
 
   /* 특정 퀘스트 조회 */
-  async findOneWithCompletes(
-    id: number,
-    playerId: number | null
-  ): Promise<Object> {
+  async findOneWithCompletes(id: number, playerId?: number): Promise<Object> {
     const quest = await this.findOne({
       where: { id },
       relations: ['completes', 'completes.player'],

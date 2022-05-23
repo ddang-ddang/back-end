@@ -1,8 +1,8 @@
 {
-  "name": "ddang-ddang-backend",
+  "name": "go-chat-back-end",
   "version": "0.0.1",
-  "description": "ddang-ddang-project backend",
-  "author": "moto4321, coco, diasm",
+  "description": "",
+  "author": "",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -18,8 +18,7 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "deploy": "npm ci && npm run build && npm run start:prod"
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/axios": "^0.0.7",
@@ -42,6 +41,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.2",
     "config": "^3.3.7",
+    "express": "^4.18.1",
     "mime": "^1.6.0",
     "mysql2": "^2.3.3",
     "passport": "^0.5.2",
@@ -57,8 +57,6 @@
     "webpack": "^5.72.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.17.10",
-    "@babel/preset-env": "^7.17.10",
     "@nestjs/cli": "^8.2.5",
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/testing": "^8.0.0",
@@ -89,6 +87,9 @@
     "typescript": "^4.3.5"
   },
   "jest": {
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    },
     "moduleFileExtensions": [
       "js",
       "json",
@@ -103,6 +104,10 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "node_modules",
+      ".entity.ts"
+    ]
   }
 }

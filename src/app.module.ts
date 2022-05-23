@@ -1,5 +1,5 @@
 //  모듈관련
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { FeedsModule } from './feeds/feeds.module';
 import { CommentsModule } from './comments/comments.module';
@@ -29,6 +29,9 @@ import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
 
 import { typeORMConfig, jwtConfig } from '../configs';
+import { HttpExceptionFilter } from './utils/http-exception.filter';
+import { APP_FILTER } from '@nestjs/core';
+import { FeedException } from './feeds/feeds.exception';
 
 @Module({
   imports: [
@@ -60,6 +63,17 @@ import { typeORMConfig, jwtConfig } from '../configs';
     RanksModule,
   ],
   controllers: [AppController, PlayersController],
-  providers: [AppService, PlayersService, AuthService, FeedsService],
+  providers: [
+    AppService,
+    PlayersService,
+    AuthService,
+    FeedsService,
+    Logger,
+    FeedException,
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}

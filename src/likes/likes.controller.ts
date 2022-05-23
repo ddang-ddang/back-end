@@ -9,7 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiOperation } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { LikesService } from './likes.service';
 
 @Controller('/api/feeds/:feedId/like')

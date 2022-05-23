@@ -1,8 +1,9 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Player } from '../players/entities/player.entity';
-import { Feed } from '../feeds/entities/feed.entity';
+import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
+import { Feed } from 'src/feeds/entities/feed.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @EntityRepository(Comment)
 export class CommentRepository extends Repository<Comment> {
@@ -21,7 +22,20 @@ export class CommentRepository extends Repository<Comment> {
     });
     await this.save(newComment);
 
-    return newComment;
+    // return newComment;
+    return {
+      id: newComment.id,
+      comment: newComment.comment,
+      player: {
+        id: newComment.player.id,
+        email: newComment.player.email,
+        nickname: newComment.player.nickname,
+        mbti: newComment.player.mbti,
+        profileImg: newComment.player.profileImg,
+        level: newComment.player.level,
+        exp: newComment.player.exp,
+      },
+    };
   }
 
   /* 댓글 수정 */
