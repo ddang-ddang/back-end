@@ -7,8 +7,8 @@ import { Player } from 'src/players/entities/player.entity';
 @EntityRepository(Comment)
 export class CommentRepository extends Repository<Comment> {
   /* 댓글 업로드 퀘스트 수행 */
-  async createComment(playerId: number, feedId: number, comment: string) {
-    const playerOne = await Player.findOne({
+  async createComment(playerId: number, feed: Feed, comment: string) {
+    const player = await Player.findOne({
       where: {
         id: playerId,
       },
@@ -16,22 +16,21 @@ export class CommentRepository extends Repository<Comment> {
 
     const newComment = await this.save({
       comment,
-      feed: feedId,
-      player: playerId,
-      playerOne,
+      feed,
+      player,
     });
 
     return {
       id: newComment.id,
       comment: newComment.comment,
       player: {
-        id: newComment.playerOne.id,
-        email: newComment.playerOne.email,
-        nickname: newComment.playerOne.nickname,
-        mbti: newComment.playerOne.mbti,
-        profileImg: newComment.playerOne.profileImg,
-        level: newComment.playerOne.level,
-        exp: newComment.playerOne.exp,
+        id: newComment.player.id,
+        email: newComment.player.email,
+        nickname: newComment.player.nickname,
+        mbti: newComment.player.mbti,
+        profileImg: newComment.player.profileImg,
+        level: newComment.player.level,
+        exp: newComment.player.exp,
       },
     };
   }

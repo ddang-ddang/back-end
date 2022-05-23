@@ -30,8 +30,8 @@ export class Comment extends BaseEntity {
   deletedAt: Date;
 
   @ManyToOne((type) => Feed, (feed) => feed.comments)
-  feed: number;
+  feed: Feed;
 
   @ManyToOne((type) => Player, (player) => player.comments)
-  player: number;
+  player: Player;
 }

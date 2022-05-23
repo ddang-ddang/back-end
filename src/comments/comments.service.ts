@@ -27,7 +27,7 @@ export class CommentsService {
     if (feed) {
       const newComment = await this.commentRepository.createComment(
         playerId,
-        feedId,
+        feed,
         commentText
       );
 
@@ -85,7 +85,7 @@ export class CommentsService {
 
   /* 댓글 작성자와 현재 유저 매칭 */
   async matchPlayerComment(playerId: number, comment: Comment) {
-    if (playerId === comment.player) {
+    if (playerId === comment.player.id) {
       return true;
     }
     return false;
