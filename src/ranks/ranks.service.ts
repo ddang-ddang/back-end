@@ -27,55 +27,53 @@ export class RanksService {
     try {
       // 모든 날짜의 현재 지역 데이터 조회
       const regions = await this.regions.find({
+        select: ['id', 'totalCount'],
         where: { regionSi, regionGu, regionDong },
       });
       if (regions.length === 0) this.exceptions.notFound();
-
       const { totalCount } = regions[0];
-      // 퀘스트 조회 (완료 테이블, 완료한 플레이어 조인)
-      const quests = await Promise.all([
+
+      const completedPlayers = await Promise.all([
         ...regions.map((region) => {
-          // TODO: relations 내에서 필요한 정보만 받을 수 있게 수정 (플레이어 닉네임, 프로필 이미지)
           return getRepository(Quest)
             .createQueryBuilder('quest')
+            .select([
+              'type',
+              'player.id',
+              'player.nickname',
+              'player.profileImg',
+            ])
             .where('regionId = :id', { id: region.id })
-            .innerJoinAndSelect('quest.completes', 'complete')
-            .leftJoinAndSelect('complete.player', 'player')
-            .getMany();
+            .innerJoin('quest.completes', 'complete')
+            .leftJoin('complete.player', 'player')
+            .getRawMany();
         }),
       ]);
 
-      const totalCompletedBy = [];
-      const mobsCompletedBy = [];
-      const timeCompletedBy = [];
-      const docsCompletedBy = [];
+      const totalCompletedPlayers = [];
+      const mobsCompletedPlayers = [];
+      const timeCompletedPlayers = [];
+      const docsCompletedPlayers = [];
 
       // 퀘스트 별로 완료한 플레이어 id 배열로 추가
-      const allQuests = quests.flat();
-      allQuests.forEach((quest) => {
-        const { type } = quest;
+      completedPlayers.flat().forEach((player) => {
+        const { type, player_playerId } = player;
         if (type === 'mob') {
-          quest.completes.forEach((complete) => {
-            mobsCompletedBy.push(complete.player.id);
-            totalCompletedBy.push(complete.player.id);
-          });
+          mobsCompletedPlayers.push(player_playerId);
+          totalCompletedPlayers.push(player_playerId);
         } else if (type === 'time') {
-          quest.completes.forEach((complete) => {
-            timeCompletedBy.push(complete.player.id);
-            totalCompletedBy.push(complete.player.id);
-          });
+          timeCompletedPlayers.push(player_playerId);
+          totalCompletedPlayers.push(player_playerId);
         } else if (type === 'feed') {
-          quest.completes.forEach((complete) => {
-            docsCompletedBy.push(complete.player.id);
-            totalCompletedBy.push(complete.player.id);
-          });
+          docsCompletedPlayers.push(player_playerId);
+          totalCompletedPlayers.push(player_playerId);
         }
       });
 
-      const total = await this.rankFor(totalCompletedBy, totalCount, 3);
-      const mob = await this.rankFor(mobsCompletedBy, totalCount, 3);
-      const time = await this.rankFor(timeCompletedBy, totalCount, 1);
-      const docs = await this.rankFor(docsCompletedBy, totalCount, 2);
+      const total = await this.rankFor(totalCompletedPlayers, totalCount, 3);
+      const mob = await this.rankFor(mobsCompletedPlayers, totalCount, 3);
+      const time = await this.rankFor(timeCompletedPlayers, totalCount, 1);
+      const docs = await this.rankFor(docsCompletedPlayers, totalCount, 2);
 
       const ranks = { total, mob, time, docs };
 
