@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import { getManager, getRepository, Repository } from 'typeorm';
+import { Connection, getManager, getRepository, Repository } from 'typeorm';
 import { mapConfig } from '../../configs';
 import { Notif } from '../notifs/entities/notif.entity';
 import { Player } from '../players/entities/player.entity';
@@ -36,7 +36,8 @@ export class QuestsService {
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
     private readonly quests: QuestRepository,
-    private readonly exceptions: QuestsException
+    private readonly exceptions: QuestsException,
+    private readonly connection: Connection
   ) {}
 
   private readonly logger = new Logger(QuestsService.name);
@@ -129,33 +130,41 @@ export class QuestsService {
     const isCompleted = await this.completes.findOne({ quest, player });
     if (isCompleted) return this.exceptions.alreadyCompleted();
 
-    await this.completes.save(this.completes.create({ quest, player }));
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
-    const completes = await getManager()
-      .createQueryBuilder(Complete, 'complete')
-      .leftJoinAndSelect('complete.quest', 'quest')
-      .where('playerId = :id', { id: playerId })
-      .getMany();
+    try {
+      await queryRunner.manager.save(Complete, { quest, player });
 
-    // 현재 완료한 퀘스트 타입의 횟수 확인
-    const countFor = {};
-    completes.forEach((complete) => {
-      countFor[complete.quest.type] = (countFor[complete.quest.type] || 0) + 1;
-    });
-    const setGoals = countFor[questType];
+      /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
+      const completes = await getManager()
+        .createQueryBuilder(Complete, 'complete')
+        .leftJoinAndSelect('complete.quest', 'quest')
+        .where('playerId = :id', { id: playerId })
+        .getMany();
 
-    // 해당하는 미션 찾아서 업적 추가
-    const mission = await this.missions.findOne({
-      where: {
-        setGoals,
-        type: `${questType}`,
-      },
-    });
-    if (mission) {
-      await this.achievements.save(
-        this.achievements.create({ mission, player })
-      );
+      // 현재 완료한 퀘스트 타입의 횟수 확인
+      const countFor = {};
+      completes.forEach((complete) => {
+        countFor[complete.quest.type] =
+          (countFor[complete.quest.type] || 0) + 1;
+      });
+      const setGoals = countFor[questType];
+
+      // 해당하는 미션 찾아서 업적 추가
+      const mission = await this.missions.findOne({
+        where: {
+          setGoals,
+          type: `${questType}`,
+        },
+      });
+      if (mission)
+        await queryRunner.manager.save(Achievement, { mission, player });
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
     }
 
     return { ok: true };
