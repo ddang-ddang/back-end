@@ -1,37 +1,22 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import * as config from 'config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ExpressAdapter } from '@nestjs/platform-express';
-// import * as http from 'http';
-// import * as https from 'https';
+import { serverConfig } from '../configs';
+
 import * as express from 'express';
 
 async function bootstrap() {
   const logger = new Logger();
 
-  // const privateKey = fs.readFileSync(
-  //   'D:\\localhost.ssh\\ajanuw.local.key',
-  //   'utf8'
-  // );
-  // const certificate = fs.readFileSync(
-  //   'D:\\localhost.ssh\\ajanuw.local.crt',
-  //   'utf8'
-  // );
-  // const httpsOptions = { key: privateKey, cert: certificate };
-
   const server = express();
 
-  // http.createServer(server).listen(3000);
-  // https.createServer(httpsOptions, server).listen(443);
   const app = await NestFactory.create(
     AppModule,
 
     new ExpressAdapter(server)
   );
-  const serverConfig = config.get('server');
-  const developmentConfig = config.get('jwt');
 
   app.enableCors({
     origin: '*',
