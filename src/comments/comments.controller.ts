@@ -104,8 +104,8 @@ export class CommentsController {
     @Body() updateCommentDto: UpdateCommentDto
   ) {
     const { playerId } = req['user'].player;
-    const feedId = Number(params['feedId']);
-    const commentId = Number(params['commentId']);
+    const feedId = params['feedId'];
+    const commentId = params['commentId'];
     this.logger.verbose(
       `trying to update comment commentId: ${commentId} userId: ${playerId}`
     );

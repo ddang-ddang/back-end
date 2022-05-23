@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Any } from 'typeorm';
-import { CommentsController } from './comments.controller';
-import { CommentsService } from './comments.service';
+import { CommentsController } from '../../src/comments/comments.controller';
+import { CommentsService } from '../../src/comments/comments.service';
 
 describe('Comment controller', () => {
   let controller: CommentsController;
 
-  const req = createRequest();
+  // const req = createRequest();
 
   const mockCommentService = {
     createComment: jest.fn().mockImplementation((req, feedId, dto) => {

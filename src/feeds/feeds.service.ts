@@ -136,6 +136,7 @@ export class FeedsService {
     feedContent: string
   ) {
     const feed = await this.findOneFeed(feedId);
+    console.log('aaaa');
     const match = await this.matchPlayerFeed(playerId, feed);
     if (feed) {
       if (match) {

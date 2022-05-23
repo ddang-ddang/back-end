@@ -82,7 +82,7 @@ export class FeedRepository extends Repository<Feed> {
   ) {
     console.log(feedId, img, content);
     return this.update(
-      { id: feedId },
+      { id: feedId, deletedAt: null },
       {
         content,
         image1_url: img[0],
