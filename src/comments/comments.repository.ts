@@ -20,7 +20,21 @@ export class CommentRepository extends Repository<Comment> {
       player,
     });
 
-    return newComment;
+    console.log(newComment);
+
+    return {
+      id: newComment.id,
+      comment: newComment.comment,
+      player: {
+        id: newComment.player.id,
+        email: newComment.player.email,
+        nickname: newComment.player.nickname,
+        mbti: newComment.player.mbti,
+        profileImg: newComment.player.profileImg,
+        level: newComment.player.level,
+        exp: newComment.player.exp,
+      },
+    };
   }
 
   /* 댓글 수정 */

@@ -24,7 +24,15 @@ export class CommentsService {
     const commentText = createCommentDto.comment;
     const feed: Feed = await Feed.findOne(feedId);
     if (feed) {
-      return this.commentRepository.createComment(playerId, feed, commentText);
+      const newComment = await this.commentRepository.createComment(
+        playerId,
+        feed,
+        commentText
+      );
+
+      console.log(newComment);
+
+      return newComment;
     }
     this.commentException.NotFoundFeed();
   }

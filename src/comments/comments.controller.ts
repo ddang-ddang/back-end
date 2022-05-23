@@ -38,6 +38,7 @@ export class CommentsController {
         feedId,
         createCommentDto
       );
+      console.log('comment', comment);
       return {
         ok: true,
         comment,
