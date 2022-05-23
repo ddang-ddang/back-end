@@ -1,6 +1,7 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Comment } from './entities/comment.entity';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Player } from 'src/players/entities/player.entity';
 
@@ -14,25 +15,14 @@ export class CommentRepository extends Repository<Comment> {
       },
     });
 
-    const newComment = await this.save({
+    const newComment = this.create({
       comment,
       feed,
       player,
     });
+    await this.save(newComment);
 
-    return {
-      id: newComment.id,
-      comment: newComment.comment,
-      player: {
-        id: newComment.player.id,
-        email: newComment.player.email,
-        nickname: newComment.player.nickname,
-        mbti: newComment.player.mbti,
-        profileImg: newComment.player.profileImg,
-        level: newComment.player.level,
-        exp: newComment.player.exp,
-      },
-    };
+    return newComment;
   }
 
   /* 댓글 수정 */
@@ -42,15 +32,12 @@ export class CommentRepository extends Repository<Comment> {
     updateCommentDto: UpdateCommentDto
   ) {
     const { comment } = updateCommentDto;
-    const updateComment = await this.update(
+    return this.update(
       { id: commentId },
       {
         comment,
       }
     );
-
-    console.log(updateComment);
-    return updateComment;
   }
   /* 댓글 삭제 */
   async deleteComment(commentId: number) {
