@@ -6,12 +6,13 @@ import { Region } from '../quests/entities/region.entity';
 import { QuestRepository } from '../quests/repositories/quest.repository';
 import { Complete } from '../quests/entities/complete.entity';
 import { Player } from '../players/entities/player.entity';
+import { RanksException } from './ranks.exception';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Region, Complete, Player, QuestRepository]),
   ],
   controllers: [RanksController],
-  providers: [RanksService],
+  providers: [RanksService, RanksException],
 })
 export class RanksModule {}

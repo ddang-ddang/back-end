@@ -5,6 +5,7 @@ import { getRepository, Repository } from 'typeorm';
 import { Complete } from '../quests/entities/complete.entity';
 import { Player } from '../players/entities/player.entity';
 import { Quest } from '../quests/entities/quest.entity';
+import { RanksException } from './ranks.exception';
 
 @Injectable()
 export class RanksService {
@@ -14,7 +15,8 @@ export class RanksService {
     @InjectRepository(Complete)
     private readonly completes: Repository<Complete>,
     @InjectRepository(Player)
-    private readonly players: Repository<Player>
+    private readonly players: Repository<Player>,
+    private readonly exceptions: RanksException
   ) {}
 
   private readonly logger = new Logger(RanksService.name);
@@ -28,15 +30,14 @@ export class RanksService {
       const regions = await this.regions.find({
         where: { regionSi, regionGu, regionDong },
       });
-      if (regions.length === 0)
-        return { ok: false, message: '현재 위치를 찾을 수 없습니다.' };
+      if (regions.length === 0) this.exceptions.notFound();
 
       const { totalCount } = regions[0];
       // 퀘스트 조회 (완료 테이블, 완료한 플레이어 조인)
       const quests = await Promise.all([
-        ...regions.map(async (region) => {
+        ...regions.map((region) => {
           // TODO: relations 내에서 필요한 정보만 받을 수 있게 수정 (플레이어 닉네임, 프로필 이미지)
-          return await getRepository(Quest)
+          return getRepository(Quest)
             .createQueryBuilder('quest')
             .where('regionId = :id', { id: region.id })
             .innerJoinAndSelect('quest.completes', 'complete')
@@ -81,7 +82,7 @@ export class RanksService {
 
       return { ok: true, ranks };
     } catch (error) {
-      return { ok: false, message: '랭킹을 조회할 수 없습니다.' };
+      this.exceptions.serverError();
     }
   }
 
