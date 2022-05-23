@@ -15,12 +15,11 @@ export class CommentRepository extends Repository<Comment> {
       },
     });
 
-    const newComment = this.create({
+    const newComment = await this.save({
       comment,
       feed,
       player,
     });
-    await this.save(newComment);
 
     return newComment;
   }
