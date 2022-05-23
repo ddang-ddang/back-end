@@ -8,6 +8,7 @@ import { LikeRepository } from 'src/likes/likes.repository';
 import { Likes } from 'src/likes/entities/like.entity';
 import { LikesService } from 'src/likes/likes.service';
 import { CommentRepository } from 'src/comments/comments.repository';
+import { FeedException } from './feeds.exception';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { CommentRepository } from 'src/comments/comments.repository';
     TypeOrmModule.forFeature([Feed]),
   ],
   controllers: [FeedsController],
-  providers: [FeedsService],
+  providers: [FeedsService, FeedException],
 })
 export class FeedsModule {}

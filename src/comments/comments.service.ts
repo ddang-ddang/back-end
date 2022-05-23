@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Comment } from './entities/comment.entity';
@@ -68,10 +64,6 @@ export class CommentsService {
       relations: ['player'],
     });
     if (!comment) {
-      // throw new NotFoundException({
-      //   ok: false,
-      //   message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
-      // });
       this.commentException.NotFoundComment();
     }
     return comment;
@@ -102,10 +94,6 @@ export class CommentsService {
           updateCommentDto
         );
       } else {
-        // throw new BadRequestException({
-        //   ok: false,
-        //   message: `댓글 작성자만 수정할 수 있습니다.`,
-        // });
         this.commentException.CannotEditComment();
       }
     } else {
@@ -121,10 +109,6 @@ export class CommentsService {
       if (match) {
         return this.commentRepository.deleteComment(commentId);
       } else {
-        // throw new BadRequestException({
-        //   ok: false,
-        //   message: `댓글 작성자만 삭제할 수 있습니다.`,
-        // });
         this.commentException.CannotDeleteComment();
       }
     } else {

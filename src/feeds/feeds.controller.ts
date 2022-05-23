@@ -10,14 +10,12 @@ import {
   Req,
   Request,
   Query,
-  ConsoleLogger,
   Post,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UpdateFeedDto } from './dto/update-feed.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 
 @Controller('api/feeds')
 @ApiTags('피드 API')
