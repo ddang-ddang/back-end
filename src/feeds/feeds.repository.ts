@@ -80,7 +80,7 @@ export class FeedRepository extends Repository<Feed> {
     img: string[],
     content: string
   ) {
-    console.log(feedId, img, content);
+    console.log(playerId, feedId, img, content);
     return this.update(
       { id: feedId },
       {
