@@ -1,4 +1,4 @@
-import { ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -21,14 +21,9 @@ import {
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
-import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
 
 // 인증관련 모듈
-import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
-import { GoogleAuthGuard } from 'src/auth/google/google-auth.guard';
-import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
-import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 
 // 데이터 엔티티
 import { Player } from './entities/player.entity';

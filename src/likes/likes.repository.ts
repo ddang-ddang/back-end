@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
-import { Feed } from 'src/feeds/entities/feed.entity';
-import { Player } from 'src/players/entities/player.entity';
 import { EntityRepository, Repository } from 'typeorm';
+import { Feed } from '../feeds/entities/feed.entity';
+import { Player } from '../players/entities/player.entity';
 import { Likes } from './entities/like.entity';
 
 @EntityRepository(Likes)
