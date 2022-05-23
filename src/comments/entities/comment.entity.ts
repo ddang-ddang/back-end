@@ -6,6 +6,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -29,8 +30,8 @@ export class Comment extends BaseEntity {
   deletedAt: Date;
 
   @ManyToOne((type) => Feed, (feed) => feed.comments)
-  feed: Feed;
+  feed: number;
 
   @ManyToOne((type) => Player, (player) => player.comments)
-  player: Player;
+  player: number;
 }
