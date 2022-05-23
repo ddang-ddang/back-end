@@ -11,7 +11,6 @@ import {
   Req,
   Request,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
 import { CommentsService } from './comments.service';
@@ -39,6 +38,7 @@ export class CommentsController {
         feedId,
         createCommentDto
       );
+      console.log('comment', comment);
       return {
         ok: true,
         comment,
@@ -133,14 +133,17 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async removeComment(
     @Req() req: Request,
-    @Param('commentId') commentId: number
+    // @Param('commentId') commentId: number
+    @Param() params: number
   ) {
     const { playerId } = req['user'].player;
+    const feedId = Number(params['feedId']);
+    const commentId = Number(params['commentId']);
     this.logger.verbose(
       `trying to delete commentId: ${commentId} userId: ${playerId}`
     );
     try {
-      await this.commentsService.removeComment(playerId, commentId);
+      await this.commentsService.removeComment(playerId, commentId, feedId);
       return {
         ok: true,
       };

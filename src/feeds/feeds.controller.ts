@@ -10,7 +10,6 @@ import {
   Req,
   Request,
   Query,
-  ConsoleLogger,
   Post,
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';

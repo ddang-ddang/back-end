@@ -10,6 +10,8 @@ import { KakaoStrategy } from './kakao/kakao-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtRefreshTokenStrategy } from './jwt/jwt-refresh-strategy';
 import { jwtConfig } from '../../configs';
+import { PlayerRepository } from 'src/players/players.repository';
+import { PlayersModule } from 'src/players/players.module';
 
 @Module({
   imports: [

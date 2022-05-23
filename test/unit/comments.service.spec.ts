@@ -1,18 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { JwtStrategy } from 'src/auth/jwt/jwt.strategy';
-import {
-  Connection,
-  createConnections,
-  createQueryBuilder,
-  getConnection,
-  Repository,
-} from 'typeorm';
-import { CommentRepository } from './comments.repository';
-import { CommentsService } from './comments.service';
-import { Comment } from './entities/comment.entity';
-import { plainToClass } from 'class-transformer';
-import { CreateCommentDto } from './dto/create-comment.dto';
+import { Repository } from 'typeorm';
+import { CommentRepository } from '../../src/comments/comments.repository';
+import { CommentsService } from '../../src/comments/comments.service';
+import { Comment } from '../../src/comments/entities/comment.entity';
+import { CreateCommentDto } from '../../src/comments/dto/create-comment.dto';
 
 const mockCommentRepository = {
   findAllComments: jest.fn(),

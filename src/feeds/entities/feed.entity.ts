@@ -12,10 +12,10 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Quest } from '../../quests/entities/quest.entity';
-import { Likes } from "../../likes/entities/like.entity";
-import { Player } from "../../players/entities/player.entity";
-import { Region } from "../../quests/entities/region.entity";
-import { Comment } from "../../comments/entities/comment.entity";
+import { Likes } from '../../likes/entities/like.entity';
+import { Player } from '../../players/entities/player.entity';
+import { Region } from '../../quests/entities/region.entity';
+import { Comment } from '../../comments/entities/comment.entity';
 
 @Entity()
 export class Feed extends BaseEntity {

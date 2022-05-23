@@ -7,6 +7,7 @@ import { PlayersService } from './players.service';
 import { PlayerRepository } from './players.repository';
 import { ConfigModule } from '@nestjs/config';
 import { jwtConfig } from '../../configs';
+import { AuthService } from 'src/auth/auth.service';
 
 @Module({
   imports: [

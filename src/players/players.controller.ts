@@ -1,4 +1,4 @@
-import { ConfigService } from '@nestjs/config
+import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -28,7 +28,12 @@ import { PlayersService } from './players.service';
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
-import { JwtRefreshTokenGuard } from "../auth/jwt/jwt-refresh-token.guard";
+import { JwtRefreshTokenGuard } from '../auth/jwt/jwt-refresh-token.guard';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
+import { GoogleAuthGuard } from 'src/auth/google/google-auth.guard';
+import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
+import { LocalAuthGuard } from 'src/auth/local/local-auth.guard';
 
 @Controller('api/players')
 @ApiTags('플레이어 API')

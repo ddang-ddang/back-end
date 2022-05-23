@@ -1,6 +1,5 @@
 import {
   Controller,
-  Body,
   Put,
   Param,
   UseGuards,

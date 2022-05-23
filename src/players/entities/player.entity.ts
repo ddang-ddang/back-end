@@ -11,9 +11,6 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Feed } from '../../feeds/entities/feed.entity';
-import { Likes } from '../../likes/entities/like.entity';
-import { Comment } from '../../comments/entities/comment.entity';
 import { Complete } from '../../quests/entities/complete.entity';
 
 //연결해야함

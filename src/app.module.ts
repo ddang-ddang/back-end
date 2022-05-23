@@ -29,6 +29,7 @@ import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
 
 import { typeORMConfig, jwtConfig } from '../configs';
+import { FeedException } from './feeds/feeds.exception';
 
 @Module({
   imports: [
@@ -60,6 +61,12 @@ import { typeORMConfig, jwtConfig } from '../configs';
     RanksModule,
   ],
   controllers: [AppController, PlayersController],
-  providers: [AppService, PlayersService, AuthService, FeedsService],
+  providers: [
+    AppService,
+    PlayersService,
+    AuthService,
+    FeedsService,
+    FeedException,
+  ],
 })
 export class AppModule {}
