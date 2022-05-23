@@ -97,11 +97,7 @@ export class CommentsService {
     commentId: number,
     updateCommentDto: UpdateCommentDto
   ) {
-<<<<<<< HEAD
-    const comment = await this.findOneComment(feedId, commentId);
-=======
     const comment = await this.findOneComment(commentId, feedId);
->>>>>>> a462e0889a81973434f43e56a239e09b126b99ff
     const match = await this.matchPlayerComment(playerId, comment);
     if (comment) {
       if (match) {

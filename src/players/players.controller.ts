@@ -111,11 +111,6 @@ export class PlayersController {
 
     this.logger.verbose(`이메일 중복확인을 하려 합니다`);
 
-<<<<<<< HEAD
-    console.log(process.env.DB_TYPE);
-
-=======
->>>>>>> a462e0889a81973434f43e56a239e09b126b99ff
     const result = await this.playersService.findByEmail({ email });
     return { ok: true, row: result };
   }
