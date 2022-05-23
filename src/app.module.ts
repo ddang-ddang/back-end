@@ -31,6 +31,7 @@ import { CommentRepository } from './comments/comments.repository';
 import { typeORMConfig, jwtConfig } from '../configs';
 import { HttpExceptionFilter } from './utils/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
+import { FeedException } from './feeds/feeds.exception';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { APP_FILTER } from '@nestjs/core';
     AuthService,
     FeedsService,
     Logger,
+    FeedException,
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
