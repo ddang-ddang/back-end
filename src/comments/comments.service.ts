@@ -55,7 +55,12 @@ export class CommentsService {
 
   /* 특정 댓글 조회 */
   async findOneComment(commentId: number, feedId?: number) {
-    const feed = await Feed.findOne({ id: feedId });
+    const feed = await Feed.findOne({
+      where: {
+        id: feedId,
+        deletedAt: null,
+      },
+    });
     if (!feed) {
       this.commentException.NotFoundFeed();
     }
@@ -92,7 +97,7 @@ export class CommentsService {
     commentId: number,
     updateCommentDto: UpdateCommentDto
   ) {
-    const comment = await this.findOneComment(feedId, commentId);
+    const comment = await this.findOneComment(commentId, feedId);
     const match = await this.matchPlayerComment(playerId, comment);
     if (comment) {
       if (match) {
