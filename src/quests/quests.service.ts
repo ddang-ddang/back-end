@@ -2,17 +2,18 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import { getManager, Repository } from 'typeorm';
-import { FeedRepository } from 'src/feeds/feeds.repository';
-import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
-import { QuestRepository } from 'src/quests/repositories/quest.repository';
-import { Complete } from 'src/quests/entities/complete.entity';
-import { Region } from 'src/quests/entities/region.entity';
-import { Player } from 'src/players/entities/player.entity';
-import { Notif } from '../notifs/entities/notif.entity';
-import { Mission } from 'src/players/entities/mission.entity';
-import { Achievement } from 'src/players/entities/achievement.entity';
+import { getManager, getRepository, Repository } from 'typeorm';
 import { mapConfig } from '../../configs';
+import { Notif } from '../notifs/entities/notif.entity';
+import { Player } from '../players/entities/player.entity';
+import { FeedRepository } from '../feeds/feeds.repository';
+import { Complete } from './entities/complete.entity';
+import { Region } from './entities/region.entity';
+import { Achievement } from '../players/entities/achievement.entity';
+import { Mission } from '../players/entities/mission.entity';
+import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
+import { QuestRepository } from './repositories/quest.repository';
+import { QuestsException } from './quests.exception';
 
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
 const REST_API_KEY = mapConfig.kakaoApiKey;
@@ -34,7 +35,8 @@ export class QuestsService {
     private readonly missions: Repository<Mission>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
-    private readonly quests: QuestRepository
+    private readonly quests: QuestRepository,
+    private readonly exceptions: QuestsException
   ) {}
 
   private readonly logger = new Logger(QuestsService.name);
@@ -115,65 +117,52 @@ export class QuestsService {
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number, questType: string) {
-    try {
-      const quest = await this.quests.findOne({
-        where: { id: questId },
-        relations: ['region'],
-      });
-      if (!quest)
-        return { ok: false, message: '요청하신 퀘스트를 찾을 수 없습니다.' };
+    // try {
+    const quest = await this.quests.findOne({
+      where: { id: questId },
+      relations: ['region'],
+    });
+    if (!quest) this.exceptions.notFoundQuest();
 
-      const player = await Player.findOne({ where: { id: playerId } });
-      if (!player)
-        return { ok: false, message: '플레이어님의 정보를 찾을 수 없습니다.' };
+    const player = await Player.findOne({ where: { id: playerId } });
+    if (!player) this.exceptions.notFoundPlayer();
 
-      const isCompleted = await this.completes.findOne({ quest, player });
-      if (isCompleted)
-        return { ok: false, message: '퀘스트를 이미 완료하였습니다.' };
+    const isCompleted = await this.completes.findOne({ quest, player });
+    if (isCompleted) return this.exceptions.alreadyCompleted();
 
-      await this.completes.save(this.completes.create({ quest, player }));
+    await this.completes.save(this.completes.create({ quest, player }));
 
-      /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
-      const completes = await getManager()
-        .createQueryBuilder(Complete, 'complete')
-        .leftJoinAndSelect('complete.quest', 'quest')
-        .where('playerId = :id', { id: playerId })
-        .getMany();
+    /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
+    const completes = await getManager()
+      .createQueryBuilder(Complete, 'complete')
+      .leftJoinAndSelect('complete.quest', 'quest')
+      .where('playerId = :id', { id: playerId })
+      .getMany();
 
-      // 현재 완료한 퀘스트 타입의 횟수 확인
-      const countFor = {};
-      completes.forEach((complete) => {
-        countFor[complete.quest.type] =
-          (countFor[complete.quest.type] || 0) + 1;
-      });
-      const setGoals = countFor[questType];
+    // 현재 완료한 퀘스트 타입의 횟수 확인
+    const countFor = {};
+    completes.forEach((complete) => {
+      countFor[complete.quest.type] = (countFor[complete.quest.type] || 0) + 1;
+    });
+    const setGoals = countFor[questType];
 
-      // 해당하는 미션 찾아서 업적 추가
-      const mission = await this.missions.findOne({
-        where: {
-          setGoals,
-          type: `${questType}`,
-        },
-      });
-      if (mission) {
-        await this.achievements.save(
-          this.achievements.create({ mission, player })
-        );
-      }
-
-      // 알림에 추가
-      // await this.notifs.save(
-      //   this.notifs.create({
-      //     title: 'hello',
-      //     content: 'hi',
-      //     region: quest.region,
-      //   })
-      // );
-
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, message: '퀘스트를 완료할 수 없습니다.' };
+    // 해당하는 미션 찾아서 업적 추가
+    const mission = await this.missions.findOne({
+      where: {
+        setGoals,
+        type: `${questType}`,
+      },
+    });
+    if (mission) {
+      await this.achievements.save(
+        this.achievements.create({ mission, player })
+      );
     }
+
+    return { ok: true };
+    // } catch (error) {
+    //   this.exceptions.serverErrorOnComplete();
+    // }
   }
 
   /*
@@ -183,7 +172,7 @@ export class QuestsService {
    */
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
-  async getAll(lat: number, lng: number, playerId: number | null) {
+  async getAll(lat: number, lng: number, playerId?: number) {
     try {
       console.time('getAll');
       console.time('카카오API - getAddressName');
@@ -191,11 +180,20 @@ export class QuestsService {
       console.timeEnd('카카오API - getAddressName');
 
       const date = new Date().toDateString();
-
       /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
-      let region = await this.regions.findOne({ date, ...kakaoAddress });
+      let region = await getRepository(Region)
+        .createQueryBuilder('region')
+        .where(
+          'region.date = :date AND region.regionSi = :si AND region.regionGu = :gu AND region.regionDong = :dong',
+          {
+            date,
+            si: kakaoAddress.regionSi,
+            gu: kakaoAddress.regionGu,
+            dong: kakaoAddress.regionDong,
+          }
+        )
+        .getOne();
       if (region) {
-        const { regionSi, regionGu, regionDong } = region;
         const allQuests = await this.quests.findAllWithCompletes(
           region,
           playerId
@@ -203,7 +201,7 @@ export class QuestsService {
         console.timeEnd('getAll');
         return {
           ok: true,
-          currentRegion: { regionSi, regionGu, regionDong },
+          currentRegion: region,
           rows: allQuests,
         };
       }
@@ -213,7 +211,7 @@ export class QuestsService {
       const { totalCount, pageCount } = await this.getRegionData(kakaoAddress);
       console.timeEnd('주소API - getRegionData');
       console.time('createQuests');
-      const quest = await this.createQuests(
+      const quests = await this.createQuests(
         totalCount,
         pageCount,
         kakaoAddress
@@ -231,8 +229,8 @@ export class QuestsService {
 
       // 퀘스트 데이터 DB에 추가 및 조회
       await Promise.all([
-        ...quest.map(async (quest) => {
-          return await this.quests.save({
+        ...quests.map((quest) => {
+          return this.quests.save({
             ...quest,
             region,
           });
@@ -251,7 +249,7 @@ export class QuestsService {
         rows: allQuests,
       };
     } catch (error) {
-      return { ok: false, message: error.message };
+      this.exceptions.serverErrorOnQuest();
     }
   }
 
@@ -489,15 +487,14 @@ export class QuestsService {
   }
 
   /* 특정 퀘스트 조회 */
-  async getOne(id: number, playerId: number | null) {
+  async getOne(id: number, playerId?: number) {
     try {
       const quest = await this.quests.findOneWithCompletes(id, playerId);
-      if (!quest)
-        return { ok: false, message: '해당 게시글을 찾을 수 없습니다.' };
+      if (!quest) this.exceptions.notFoundQuest();
 
       return { ok: true, row: quest };
     } catch (error) {
-      return { ok: false, message: error.message };
+      this.exceptions.serverErrorOnQuest();
     }
   }
 
@@ -532,7 +529,7 @@ export class QuestsService {
         regionDong: region.regionDong,
       };
       const { totalCount, pageCount } = region;
-      const quest = await this.createQuests(
+      const quests = await this.createQuests(
         totalCount,
         pageCount,
         kakaoAddress
@@ -546,8 +543,8 @@ export class QuestsService {
       await this.regions.save(newRegion);
 
       await Promise.all([
-        ...quest.map(async (quest) => {
-          return await this.quests.save({
+        ...quests.map((quest) => {
+          return this.quests.save({
             ...quest,
             region: newRegion,
           });

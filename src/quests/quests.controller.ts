@@ -12,8 +12,8 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
-import { QuestsService } from 'src/quests/quests.service';
-import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
+import { QuestsService } from './quests.service';
+import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
 
 @Controller('/api/quests')
 @ApiTags('퀘스트 API')
@@ -28,36 +28,41 @@ export class QuestsController {
     @Query('lng') lng: number,
     @Request() req: any
   ) {
-    let playerId = null;
-    if (req.headers.authorization) {
-      const token = req.headers.authorization.split(' ')[1];
-      const encodedPayload = token.split('.')[1];
-      const payload = Buffer.from(encodedPayload, 'base64');
-      playerId = JSON.parse(payload.toString()).id;
-    }
-
     if (!lat || !lng) {
       throw new BadRequestException({
         ok: false,
         message: '위도(lat), 경도(lng)를 쿼리 파라미터로 보내주세요/',
       });
     }
-    return this.questsService.getAll(lat, lng, playerId);
+
+    if (req.headers.authorization) {
+      const token = req.headers.authorization.split(' ')[1];
+      const encodedPayload = token.split('.')[1];
+      const payload = Buffer.from(encodedPayload, 'base64');
+      const playerId = JSON.parse(payload.toString()).id;
+      return this.questsService.getAll(lat, lng, playerId);
+    }
+
+    return this.questsService.getAll(lat, lng);
   }
 
   /* 특정 퀘스트 조회 API */
   @Get(':questId')
   @ApiOperation({ summary: '특정 퀘스트 조회 API' })
-  getOne(@Param('questId') id: number, @Request() req: any) {
-    let playerId = null;
-    if (req.headers.authorization) {
-      const token = req.headers.authorization.split(' ')[1];
-      const encodedPayload = token.split('.')[1];
-      const payload = Buffer.from(encodedPayload, 'base64');
-      playerId = JSON.parse(payload.toString()).id;
-    }
+  async getOne(@Param('questId') id: number, @Request() req: any) {
+    try {
+      if (req.headers.authorization) {
+        const token = req.headers.authorization.split(' ')[1];
+        const encodedPayload = token.split('.')[1];
+        const payload = Buffer.from(encodedPayload, 'base64');
+        const playerId = JSON.parse(payload.toString()).id;
+        return await this.questsService.getOne(id, playerId);
+      }
 
-    return this.questsService.getOne(id, playerId);
+      return await this.questsService.getOne(id);
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   /**
