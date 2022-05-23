@@ -9,16 +9,6 @@ import {
 @Injectable()
 export class FeedException {
   // 피드 조회 실패
-  NotFoundComment() {
-    throw new NotFoundException({
-      statusCode: HttpStatus.NOT_FOUND,
-      ok: false,
-      message: '삭제되었거나 존재하지 않는 피드입니다.',
-      error: 'Not Found',
-    });
-  }
-
-  // 피드 조회 실패
   NotFoundFeed() {
     throw new NotFoundException({
       statusCode: HttpStatus.NOT_FOUND,
@@ -29,7 +19,7 @@ export class FeedException {
   }
 
   // 피드 사용자만 수정 가능
-  CannotEditComment() {
+  CannotEditFeed() {
     throw new BadRequestException({
       statusCode: HttpStatus.BAD_REQUEST,
       ok: false,
@@ -39,7 +29,7 @@ export class FeedException {
   }
 
   // 피드 사용자만 삭제 가능
-  CannotDeleteComment() {
+  CannotDeleteFeed() {
     throw new BadRequestException({
       statusCode: HttpStatus.BAD_REQUEST,
       ok: false,
