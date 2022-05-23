@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config
 import {
   ApiCreatedResponse,
   ApiOkResponse,
@@ -14,8 +15,9 @@ import {
   UseGuards,
   Request,
   Logger,
-  Res,
   BadRequestException,
+  UnauthorizedException,
+  HttpCode,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -26,11 +28,7 @@ import { PlayersService } from './players.service';
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
-import { AuthService } from '../auth/auth.service';
-import { JwtAuthGuard } from '../auth/jwt/jwt-auth.guard';
-import { LocalAuthGuard } from '../auth/local/local-auth.guard';
-import { GoogleAuthGuard } from '../auth/google/google-auth.guard';
-import { KakaoAuthGuard } from '../auth/kakao/kakao-auth.guard';
+import { JwtRefreshTokenGuard } from "../auth/jwt/jwt-refresh-token.guard";
 
 @Controller('api/players')
 @ApiTags('플레이어 API')
@@ -38,7 +36,8 @@ export class PlayersController {
   private logger = new Logger('PlayersController');
   constructor(
     private readonly playersService: PlayersService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService
   ) {}
 
   /*
@@ -54,26 +53,22 @@ export class PlayersController {
     inputBodyDto: InputPlayerDto
   ): Promise<object> {
     const { email, nickname, password, mbti, profileImg } = inputBodyDto;
-    this.logger.verbose(`회원을 가입하려고 합니다.: ${email}`);
 
-    console.log({ email, nickname, password, mbti, profileImg });
     try {
-      await this.playersService.signup({
+      this.logger.verbose(`회원을 가입하려고 합니다.: ${email}`);
+      const result = await this.playersService.signup({
         email,
         nickname,
         password,
         mbti,
         profileImg,
         provider: 'local',
+        providerId: null,
+        currentHashedRefreshToken: null,
       });
-      return { ok: true };
+      return { ok: true, result };
     } catch (err) {
-      if (!err) {
-        throw new BadRequestException({
-          ok: false,
-          message: err.message,
-        });
-      }
+      return { ok: false, row: err.message };
     }
   }
 
@@ -88,10 +83,12 @@ export class PlayersController {
   @Post('dupNickname')
   async duplicateNicknameCheck(@Body() nicknameDto: NicknameDto) {
     const { nickname } = nicknameDto;
+    console.log(nickname);
 
     this.logger.verbose(`닉네임을 중복확인을 하려 합니다`);
 
     const result = await this.playersService.findByNickname({ nickname });
+    console.log(result);
 
     return { ok: true, row: result };
   }
@@ -107,6 +104,7 @@ export class PlayersController {
   @Post('dupEmail')
   async duplicateEmailCheck(@Body() emailDto: EmailDto) {
     const { email } = emailDto;
+
     this.logger.verbose(`이메일 중복확인을 하려 합니다`);
 
     const result = await this.playersService.findByEmail({ email });
@@ -128,7 +126,7 @@ export class PlayersController {
         profileImg,
         nickname,
       });
-      return { ok: true, row: result };
+      return { ok: true, row: { email } };
     } catch (err) {
       if (!err) {
         throw new BadRequestException({
@@ -156,18 +154,40 @@ export class PlayersController {
    */
   @UseGuards(LocalAuthGuard)
   @Post('signin')
-  async signIn(@Request() req, @Res({ passthrough: true }) res) {
+  async signIn(@Request() req) {
     try {
-      const { email, nickname } = req.user;
+      const { id, email, nickname } = req.user;
 
       this.logger.verbose(`${email}님이 로그인하려고 합니다`);
 
-      const accessToken = await this.authService.login(email, nickname);
-      console.log(accessToken);
+      const tokens = await this.authService.signin(email, nickname, id);
 
-      res.setHeader('Authorization', `Bearer ${accessToken}`);
+      const { accessToken, refreshToken } = tokens;
 
-      return { ok: true, row: { email: email, nickname: nickname } };
+      req.res.setHeader('accessToken', accessToken);
+      req.res.setHeader('refreshToken', refreshToken);
+
+      return { ok: true, row: { email, nickname } };
+    } catch (err) {
+      throw new UnauthorizedException('refreshToken is invalid');
+    }
+  }
+
+  // 엑세스 토큰 발급해주는 라우터
+  @ApiOperation({ summary: 'jwt인증 API' })
+  @UseGuards(JwtAuthGuard)
+  @Get('auth')
+  async getHello(@Request() req): Promise<object> {
+    try {
+      const { playerId, email, nickname } = req.user.player;
+
+      this.logger.verbose(`${email}님이 인증 하려고 합니다`);
+
+      // const envData = this.configService.get('DB_PORT');
+      // console.log(envData);
+      // console.log('wlkejflkwjeflkjwef');
+
+      return { ok: true, user: { playerId, email, nickname } };
     } catch (err) {
       return {
         ok: false,
@@ -175,103 +195,141 @@ export class PlayersController {
       };
     }
   }
+  // 엑세스 토큰 발급해주는 라우터
+  @UseGuards(JwtRefreshTokenGuard)
+  @Get('auth/getToken')
+  async test(@Request() req) {
+    try {
+      const { id, email, nickname } = req.user;
 
-  //원하는 곳에 JwtAuthGuard 붙이면 됨
-  @ApiOperation({ summary: 'jwt인증 API' })
-  @UseGuards(JwtAuthGuard)
-  @Get('auth')
-  async getHello(@Request() req): Promise<object> {
-    const { playerId, email, nickname } = req.user.player;
-    this.logger.verbose(`${email}님이 인증을 시도합니다.`);
-    return {
-      ok: true,
-      row: { playerId: playerId, email: email, nickname: nickname },
-    };
+      this.logger.verbose(
+        `${email}님이 새로운 엑세스 토큰을 발급하려고 합니다`
+      );
+
+      const accessToken = this.authService.getJwtAccessToken({
+        id,
+        email,
+        nickname,
+      });
+
+      // 쿠키를 보내준다 주입한다.
+      req.res.setHeader('accesstoken', accessToken);
+
+      return { ok: true, profile: { id, email, nickname } };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
   }
 
-  /*
-   * 구글 로그인
-   *
-   */
+  @UseGuards(JwtAuthGuard)
+  @Get('logout')
+  @HttpCode(200)
+  async logout(@Request() req) {
+    try {
+      const { playerId, email } = req.user.player;
+      this.logger.verbose(`${email}님이 로그아웃 하려고 합니다`);
+      // 엑세스 토큰을 삭제
+      // DB에서 리프레쉬 삭제
+      // 클라이언트에서는 localstorage에서 삭제따로 해줘야함
+      console.log(playerId);
+      const result = await this.authService.logout(playerId);
+      req.res.setHeader('Set-Cookie', result);
+      console.log(result);
 
-  @ApiOperation({ summary: 'jwt인증 API' })
+      return { ok: true, row: result };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  }
+
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  async google() {
+    console.log('hello');
+  }
+
+  @ApiOperation({ summary: '구글 로그인' })
   @UseGuards(GoogleAuthGuard)
   @Get('googleauth')
-  async googleAuth(@Request() req) {
-    console.log(req.user);
-    return req;
+  async googleauth(@Request() req) {
+    const { id, nickname, email } = req.user;
+
+    this.logger.verbose(`${email}님이 카카오로 로그인하려고 합니다`);
+
+    const tokens = await this.authService.signin(email, nickname, id);
+
+    const { accessToken, refreshToken } = tokens;
+
+    req.res.setHeader('accessToken', accessToken);
+    req.res.setHeader('refreshToken', refreshToken);
+
+    // return req.res.redirect('http://localhost:3005');
   }
 
-  /* 구글 리다이렉트 부분 */
-  @Get('redirect')
-  @UseGuards(GoogleAuthGuard)
-  googleAuthRedirect(@Request() req, @Res() res) {
-    const { email, accessToken } = req.user;
-    this.logger.verbose(
-      `${email}님이 구글로그인 리다이렉트을 이용 하려고 합니다`
-    );
-    console.log(accessToken);
-    console.log(req.user);
-    return res.writeHead(301, { Location: 'http://localhost:3005' });
-  }
-
-  /*
-   * 카카오 로그인
-   */
+  /* 카카오 로그인 부분 */
+  @ApiOperation({ summary: '카카오 로그인' })
   @UseGuards(KakaoAuthGuard)
-  @Get('kakaoauth')
-  async kakaoAuth(@Request() req) {
-    const { email, accessToken } = req.user;
-    this.logger.verbose(`${email}님이 카카오 로그인을 이용 하려고 합니다`);
-    console.log(accessToken);
-    console.log(req.user);
-    return { ok: true };
+  @Get('kakaoAuth')
+  async kakaopage(@Request() req) {
+    const { id, username, email } = req.user;
+
+    this.logger.verbose(`${email}님이 카카오로 로그인하려고 합니다`);
+
+    const tokens = await this.authService.signin(email, username, id);
+
+    const { accessToken, refreshToken } = tokens;
+
+    req.res.setHeader('accessToken', accessToken);
+    req.res.setHeader('refreshToken', refreshToken);
+    return { ok: 'ok' };
+
+    // return req.res.redirect('http://localhost:3005');
   }
-
-  /* 카카오 리다이렉트 부분 */
-  @Get('kakaoredirect')
-  @UseGuards(KakaoAuthGuard)
-  kakaopage(@Request() req, @Res() res) {
-    const { email, accessToken } = req.user;
-    this.logger.verbose(
-      `${email}님이 카카트로그인 리다이렉트을 이용 하려고 합니다`
-    );
-
-    return res.writeHead(301, { Location: 'http://localhost:3005' });
-  }
-
   // mypage
   @UseGuards(JwtAuthGuard)
   @Get('mypage')
   async loadMypage(@Request() req): Promise<object> {
     try {
-      const { email, nickname, playerId } = req.user.player;
-      this.logger.verbose(`${email}님이 마이페이지를 이용 하려고 합니다`);
-      const player = await this.playersService.getDataByEmail({ email });
-      console.log(player);
+      const mockdata = {
+        nickname: '강윤지',
+        mbti: 'ENTP',
+        badges: [
+          {
+            badge1: 'imageUrl', //
+            badge2: 'imageUrl',
+            badge3: 'imageUrl',
+          },
+        ],
+        occupiedPlaces: [
+          {
+            lat: '222.333',
+            lng: '333.444',
+          },
+        ],
+        missions: [
+          {
+            title: '동네 길냥이',
+            description: '개의 땅문서를 작성했어요.',
+            setGoalds: 20,
+            badge: 'imageUrl',
+          },
+        ],
+        achievements: [
+          {
+            title: '동네 길냥이',
+            description: '개의 땅문서를 작성했어요.',
+            setGoalds: 20,
+            badge: 'imageUrl',
+          },
+        ],
+      };
+      this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
 
-      const { profileImg, mbti, level, exp } = player;
-
-      const locations = await this.playersService.loadLatLng(playerId);
-      // const test = await this.playersService.
-
-      // const { comments } = locations;
-
-      console.log(locations);
+      const test = await this.playersService.mypageInfo(2);
 
       return {
         ok: true,
-        // locations,
-        profile: {
-          playerId: playerId,
-          email: email,
-          nickname: nickname,
-          profileImg: profileImg,
-          mbti: mbti,
-          level: level,
-          exp: exp,
-          occupiedPlaces: locations,
-        },
+        rows: test,
       };
     } catch (err) {
       console.log(err);

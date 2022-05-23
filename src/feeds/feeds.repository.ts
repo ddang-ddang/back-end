@@ -1,9 +1,12 @@
 import { EntityRepository, Repository } from 'typeorm';
 import { Feed } from './entities/feed.entity';
-import { ConflictException } from '@nestjs/common';
-import { Complete } from "../quests/entities/complete.entity";
-import { Quest } from "../quests/entities/quest.entity";
-import { Player } from "../players/entities/player.entity";
+import { UpdateFeedDto } from './dto/update-feed.dto';
+import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
+import { Quest } from 'src/quests/entities/quest.entity';
+import { Player } from 'src/players/entities/player.entity';
+import { Complete } from 'src/quests/entities/complete.entity';
+import { ConflictException, ConsoleLogger } from '@nestjs/common';
+import { Region } from 'src/quests/entities/region.entity';
 
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
@@ -19,13 +22,20 @@ export class FeedRepository extends Repository<Feed> {
         where: {
           id: questId,
         },
+        relations: ['region'],
       }),
       Player.findOne({
         where: {
-          Id: playerId,
+          id: playerId,
         },
       }),
     ]);
+
+    const region = await Region.findOne({
+      where: {
+        id: quest.region.id,
+      },
+    });
 
     const completeOne = await Complete.find({
       where: {
@@ -56,6 +66,7 @@ export class FeedRepository extends Repository<Feed> {
       image3_url: img[2],
       player,
       quest,
+      region,
     });
     await this.save(newContent);
 
@@ -82,8 +93,20 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 삭제 */
-  async deleteFeed(feedId: number): Promise<void> {
+  async deleteFeed(
+    playerId: number,
+    feedId: number,
+    feed: Feed
+  ): Promise<void> {
+    const player = await Player.findOne({ where: { id: playerId } });
+    const quest = await Quest.findOne({
+      where: {
+        id: feed.quest.id,
+      },
+    });
     await this.update({ id: feedId }, { deletedAt: new Date() });
+    // complete 테이블 데이터 삭제
+    await Complete.delete({ player, quest }); // player quest
     return;
   }
 }

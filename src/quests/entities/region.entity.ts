@@ -5,8 +5,9 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Feed } from '../../feeds/entities/feed.entity';
-import { Quest } from './quest.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
+import { Feed } from 'src/feeds/entities/feed.entity';
+import { Notif } from 'src/notifs/entities/notif.entity';
 
 @Entity()
 export class Region extends BaseEntity {
@@ -25,9 +26,18 @@ export class Region extends BaseEntity {
   @Column()
   regionDong: string;
 
+  @Column()
+  totalCount: number;
+
+  @Column()
+  pageCount: number;
+
   @OneToMany((type) => Quest, (quest) => quest.region)
   quests: Quest[];
 
   @OneToMany((type) => Feed, (feed) => feed.region)
   feeds: Feed[];
+
+  @OneToMany((type) => Notif, (notif) => notif.region)
+  notifs: Notif[];
 }

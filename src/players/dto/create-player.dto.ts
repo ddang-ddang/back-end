@@ -25,6 +25,9 @@ export class CreatePlayerDto {
 
   @IsNotEmpty()
   providerId: string;
+
+  @IsNotEmpty()
+  currentHashedRefreshToken: string;
 }
 
 export class InputPlayerDto extends PickType(CreatePlayerDto, [
@@ -42,6 +45,17 @@ export class CreateBodyDto extends PickType(CreatePlayerDto, [
   'mbti',
   'profileImg',
   'provider',
+  'providerId',
+  'currentHashedRefreshToken',
+] as const) {}
+export class CreateKakaoDto extends PickType(CreatePlayerDto, [
+  'email',
+  'password',
+  'nickname',
+  'mbti',
+  'profileImg',
+  'provider',
+  'providerId',
 ] as const) {}
 
 export class CreateLocalDto extends PickType(CreatePlayerDto, [
@@ -54,7 +68,7 @@ export class CreateLocalDto extends PickType(CreatePlayerDto, [
   'providerId',
 ] as const) {}
 
-export class CreateIdDto extends PickType(CreatePlayerDto, [
+export class LoginDto extends PickType(CreatePlayerDto, [
   'email',
   'password',
 ] as const) {}
@@ -75,4 +89,12 @@ export class EmailDto extends PickType(CreatePlayerDto, ['email'] as const) {}
 
 export class NicknameDto extends PickType(CreatePlayerDto, [
   'nickname',
+] as const) {}
+
+export class PlayerIdDto extends PickType(CreatePlayerDto, ['id'] as const) {}
+
+export class TokenPayloadDto extends PickType(CreatePlayerDto, [
+  'id',
+  'nickname',
+  'email',
 ] as const) {}

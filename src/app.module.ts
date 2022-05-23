@@ -1,37 +1,46 @@
-import { JwtModule } from '@nestjs/jwt';
+//  모듈관련
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { JwtModule } from '@nestjs/jwt';
 import { FeedsModule } from './feeds/feeds.module';
 import { CommentsModule } from './comments/comments.module';
 import { LikesModule } from './likes/likes.module';
 import { QuestsModule } from './quests/quests.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeORMConfig } from 'ormconfig';
-import { AchievementsService } from './achievements/achievements.service';
-import { AchievementsController } from './achievements/achievements.controller';
-import * as config from 'config';
-import { AuthModule } from './auth/auth.module';
 import { PlayersModule } from './players/players.module';
-import { FeedRepository } from './feeds/feeds.repository';
+import { ScheduleModule } from '@nestjs/schedule';
+import { NotifsModule } from './notifs/notifs.module';
+import { RanksModule } from './ranks/ranks.module';
+import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
-import { PlayersController } from './players/players.controller';
-import { PlayersService } from './players/players.service';
+import { AuthModule } from './auth/auth.module';
+
+//  서비스 관련 모듈
+import { AppService } from './app.service';
 import { AuthService } from './auth/auth.service';
 import { FeedsService } from './feeds/feeds.service';
+import { PlayersService } from './players/players.service';
+
+import { AppController } from './app.controller';
+import { PlayersController } from './players/players.controller';
+
+import { FeedRepository } from './feeds/feeds.repository';
 import { PlayerRepository } from './players/players.repository';
 import { LikeRepository } from './likes/likes.repository';
 import { CommentRepository } from './comments/comments.repository';
-import { QuestsRepository } from './quests/quests.repository';
 
-const jwtConfig = config.get('jwt');
+import { typeORMConfig, jwtConfig } from '../configs';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ envFilePath: './config/.env', isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '3600s' },
+      secret: jwtConfig.accessTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenSecret}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
     TypeOrmModule.forRoot(typeORMConfig),
     TypeOrmModule.forFeature([
@@ -40,20 +49,17 @@ const jwtConfig = config.get('jwt');
       LikeRepository,
       CommentRepository,
     ]),
+    ScheduleModule.forRoot(),
     AuthModule,
     PlayersModule,
     FeedsModule,
     CommentsModule,
     LikesModule,
     QuestsModule,
+    NotifsModule,
+    RanksModule,
   ],
-  controllers: [AppController, PlayersController, AchievementsController],
-  providers: [
-    AppService,
-    AchievementsService,
-    PlayersService,
-    AuthService,
-    FeedsService,
-  ],
+  controllers: [AppController, PlayersController],
+  providers: [AppService, PlayersService, AuthService, FeedsService],
 })
 export class AppModule {}

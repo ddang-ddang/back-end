@@ -4,8 +4,10 @@ import { FeedsController } from './feeds.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FeedRepository } from './feeds.repository';
 import { Feed } from './entities/feed.entity';
-import { LikeRepository } from '../likes/likes.repository';
-import { CommentRepository } from '../comments/comments.repository';
+import { LikeRepository } from 'src/likes/likes.repository';
+import { Likes } from 'src/likes/entities/like.entity';
+import { LikesService } from 'src/likes/likes.service';
+import { CommentRepository } from 'src/comments/comments.repository';
 
 @Module({
   imports: [

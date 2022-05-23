@@ -4,16 +4,12 @@ import { AuthService } from './auth.service';
 import { LocalStrategy } from './local/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt/jwt.strategy';
-import * as config from 'config';
 import { ConfigModule } from '@nestjs/config';
 import { GoogleStrategy } from './google/google.strategy';
 import { KakaoStrategy } from './kakao/kakao-strategy';
-import { SessionSerializer } from './session/session.seralizer';
 import { PassportModule } from '@nestjs/passport';
-import { PlayersModule } from '../players/players.module';
-import { PlayerRepository } from '../players/players.repository';
-
-const jwtConfig = config.get('jwt');
+import { JwtRefreshTokenStrategy } from './jwt/jwt-refresh-strategy';
+import { jwtConfig } from '../../configs';
 
 @Module({
   imports: [
@@ -21,19 +17,23 @@ const jwtConfig = config.get('jwt');
     PassportModule,
     PlayersModule,
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '60s' },
+      secret: jwtConfig.accessTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
     TypeOrmModule.forFeature([PlayerRepository]),
   ],
   providers: [
     AuthService,
-    SessionSerializer,
     LocalStrategy,
     JwtStrategy,
+    JwtRefreshTokenStrategy,
     GoogleStrategy,
     KakaoStrategy,
   ],
-  exports: [AuthService],
+  exports: [AuthService, JwtStrategy, JwtRefreshTokenStrategy, PassportModule],
 })
 export class AuthModule {}

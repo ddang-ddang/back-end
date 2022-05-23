@@ -32,12 +32,17 @@ export class CommentsController {
     @Body() createCommentDto: CreateCommentDto
   ) {
     const { playerId } = req['user'].player;
+    this.logger.verbose(`trying to create comment by userId ${playerId}`);
     try {
-      return this.commentsService.createComment(
+      const comment = await this.commentsService.createComment(
         playerId,
         feedId,
         createCommentDto
       );
+      return {
+        ok: true,
+        comment,
+      };
     } catch (error) {
       return {
         ok: false,
@@ -50,7 +55,7 @@ export class CommentsController {
   @Get()
   @ApiOperation({ summary: '특정 게시글의 댓글 조회 API' })
   async findAllComments(@Param('feedId') feedId: number) {
-    this.logger.verbose(`trying to get all comments feedId:  userId: `);
+    this.logger.verbose(`trying to get all comments feedId: ${feedId}`);
     try {
       const comments = await this.commentsService.findAllComments(feedId);
       return {
@@ -69,11 +74,14 @@ export class CommentsController {
   @Get(':commentId')
   @ApiOperation({ summary: '게시글의 특정 댓글 조회 API' })
   async findOneComment(@Param() params: number) {
-    this.logger.verbose(`trying to get a comment feedId:  userId: `);
     try {
       const feedId = params['feedId'];
+      this.logger.verbose(`trying to get a comment feedId: ${feedId}`);
       const commentId = params['commentId'];
-      const comment = await this.commentsService.findOneComment(commentId);
+      const comment = await this.commentsService.findOneComment(
+        commentId,
+        feedId
+      );
       return {
         ok: true,
         row: comment,

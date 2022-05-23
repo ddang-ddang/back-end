@@ -4,18 +4,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Player } from './entities/player.entity';
 import { PlayersController } from './players.controller';
 import { PlayersService } from './players.service';
-import * as config from 'config';
 import { PlayerRepository } from './players.repository';
-import { AuthService } from '../auth/auth.service';
-
-const jwtConfig = config.get('jwt');
+import { ConfigModule } from '@nestjs/config';
+import { jwtConfig } from '../../configs';
 
 @Module({
   imports: [
+    ConfigModule,
     TypeOrmModule.forFeature([Player, PlayerRepository]),
     JwtModule.register({
-      secret: jwtConfig.secret,
-      signOptions: { expiresIn: '3600s' },
+      secret: jwtConfig.accessTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+    }),
+    JwtModule.register({
+      secret: jwtConfig.refreshTokenSecret,
+      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
     }),
   ],
   providers: [PlayersService, AuthService],

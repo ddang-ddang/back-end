@@ -1,19 +1,19 @@
 import {
-  Body,
   Controller,
-  Post,
+  Body,
   Query,
-  Get,
   Param,
   UseGuards,
+  Get,
+  Post,
   Req,
   Request,
   BadRequestException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
-import { QuestsService } from './quests.service';
+import { AuthGuard } from '@nestjs/passport';
+import { QuestsService } from 'src/quests/quests.service';
+import { CreateFeedDto } from 'src/feeds/dto/create-feed.dto';
 
 @Controller('/api/quests')
 @ApiTags('퀘스트 API')
@@ -76,10 +76,14 @@ export class QuestsController {
     const { playerId } = req['user'].player;
     console.log(req['user']);
     if (questType === 'feed') {
-      return this.questsService.feedQuest(id, playerId, createFeedDto);
-    } else if (questType === 'time' || questType === 'mob') {
-      return this.questsService.questComplete(id, playerId);
+      return this.questsService.feedQuest(
+        id,
+        playerId,
+        createFeedDto,
+        questType
+      );
+    } else {
+      return this.questsService.questComplete(id, playerId, questType);
     }
-    return;
   }
 }

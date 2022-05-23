@@ -2,12 +2,11 @@ import {
   BaseEntity,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Quest } from './quest.entity';
-import { Player } from '../../players/entities/player.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
+import { Player } from 'src/players/entities/player.entity';
 
 @Entity()
 export class Complete extends BaseEntity {
@@ -17,9 +16,9 @@ export class Complete extends BaseEntity {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => Player, (player) => player.completes)
-  player: Player;
-
   @ManyToOne(() => Quest, (quest) => quest.completes)
   quest: Quest;
+
+  @ManyToOne(() => Player, (player) => player.completes)
+  player: Player;
 }

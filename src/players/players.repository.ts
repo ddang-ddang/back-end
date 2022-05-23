@@ -1,11 +1,17 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, Repository, createQueryBuilder } from 'typeorm';
 import {
   CreateBodyDto,
+  CreateLocalDto,
   EmailDto,
   NicknameDto,
   UpdateInfoDto,
 } from './dto/create-player.dto';
 import { Player } from './entities/player.entity';
+import * as bcrypt from 'bcrypt';
+import { Mission } from './entities/mission.entity';
+import { Achievement } from './entities/achievement.entity';
+import { Quest } from '../quests/entities/quest.entity';
+import { Complete } from '../quests/entities/complete.entity';
 
 @EntityRepository(Player)
 export class PlayerRepository extends Repository<Player> {
@@ -13,7 +19,6 @@ export class PlayerRepository extends Repository<Player> {
     const { email } = emailDto;
     return this.findOne({ where: { email } });
   }
-
   async findByNickname(nicknameDto: NicknameDto): Promise<Player> {
     try {
       const { nickname } = nicknameDto;
@@ -48,72 +53,115 @@ export class PlayerRepository extends Repository<Player> {
         mbti,
         profileImg,
         provider,
-        // providerId,
+        providerId,
+        currentHashedRefreshToken,
       } = createBodyDto;
 
-      const result = await this.create({
+      console.log(createBodyDto);
+      const result = this.create({
         email,
         password,
         nickname,
         mbti,
         profileImg,
         provider,
+        providerId,
+        currentHashedRefreshToken,
       });
 
-      return await this.save(result);
-    } catch (err) {
-      return err.message;
-    }
-  }
-
-  // 경도 위도 가져와서 mypage에 보내줄거
-  async locations(id2: number): Promise<any> {
-    const id = 2;
-    try {
-      const result = await this.createQueryBuilder('player')
-        // .select([
-        //   'player',
-        //   'player.id',
-        //   'player.email',
-        //   'player.nickname',
-        //   'player.mbti',
-        //   'player.profileImg',
-        //   'player.level',
-        //   'player.exp',
-        // ])
-        .where('player.id = :id', { id })
-        // .innerJoinAndSelect('player.completes', 'complete')
-        .leftJoinAndSelect('player.completes', 'complete')
-        // .leftJoinAndSelect('player.quests', 'quest')
-        // .select(['complete.id', 'complete.questId'])
-        // .leftJoin('complete.quest', 'quest')
-        // .select(['quest.lat', 'quest.lng'])
-        .getMany();
-      console.log(result);
+      // console.log(result);
+      await this.save(result);
       return result;
     } catch (err) {
       return err.message;
     }
   }
 
-  //     const locations = await this.find({
-  //       order: { id: 'DESC' },
-  //       relations: ['completes', 'completes.quest'],
-  //       select: [
-  //         'id',
-  //         'nickname',
-  //         'profileImg',
-  //         'mbti',
-  //         'level',
-  //         'exp',
-  //         'completes',
-  //         // 'completes.quest.id',
-  //       ],
-  //     });
+  //토큰 관련 Repository
+  async saveRefreshToken(id: number, refreshToken: string): Promise<any> {
+    try {
+      const token = refreshToken.split(' ')[1];
+      const currentHashedRefreshToken = await bcrypt.hash(token, 10);
+      const result = await this.update(id, {
+        currentHashedRefreshToken,
+      });
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
 
-  //     return locations;
-  //   } catch (err) {
-  //     return err.message;
-  //   }
-  // }
+  async checkRefreshToken(id: number): Promise<any> {
+    try {
+      const result = await this.findOne({
+        select: ['currentHashedRefreshToken'],
+        where: { id },
+      });
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+  async deleteToken(id: number): Promise<any> {
+    try {
+      const result = await this.update(id, { currentHashedRefreshToken: null });
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  async findOrCreatePlayer(createLocalDto: CreateLocalDto): Promise<object> {
+    try {
+      const {
+        email,
+        password,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+      } = createLocalDto;
+
+      const createPlayer = await this.create({
+        email,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+      });
+
+      const result = await this.save(createPlayer);
+
+      return result;
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  async checkSignUp(providerId: string, provider: string): Promise<boolean> {
+    try {
+      const result = await this.findOne({ where: { providerId } });
+      if (!result) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err.message);
+      return false;
+    }
+  }
+  async checkById(id: number): Promise<boolean> {
+    try {
+      const result = await this.findOne({ where: { id } });
+      if (!result) {
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.log(err.message);
+      return false;
+    }
+  }
 }

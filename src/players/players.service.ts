@@ -9,6 +9,8 @@ import {
 import { Player } from './entities/player.entity';
 import { PlayerRepository } from './players.repository';
 import * as bcrypt from 'bcrypt';
+import { Complete } from '../quests/entities/complete.entity';
+import { Mission } from './entities/mission.entity';
 
 @Injectable()
 export class PlayersService {
@@ -20,23 +22,31 @@ export class PlayersService {
   // 플레이어 생성
   async signup(createPlayerDto: CreateBodyDto): Promise<Player> {
     try {
-      const { email, password, nickname, mbti, profileImg, provider } =
-        createPlayerDto;
+      const {
+        email,
+        password,
+        nickname,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+        currentHashedRefreshToken,
+      } = createPlayerDto;
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const createPlayer = await this.playersRepository.createPlayer({
-        email: email,
-        nickname: nickname,
+        email,
+        nickname,
         password: hashedPassword,
-        mbti: mbti,
-        profileImg: profileImg,
-        provider: provider,
-        // providerId: providerId,
+        mbti,
+        profileImg,
+        provider,
+        providerId,
+        currentHashedRefreshToken,
       });
       return createPlayer;
     } catch (err) {
       return err.message;
-      console.log(err);
     }
   }
 
@@ -66,7 +76,7 @@ export class PlayersService {
       }
       return true;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
     }
   }
 
@@ -83,7 +93,16 @@ export class PlayersService {
       }
       return result;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
+    }
+  }
+
+  async getRefreshToken(playerId: number): Promise<string> {
+    try {
+      const result = await this.playersRepository.checkRefreshToken(playerId);
+      return result;
+    } catch (err) {
+      console.log(err.message);
     }
   }
 
@@ -99,13 +118,70 @@ export class PlayersService {
       });
       return result;
     } catch (err) {
-      console.log(err);
+      console.log(err.message);
     }
   }
 
-  async loadLatLng(playerId: number): Promise<object> {
-    const result = await this.playersRepository.locations(playerId);
-    console.log(result);
-    return result;
+  async mypageInfo(playerId: number): Promise<object> {
+    try {
+      //플레이어즈의 닉네임, mbti를 가져온다
+      const profile = await Player.createQueryBuilder('player')
+        .select([
+          'player.id',
+          'player.email',
+          'player.nickname',
+          'player.mbti',
+          'player.profileImg',
+          'player.level',
+          'player.exp',
+        ])
+        .leftJoinAndSelect('player.completes', 'completes')
+        .leftJoinAndSelect('completes.quest', 'quest')
+        .where('player.playerId = :playerId', { playerId: playerId })
+        .getMany();
+
+      const countEachType = await Complete.createQueryBuilder('complete')
+        .select(['quest.type', 'count(quest.type) as cnt'])
+        .leftJoin('complete.quest', 'quest')
+        .where('complete.playerId = :playerId', { playerId: playerId })
+        .groupBy('quest.type')
+        .getRawMany();
+
+      const missionList = await Mission.find({
+        order: {
+          createdAt: 'DESC',
+        },
+      });
+      const achievedMission = [];
+      const notAchievedMission = [];
+
+      // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
+      countEachType.map(async (cntItems) => {
+        missionList.map(async (mission) => {
+          if (
+            cntItems.quest_type === mission.type &&
+            cntItems.cnt >= mission.setGoals
+          ) {
+            achievedMission.push(mission);
+          }
+        });
+      });
+
+      missionList.map((mission) => {
+        if (!achievedMission.includes(mission)) {
+          notAchievedMission.push(mission);
+        }
+      });
+
+      // console.log(profile, missionList, achievedMission, notAchievedMission);
+
+      return {
+        profile,
+        achievedMission,
+        notAchievedMission,
+      };
+    } catch (err) {
+      return err.message;
+    }
   }
 }

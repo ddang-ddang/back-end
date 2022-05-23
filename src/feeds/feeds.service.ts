@@ -6,8 +6,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
-import { LikeRepository } from '../likes/likes.repository';
-import { CommentRepository } from '../comments/comments.repository';
+import { Likes } from '../likes/entities/like.entity';
+import { LikeRepository } from 'src/likes/likes.repository';
+import { CommentRepository } from 'src/comments/comments.repository';
+import { Region } from 'src/quests/entities/region.entity';
+import { Quest } from 'src/quests/entities/quest.entity';
 
 @Injectable()
 export class FeedsService {
@@ -18,10 +21,36 @@ export class FeedsService {
     private commentRepository: CommentRepository
   ) {}
 
+  async measureDist(
+    start_lat: number,
+    start_lng: number,
+    end_lat: number,
+    end_lng: number
+  ): Promise<number> {
+    if (start_lat == end_lat && start_lng == end_lng) return 0;
+
+    const radLat1 = (Math.PI * start_lat) / 180;
+    const radLat2 = (Math.PI * end_lat) / 180;
+    const theta = start_lng - end_lng;
+    const radTheta = (Math.PI * theta) / 180;
+    let dist =
+      Math.sin(radLat1) * Math.sin(radLat2) +
+      Math.cos(radLat1) * Math.cos(radLat2) * Math.cos(radTheta);
+    if (dist > 1) dist = 1;
+
+    dist = Math.acos(dist);
+    dist = (dist * 180) / Math.PI;
+    dist = dist * 60 * 1.1515 * 1.609344 * 1000;
+    if (dist < 100) dist = Math.round(dist / 10) * 10;
+    else dist = Math.round(dist / 100) * 100;
+
+    return dist;
+  }
+
   /* 모든 피드 가져오기 */
   async findAllFeeds(playerId: number, regionData: any) {
-    const { regionSi, regionGu, regionDong } = regionData;
-
+    const { regionSi, regionGu, regionDong, lat, lng } = regionData;
+    console.log(regionSi, regionGu, regionDong);
     // const feeds = await Feed.find({
     //   where: {
     //     deletedAt: null,
@@ -38,6 +67,7 @@ export class FeedsService {
     const feeds = await Feed.createQueryBuilder('feed')
       .select([
         'feed',
+        // `date_format(feed.createdAt, '%Y-%m-%d') as ccc`,
         'player.id',
         'player.email',
         'player.nickname',
@@ -45,16 +75,23 @@ export class FeedsService {
         'player.profileImg',
         'player.level',
         'player.exp',
+        'commentWriter.email',
+        'commentWriter.nickname',
+        'commentWriter.mbti',
+        'commentWriter.profileImg',
+        'commentWriter.level',
+        'commentWriter.exp',
       ])
       .where({ deletedAt: null })
       .leftJoinAndSelect('feed.quest', 'quest')
       .leftJoin('feed.player', 'player')
       .leftJoinAndSelect('feed.comments', 'comment')
+      .leftJoin('comment.player', 'commentWriter')
       .leftJoinAndSelect('feed.likes', 'likes')
       .leftJoinAndSelect('feed.region', 'region')
       .where(
         'region.regionSi = :si and region.regionGu = :gu and region.regionDong = :dong',
-        { si: '서울시', gu: '강남구', dong: '삼성동' }
+        { si: regionSi, gu: regionGu, dong: regionDong }
       )
       .getMany();
 
@@ -96,7 +133,7 @@ export class FeedsService {
 
   /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
   async matchPlayerFeed(playerId: number, feed: Feed) {
-    if (playerId === feed.player.id) {
+    if (feed && playerId === feed.player.id) {
       return true;
     }
     return false;
@@ -134,11 +171,18 @@ export class FeedsService {
 
   /* 피드 삭제 */
   async removeQuest(playerId: number, feedId: number): Promise<void | object> {
-    const feed = await this.feedRepository.findOne(feedId);
+    // const feed = await this.feedRepository.findOne(feedId);
+    const feed = await this.feedRepository.findOne({
+      where: {
+        id: feedId,
+        deletedAt: null,
+      },
+      relations: ['player', 'quest'],
+    });
     const match = await this.matchPlayerFeed(playerId, feed);
     if (feed) {
       if (match) {
-        return this.feedRepository.deleteFeed(feedId);
+        return this.feedRepository.deleteFeed(playerId, feedId, feed);
       } else {
         throw new BadRequestException({
           ok: false,

@@ -17,6 +17,7 @@ lerna-debug.log*
 # Tests
 /coverage
 /.nyc_output
+/config
 
 # IDEs and editors
 /.idea
@@ -35,9 +36,13 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # etc
-ormconfig.ts
 config/
 uploads/
 files/
 .env
 .gitmessage
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

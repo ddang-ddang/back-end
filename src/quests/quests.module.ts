@@ -1,26 +1,28 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { QuestsController } from './quests.controller';
-import { QuestsService } from './quests.service';
-import { Quest } from './entities/quest.entity';
-import { Region } from './entities/region.entity';
-import { RegionsRepository } from './regions.repository';
-import { CompletesRepository } from './completes.repository';
-import { Complete } from './entities/complete.entity';
-import { PlayerRepository } from '../players/players.repository';
-import { QuestsRepository } from './quests.repository';
-import { FeedRepository } from '../feeds/feeds.repository';
-import { CommentRepository } from '../comments/comments.repository';
+import { Region } from 'src/quests/entities/region.entity';
+import { Complete } from 'src/quests/entities/complete.entity';
+import { QuestRepository } from 'src/quests/repositories/quest.repository';
+import { FeedRepository } from 'src/feeds/feeds.repository';
+import { PlayerRepository } from 'src/players/players.repository';
+import { QuestsController } from 'src/quests/quests.controller';
+import { QuestsService } from 'src/quests/quests.service';
+import { Notif } from 'src/notifs/entities/notif.entity';
+import { Achievement } from '../players/entities/achievement.entity';
+import { Mission } from '../players/entities/mission.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Quest, Region, Complete]),
-    TypeOrmModule.forFeature([QuestsRepository]),
-    TypeOrmModule.forFeature([RegionsRepository]),
-    TypeOrmModule.forFeature([CompletesRepository]),
-    TypeOrmModule.forFeature([FeedRepository]),
-    TypeOrmModule.forFeature([CommentRepository]),
-    TypeOrmModule.forFeature([PlayerRepository]),
+    TypeOrmModule.forFeature([
+      Region,
+      Complete,
+      Notif,
+      Achievement,
+      Mission,
+      QuestRepository,
+      FeedRepository,
+      PlayerRepository,
+    ]),
   ],
   controllers: [QuestsController],
   providers: [QuestsService],

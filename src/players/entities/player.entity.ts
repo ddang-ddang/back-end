@@ -1,4 +1,8 @@
 import { IsEmail, IsEmpty, IsNotEmpty } from 'class-validator';
+import { Feed } from 'src/feeds/entities/feed.entity';
+import { Achievement } from './achievement.entity';
+import { Likes } from 'src/likes/entities/like.entity';
+import { Comment } from 'src/comments/entities/comment.entity';
 import {
   BaseEntity,
   Column,
@@ -47,7 +51,8 @@ export class Player extends BaseEntity {
   @IsNotEmpty()
   @Column({
     type: 'varchar',
-    length: 20,
+    default: 'mbti',
+    length: 10,
   })
   mbti: string;
 
@@ -57,6 +62,7 @@ export class Player extends BaseEntity {
    */
   @IsNotEmpty()
   @Column({
+    type: 'text',
     // default: false,
   })
   profileImg: string;
@@ -78,16 +84,17 @@ export class Player extends BaseEntity {
   /* 플레이어 프로바이더 (local, kakao, google) */
   @IsEmpty()
   @Column({
-    default: 'local',
+    type: 'varchar',
+    default: null,
+    length: '10',
   })
   provider: string;
 
-  @Column({
-    name: 'providerId',
-    type: 'int',
-    default: null,
-  })
-  providerId?: number;
+  @Column({ type: 'varchar', length: 255, default: null })
+  providerId?: string;
+
+  @Column({ type: 'varchar', default: null })
+  currentHashedRefreshToken?: string;
 
   /* 테이블 관계 */
 
@@ -106,4 +113,7 @@ export class Player extends BaseEntity {
   @OneToMany((type) => Complete, (complete) => complete.player)
   @JoinColumn({ name: 'id' })
   completes: Complete[];
+
+  @OneToMany((type) => Likes, (achievement) => achievement.player)
+  achievements: Achievement[];
 }
