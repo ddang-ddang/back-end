@@ -1,7 +1,6 @@
 import {
   ConflictException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -25,20 +24,6 @@ export class QuestsException {
     throw new ConflictException({
       ok: false,
       message: '퀘스트를 이미 완료하였습니다.',
-    });
-  }
-
-  serverErrorOnComplete() {
-    throw new InternalServerErrorException({
-      ok: false,
-      message: '퀘스트를 완료할 수 없습니다.',
-    });
-  }
-
-  serverErrorOnQuest() {
-    throw new InternalServerErrorException({
-      ok: false,
-      message: '퀘스트를 조회할 수 없습니다.',
     });
   }
 }

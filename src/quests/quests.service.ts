@@ -117,7 +117,6 @@ export class QuestsService {
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number, questType: string) {
-    // try {
     const quest = await this.quests.findOne({
       where: { id: questId },
       relations: ['region'],
@@ -160,9 +159,6 @@ export class QuestsService {
     }
 
     return { ok: true };
-    // } catch (error) {
-    //   this.exceptions.serverErrorOnComplete();
-    // }
   }
 
   /*
@@ -173,84 +169,73 @@ export class QuestsService {
 
   /* 위도(lat), 경도(lng) 기준으로 우리 지역(동) 퀘스트 조회 */
   async getAll(lat: number, lng: number, playerId?: number) {
-    try {
-      console.time('getAll');
-      console.time('카카오API - getAddressName');
-      const kakaoAddress = await this.getAddressName(lat, lng);
-      console.timeEnd('카카오API - getAddressName');
+    let allQuests;
 
-      const date = new Date().toDateString();
-      /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
-      let region = await getRepository(Region)
-        .createQueryBuilder('region')
-        .where(
-          'region.date = :date AND region.regionSi = :si AND region.regionGu = :gu AND region.regionDong = :dong',
-          {
-            date,
-            si: kakaoAddress.regionSi,
-            gu: kakaoAddress.regionGu,
-            dong: kakaoAddress.regionDong,
-          }
-        )
-        .getOne();
-      if (region) {
-        const allQuests = await this.quests.findAllWithCompletes(
-          region,
-          playerId
-        );
-        console.timeEnd('getAll');
-        return {
-          ok: true,
-          currentRegion: region,
-          rows: allQuests,
-        };
-      }
+    console.time('getAll');
+    console.time('카카오API - getAddressName');
+    const kakaoAddress = await this.getAddressName(lat, lng);
+    console.timeEnd('카카오API - getAddressName');
 
-      // 지역(동), 좌표 값으로 퀘스트 만들기
-      console.time('주소API - getRegionData');
-      const { totalCount, pageCount } = await this.getRegionData(kakaoAddress);
-      console.timeEnd('주소API - getRegionData');
-      console.time('createQuests');
-      const quests = await this.createQuests(
-        totalCount,
-        pageCount,
-        kakaoAddress
-      );
-      console.timeEnd('createQuests');
+    const date = new Date().toDateString();
+    /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
+    let region = await getRepository(Region)
+      .createQueryBuilder('region')
+      .where(
+        'region.date = :date AND region.regionSi = :si AND region.regionGu = :gu AND region.regionDong = :dong',
+        {
+          date,
+          si: kakaoAddress.regionSi,
+          gu: kakaoAddress.regionGu,
+          dong: kakaoAddress.regionDong,
+        }
+      )
+      .getOne();
 
-      // 지역(동) 데이터 DB에 추가 및 조회
-      region = this.regions.create({
-        date,
-        ...kakaoAddress,
-        totalCount,
-        pageCount,
-      });
-      await this.regions.save(region);
-
-      // 퀘스트 데이터 DB에 추가 및 조회
-      await Promise.all([
-        ...quests.map((quest) => {
-          return this.quests.save({
-            ...quest,
-            region,
-          });
-        }),
-      ]);
-
-      const { regionSi, regionGu, regionDong } = region;
-      const allQuests = await this.quests.findAllWithCompletes(
-        region,
-        playerId
-      );
+    if (region) {
+      allQuests = await this.quests.findAllWithCompletes(region, playerId);
       console.timeEnd('getAll');
       return {
         ok: true,
-        currentRegion: { regionSi, regionGu, regionDong },
+        currentRegion: region,
         rows: allQuests,
       };
-    } catch (error) {
-      this.exceptions.serverErrorOnQuest();
     }
+
+    // 지역(동), 좌표 값으로 퀘스트 만들기
+    console.time('주소API - getRegionData');
+    const { totalCount, pageCount } = await this.getRegionData(kakaoAddress);
+    console.timeEnd('주소API - getRegionData');
+    console.time('createQuests');
+    const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
+    console.timeEnd('createQuests');
+
+    // 지역(동) 데이터 DB에 추가 및 조회
+    region = this.regions.create({
+      date,
+      ...kakaoAddress,
+      totalCount,
+      pageCount,
+    });
+    await this.regions.save(region);
+
+    // 퀘스트 데이터 DB에 추가 및 조회
+    await Promise.all([
+      ...quests.map((quest) => {
+        return this.quests.save({
+          ...quest,
+          region,
+        });
+      }),
+    ]);
+
+    const { regionSi, regionGu, regionDong } = region;
+    allQuests = await this.quests.findAllWithCompletes(region, playerId);
+    console.timeEnd('getAll');
+    return {
+      ok: true,
+      currentRegion: { regionSi, regionGu, regionDong },
+      rows: allQuests,
+    };
   }
 
   /* 주소 데이터 얻어오기 */
@@ -488,14 +473,10 @@ export class QuestsService {
 
   /* 특정 퀘스트 조회 */
   async getOne(id: number, playerId?: number) {
-    try {
-      const quest = await this.quests.findOneWithCompletes(id, playerId);
-      if (!quest) this.exceptions.notFoundQuest();
+    const quest = await this.quests.findOneWithCompletes(id, playerId);
+    if (!quest) this.exceptions.notFoundQuest();
 
-      return { ok: true, row: quest };
-    } catch (error) {
-      this.exceptions.serverErrorOnQuest();
-    }
+    return { ok: true, row: quest };
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
