@@ -21,11 +21,10 @@ export class RanksService {
 
   private readonly logger = new Logger(RanksService.name);
 
-  async getAll(currentRegion) {
-    this.logger.verbose(`${currentRegion.regionDong} 랭킹 조회`);
+  async getAll(regionSi, regionGu, regionDong) {
+    this.logger.verbose(`${regionDong} 랭킹 조회`);
 
     try {
-      const { regionSi, regionGu, regionDong } = currentRegion; // 현재 지역 정보
       // 모든 날짜의 현재 지역 데이터 조회
       const regions = await this.regions.find({
         where: { regionSi, regionGu, regionDong },
@@ -98,36 +97,40 @@ export class RanksService {
     totalCount: number,
     difficulty: number
   ): Promise<object[]> {
-    // 플레이어당 퀘스트 완료횟수 (ex. { '96': 2, '99': 1, '100': 4 })
-    const countFor = {};
-    players.forEach((player) => {
-      countFor[player] = (countFor[player] || 0) + 1;
-    });
+    try {
+      // 플레이어당 퀘스트 완료횟수 (ex. { '96': 2, '99': 1, '100': 4 })
+      const countFor = {};
+      players.forEach((player) => {
+        countFor[player] = (countFor[player] || 0) + 1;
+      });
 
-    // 객체를 배열로 변경 (promise.all 및 정렬을 위해서)
-    const arrayFromObject = [];
-    for (const player in countFor) {
-      arrayFromObject.push([player, countFor[player]]);
+      // 객체를 배열로 변경 (promise.all 및 정렬을 위해서)
+      const arrayFromObject = [];
+      for (const player in countFor) {
+        arrayFromObject.push([player, countFor[player]]);
+      }
+
+      // 랭킹 정보(플레이어, 포인트 등) 생성
+      const ranksTop10 = [];
+      await Promise.all([
+        ...arrayFromObject.map(async (player) => {
+          const res = await this.players.findOne({ where: { id: player[0] } });
+          const rankingInfo = {
+            nickname: res.nickname,
+            profileImg: res.profileImg,
+            ratio: `${Math.round((player[1] / totalCount) * 45000)}%`,
+            counts: player[1],
+            points: `${player[1] * 100 * difficulty}P`,
+          };
+          ranksTop10.push(rankingInfo);
+        }),
+      ]);
+
+      // 랭킹 정렬
+      ranksTop10.sort((a, b) => b.counts - a.counts);
+      return ranksTop10.slice(0, 10);
+    } catch (error) {
+      this.exceptions.serverError();
     }
-
-    // 랭킹 정보(플레이어, 포인트 등) 생성
-    const ranksTop10 = [];
-    await Promise.all([
-      ...arrayFromObject.map(async (player) => {
-        const res = await this.players.findOne({ where: { id: player[0] } });
-        const rankingInfo = {
-          nickname: res.nickname,
-          profileImg: res.profileImg,
-          ratio: `${Math.round((player[1] / totalCount) * 45000)}%`,
-          counts: player[1],
-          points: `${player[1] * 100 * difficulty}P`,
-        };
-        ranksTop10.push(rankingInfo);
-      }),
-    ]);
-
-    // 랭킹 정렬
-    ranksTop10.sort((a, b) => b.counts - a.counts);
-    return ranksTop10.slice(0, 10);
   }
 }
