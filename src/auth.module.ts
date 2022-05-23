@@ -11,7 +11,7 @@ import { GoogleStrategy } from './google/google.strategy';
 import { KakaoStrategy } from './kakao/kakao-strategy';
 import { PassportModule } from '@nestjs/passport';
 import { JwtRefreshTokenStrategy } from './jwt/jwt-refresh-strategy';
-import { jwtConfig } from '../../configs';
+import { jwtConfig } from '../configs';
 
 @Module({
   imports: [

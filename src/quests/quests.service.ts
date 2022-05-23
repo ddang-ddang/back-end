@@ -14,7 +14,6 @@ import { Mission } from 'src/players/entities/mission.entity';
 import { Achievement } from 'src/players/entities/achievement.entity';
 import { mapConfig } from '../../configs';
 
-
 const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
 const REST_API_KEY = mapConfig.kakaoApiKey;
 const JUSO_BASE_URL = mapConfig.jusoBaseUrl;

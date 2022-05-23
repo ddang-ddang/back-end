@@ -78,7 +78,10 @@ export class CommentsController {
       const feedId = params['feedId'];
       this.logger.verbose(`trying to get a comment feedId: ${feedId}`);
       const commentId = params['commentId'];
-      const comment = await this.commentsService.findOneComment(commentId);
+      const comment = await this.commentsService.findOneComment(
+        commentId,
+        feedId
+      );
       return {
         ok: true,
         row: comment,

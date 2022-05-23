@@ -33,6 +33,7 @@ import { KakaoAuthGuard } from 'src/auth/kakao/kakao-auth.guard';
 // 데이터 엔티티
 import { Player } from './entities/player.entity';
 import { EmailDto, InputPlayerDto, NicknameDto } from './dto/create-player.dto';
+import { JwtRefreshTokenGuard } from "../auth/jwt/jwt-refresh-token.guard";
 
 @Controller('api/players')
 @ApiTags('플레이어 API')
