@@ -104,8 +104,8 @@ export class CommentsController {
     @Body() updateCommentDto: UpdateCommentDto
   ) {
     const { playerId } = req['user'].player;
-    const feedId = params['feedId'];
-    const commentId = params['commentId'];
+    const feedId = Number(params['feedId']);
+    const commentId = Number(params['commentId']);
     this.logger.verbose(
       `trying to update comment commentId: ${commentId} userId: ${playerId}`
     );
@@ -133,14 +133,17 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   async removeComment(
     @Req() req: Request,
-    @Param('commentId') commentId: number
+    // @Param('commentId') commentId: number
+    @Param() params: number
   ) {
     const { playerId } = req['user'].player;
+    const feedId = Number(params['feedId']);
+    const commentId = Number(params['commentId']);
     this.logger.verbose(
       `trying to delete commentId: ${commentId} userId: ${playerId}`
     );
     try {
-      await this.commentsService.removeComment(playerId, commentId);
+      await this.commentsService.removeComment(playerId, commentId, feedId);
       return {
         ok: true,
       };

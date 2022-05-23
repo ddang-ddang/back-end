@@ -6,6 +6,7 @@ import { CommentRepository } from './comments.repository';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { CommentException } from './comments.exception';
+import { Player } from 'src/players/entities/player.entity';
 
 @Injectable()
 export class CommentsService {
@@ -59,7 +60,14 @@ export class CommentsService {
 
   /* 특정 댓글 조회 */
   async findOneComment(commentId: number, feedId?: number) {
-    const feed = await Feed.findOne({ id: feedId });
+    console.log(typeof commentId);
+    const feed = await Feed.findOne({
+      where: {
+        id: feedId,
+        deletedAt: null,
+      },
+    });
+
     if (!feed) {
       this.commentException.NotFoundFeed();
     }
@@ -92,7 +100,7 @@ export class CommentsService {
     commentId: number,
     updateCommentDto: UpdateCommentDto
   ) {
-    const comment = await this.findOneComment(feedId, commentId);
+    const comment = await this.findOneComment(commentId, feedId);
     const match = await this.matchPlayerComment(playerId, comment);
     if (comment) {
       if (match) {
@@ -110,8 +118,8 @@ export class CommentsService {
   }
 
   /* 댓글 삭제 */
-  async removeComment(playerId: number, commentId: number) {
-    const comment = await this.findOneComment(commentId);
+  async removeComment(playerId: number, commentId: number, feedId: number) {
+    const comment = await this.findOneComment(commentId, feedId);
     const match = await this.matchPlayerComment(playerId, comment);
     if (comment) {
       if (match) {

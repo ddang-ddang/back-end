@@ -20,8 +20,6 @@ export class CommentRepository extends Repository<Comment> {
       player,
     });
 
-    console.log(newComment);
-
     return {
       id: newComment.id,
       comment: newComment.comment,
@@ -44,12 +42,15 @@ export class CommentRepository extends Repository<Comment> {
     updateCommentDto: UpdateCommentDto
   ) {
     const { comment } = updateCommentDto;
-    return this.update(
+    const updateComment = await this.update(
       { id: commentId },
       {
         comment,
       }
     );
+
+    console.log(updateComment);
+    return updateComment;
   }
   /* 댓글 삭제 */
   async deleteComment(commentId: number) {
