@@ -1,5 +1,3 @@
-import { Feed } from 'src/feeds/entities/feed.entity';
-import { Player } from 'src/players/entities/player.entity';
 import {
   BaseEntity,
   Column,
@@ -11,6 +9,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Feed } from '../../feeds/entities/feed.entity';
+import { Player } from '../../players/entities/player.entity';
 
 @Entity()
 export class Comment extends BaseEntity {

@@ -1,6 +1,6 @@
-import { Feed } from 'src/feeds/entities/feed.entity';
-import { Player } from 'src/players/entities/player.entity';
 import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Feed } from '../../feeds/entities/feed.entity';
+import { Player } from '../../players/entities/player.entity';
 @Entity()
 export class Likes {
   @PrimaryGeneratedColumn()
