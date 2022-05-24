@@ -2,8 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Region } from '../quests/entities/region.entity';
 import { getRepository, Repository } from 'typeorm';
-import { Complete } from '../quests/entities/complete.entity';
-import { Player } from '../players/entities/player.entity';
 import { Quest } from '../quests/entities/quest.entity';
 import { RanksException } from './ranks.exception';
 
@@ -12,10 +10,6 @@ export class RanksService {
   constructor(
     @InjectRepository(Region)
     private readonly regions: Repository<Region>,
-    @InjectRepository(Complete)
-    private readonly completes: Repository<Complete>,
-    @InjectRepository(Player)
-    private readonly players: Repository<Player>,
     private readonly exceptions: RanksException
   ) {}
 
@@ -24,19 +18,19 @@ export class RanksService {
   async getAll(regionSi, regionGu, regionDong) {
     this.logger.verbose(`${regionDong} 랭킹 조회`);
 
-    // 모든 날짜의 현재 지역 데이터 조회
+    // 모든 날짜의 당해 지역 데이터 조회
     const regions = await this.regions.find({
       select: ['id', 'totalCount'],
       where: { regionSi, regionGu, regionDong },
     });
     if (regions.length === 0) this.exceptions.notFound();
-    const { totalCount } = regions[0];
 
+    // 당해 지역에서 퀘스트 완료한 플레이어 조회
     const completedPlayers = await Promise.all([
       ...regions.map((region) => {
         return getRepository(Quest)
           .createQueryBuilder('quest')
-          .select(['type', 'player.id', 'player.nickname', 'player.profileImg'])
+          .select(['player.nickname', 'player.profileImg', 'player.mbti'])
           .where('regionId = :id', { id: region.id })
           .innerJoin('quest.completes', 'complete')
           .leftJoin('complete.player', 'player')
@@ -44,78 +38,96 @@ export class RanksService {
       }),
     ]);
 
-    const totalCompletedPlayers = [];
-    const mobsCompletedPlayers = [];
-    const timeCompletedPlayers = [];
-    const docsCompletedPlayers = [];
+    const players = completedPlayers.flat();
+    const total = players.length;
 
-    // 퀘스트 별로 완료한 플레이어 id 배열로 추가
-    completedPlayers.flat().forEach((player) => {
-      const { type, player_playerId } = player;
-      if (type === 'mob') {
-        mobsCompletedPlayers.push(player_playerId);
-        totalCompletedPlayers.push(player_playerId);
-      } else if (type === 'time') {
-        timeCompletedPlayers.push(player_playerId);
-        totalCompletedPlayers.push(player_playerId);
-      } else if (type === 'feed') {
-        docsCompletedPlayers.push(player_playerId);
-        totalCompletedPlayers.push(player_playerId);
-      }
+    // 닉네임, MBTI 별로 분류
+    const playersProfiles = {};
+    const countByNick = {}; // ex. { nick: 5, nick12: 3, '박재철': 6, helloworld: 2 }
+    const countByMbti = {}; // ex. { infp: 5, intp: 3, entp: 6, enfp: 2 }
+    players.forEach((player) => {
+      const { player_nickname, player_profileImg, player_mbti } = player;
+      countByNick[player_nickname] = (countByNick[player_nickname] || 0) + 1;
+      countByMbti[player_mbti] = (countByMbti[player_mbti] || 0) + 1;
+      playersProfiles[player_nickname] = {
+        player_profileImg,
+        player_mbti,
+        counts: countByNick[player_nickname],
+      };
     });
 
-    const total = await this.rankFor(totalCompletedPlayers, totalCount, 3);
-    const mob = await this.rankFor(mobsCompletedPlayers, totalCount, 3);
-    const time = await this.rankFor(timeCompletedPlayers, totalCount, 1);
-    const docs = await this.rankFor(docsCompletedPlayers, totalCount, 2);
-
-    const ranks = { total, mob, time, docs };
+    const individual = this.ranksByIndividual(
+      playersProfiles,
+      countByNick,
+      total
+    );
+    const group = this.ranksByGroup(countByMbti, total);
+    const ranks = { individual, group };
 
     return { ok: true, ranks };
   }
 
-  /* 랭킹 데이터 만들기 */
+  /* 개인 랭킹 정하기 */
   /**
-   * @param {array} players - 퀘스트 유형별 완료한 플레이어
-   * @param {number} totalCount - 해당 지역 전체 주소
-   * @param {number} difficulty - 퀘스트 난이도 (포인트 차등)
+   * @param {object} playersProfiles - 퀘스트 완료한 플레이어
+   * @param {object} countByNick - 해당 지역 전체 완료 횟수
+   * @param {number} total - 해당 지역 전체 완료 횟수
    * @returns {array} - TOP10 랭킹 리스트
    */
-  async rankFor(
-    players: number[],
-    totalCount: number,
-    difficulty: number
-  ): Promise<object[]> {
-    // 플레이어당 퀘스트 완료횟수 (ex. { '96': 2, '99': 1, '100': 4 })
-    const countFor = {};
-    players.forEach((player) => {
-      countFor[player] = (countFor[player] || 0) + 1;
-    });
-
-    // 객체를 배열로 변경 (promise.all 및 정렬을 위해서)
-    const arrayFromObject = [];
-    for (const player in countFor) {
-      arrayFromObject.push([player, countFor[player]]);
+  ranksByIndividual(
+    playersProfiles: any,
+    countByNick: object,
+    total: number
+  ): object[] {
+    // 객체를 배열로 변경 (정렬을 위해서)
+    const arrayFromObject: any[][] = [];
+    for (const nickname in countByNick) {
+      arrayFromObject.push([nickname, countByNick[nickname]]);
     }
 
     // 랭킹 정보(플레이어, 포인트 등) 생성
-    const ranksTop10 = [];
-    await Promise.all([
-      ...arrayFromObject.map(async (player) => {
-        const res = await this.players.findOne({ where: { id: player[0] } });
-        const rankingInfo = {
-          nickname: res.nickname,
-          profileImg: res.profileImg,
-          ratio: `${Math.round((player[1] / totalCount) * 45000)}%`,
-          counts: player[1],
-          points: `${player[1] * 100 * difficulty}P`,
-        };
-        ranksTop10.push(rankingInfo);
-      }),
-    ]);
+    const ranksTop16 = [];
+
+    arrayFromObject.forEach((nickname) => {
+      const rankingInfo = {
+        nickname: nickname[0],
+        profileImg: playersProfiles[nickname[0]].player_profileImg,
+        mbti: playersProfiles[nickname[0]].player_mbti,
+        ratio: Math.round((playersProfiles[nickname[0]].counts / total) * 100),
+        points: playersProfiles[nickname[0]].counts * 500,
+      };
+      ranksTop16.push(rankingInfo);
+    });
 
     // 랭킹 정렬
-    ranksTop10.sort((a, b) => b.counts - a.counts);
-    return ranksTop10.slice(0, 10);
+    ranksTop16.sort((a, b) => b.points - a.points);
+    return ranksTop16.slice(0, 16);
+  }
+
+  /* 그룹 랭킹 정하기 */
+  /**
+   * @param {object} countByMbti - mbti별 완료 횟수
+   * @param {number} total - 해당 지역 전체 완료 횟수
+   * @returns {array} - TOP10 랭킹 리스트
+   */
+  ranksByGroup(countByMbti: object, total: number): object[] {
+    // 객체를 배열로 변경
+    const arrayFromObject = [];
+    for (const mbti in countByMbti) {
+      arrayFromObject.push([mbti, countByMbti[mbti]]); // ex. [ ['intj', 2], ['entj': 1], ['isfp': 4] ]
+    }
+
+    // 랭킹 정보(MBTI, 점령률 등) 생성
+    const ranks = [];
+    arrayFromObject.forEach((el) => {
+      const rankingInfo = {
+        mbti: el[0],
+        ratio: Math.round((el[1] / total) * 100),
+      };
+      ranks.push(rankingInfo);
+    });
+
+    // 랭킹 정렬
+    return ranks.sort((a, b) => b.ratio - a.ratio);
   }
 }
