@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { Connection, getManager, getRepository, Repository } from 'typeorm';
-import { Notif } from '../notifs/entities/notif.entity';
 import { Player } from '../players/entities/player.entity';
 import { FeedRepository } from '../feeds/feeds.repository';
 import { Complete } from './entities/complete.entity';
@@ -21,8 +20,6 @@ export class QuestsService {
     private readonly completes: Repository<Complete>,
     @InjectRepository(Region)
     private readonly regions: Repository<Region>,
-    @InjectRepository(Notif)
-    private readonly notifs: Repository<Notif>,
     @InjectRepository(Achievement)
     private readonly achievements: Repository<Achievement>,
     @InjectRepository(Mission)
