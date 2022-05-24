@@ -8,11 +8,11 @@ import {
   getConnection,
   Repository,
 } from 'typeorm';
-import { CommentRepository } from './comments.repository';
-import { CommentsService } from './comments.service';
-import { Comment } from './entities/comment.entity';
+import { CommentRepository } from 'src/comments/comments.repository';
+import { CommentsService } from 'src/comments/comments.service';
+import { Comment } from 'src/comments/entities/comment.entity';
 import { plainToClass } from 'class-transformer';
-import { CreateCommentDto } from './dto/create-comment.dto';
+import { CreateCommentDto } from 'src/comments/dto/create-comment.dto';
 
 const mockCommentRepository = {
   findAllComments: jest.fn(),
