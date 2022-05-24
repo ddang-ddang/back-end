@@ -250,7 +250,7 @@ export class QuestsService {
   async getAddressName(lat, lng) {
     try {
       const res = await axios.get(
-        `${process.env.MAP_KAKAO_BASEURL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
+        `${process.env.MAP_KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
         {
           headers: {
             Authorization: `KakaoAK ${process.env.MAP_KAKAO_API_KEY}`,

@@ -1,12 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 
 describe('commentsController E2E test', () => {
   let app: INestApplication;
-
-  const playerId = 10;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -15,12 +13,19 @@ describe('commentsController E2E test', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      })
+    );
     await app.init();
   });
 
-  it('should create a new comment', () => {
+  it('댓글 조회', () => {
     return request(app.getHttpServer())
-      .post('/api/feeds/2/comments')
+      .post('/api/feeds/2')
       .send({
         comment: 'e2e test comment',
       })
