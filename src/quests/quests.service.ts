@@ -3,8 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { Connection, getManager, getRepository, Repository } from 'typeorm';
-import { mapConfig } from '../../configs';
-import { Notif } from '../notifs/entities/notif.entity';
 import { Player } from '../players/entities/player.entity';
 import { FeedRepository } from '../feeds/feeds.repository';
 import { Complete } from './entities/complete.entity';
@@ -15,11 +13,6 @@ import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
 import { QuestRepository } from './repositories/quest.repository';
 import { QuestsException } from './quests.exception';
 
-const KAKAO_BASE_URL = mapConfig.kakaoBaseUrl;
-const REST_API_KEY = mapConfig.kakaoApiKey;
-const JUSO_BASE_URL = mapConfig.jusoBaseUrl;
-const JUSO_CONFIRM_KEY = mapConfig.josoConfirmKey;
-
 @Injectable()
 export class QuestsService {
   constructor(
@@ -27,8 +20,6 @@ export class QuestsService {
     private readonly completes: Repository<Complete>,
     @InjectRepository(Region)
     private readonly regions: Repository<Region>,
-    @InjectRepository(Notif)
-    private readonly notifs: Repository<Notif>,
     @InjectRepository(Achievement)
     private readonly achievements: Repository<Achievement>,
     @InjectRepository(Mission)
@@ -184,6 +175,7 @@ export class QuestsService {
     console.time('카카오API - getAddressName');
     const kakaoAddress = await this.getAddressName(lat, lng);
     console.timeEnd('카카오API - getAddressName');
+    if (!kakaoAddress) this.exceptions.notFoundKakaoAddress();
 
     const date = new Date().toDateString();
     /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
@@ -212,30 +204,43 @@ export class QuestsService {
 
     // 지역(동), 좌표 값으로 퀘스트 만들기
     console.time('주소API - getRegionData');
-    const { totalCount, pageCount } = await this.getRegionData(kakaoAddress);
+    const regionData = await this.getRegionData(kakaoAddress);
+    if (!regionData) this.exceptions.notFoundPublicAddress();
+    const { totalCount, pageCount } = regionData;
     console.timeEnd('주소API - getRegionData');
     console.time('createQuests');
     const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
     console.timeEnd('createQuests');
 
-    // 지역(동) 데이터 DB에 추가 및 조회
-    region = this.regions.create({
-      date,
-      ...kakaoAddress,
-      totalCount,
-      pageCount,
-    });
-    await this.regions.save(region);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    // 퀘스트 데이터 DB에 추가 및 조회
-    await Promise.all([
-      ...quests.map((quest) => {
-        return this.quests.save({
-          ...quest,
-          region,
-        });
-      }),
-    ]);
+    // region, quest 생성 트랜잭션 처리
+    try {
+      // 지역(동) 데이터 DB에 추가 및 조회
+      region = this.regions.create({
+        date,
+        ...kakaoAddress,
+        totalCount,
+        pageCount,
+      });
+      await this.regions.save(region);
+
+      // 퀘스트 데이터 DB에 추가 및 조회
+      await Promise.all([
+        ...quests.map((quest) => {
+          return this.quests.save({
+            ...quest,
+            region,
+          });
+        }),
+      ]);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
 
     const { regionSi, regionGu, regionDong } = region;
     allQuests = await this.quests.findAllWithCompletes(region, playerId);
@@ -256,8 +261,12 @@ export class QuestsService {
   async getAddressName(lat, lng) {
     try {
       const res = await axios.get(
-        `${KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
-        { headers: { Authorization: `KakaoAK ${REST_API_KEY}` } }
+        `${process.env.MAP_KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
+        {
+          headers: {
+            Authorization: `KakaoAK ${process.env.MAP_KAKAO_API_KEY}`,
+          },
+        }
       );
       const { address } = res.data.documents[0];
       const regionSi: string = address.region_1depth_name;
@@ -279,9 +288,11 @@ export class QuestsService {
     const address = `${kakaoAddress.regionSi} ${kakaoAddress.regionGu} ${kakaoAddress.regionDong}`;
     try {
       const res = await axios.get(
-        `${JUSO_BASE_URL}?currentPage=1&countPerPage=10&keyword=${encodeURI(
+        `${
+          process.env.MAP_JUSO_BASE_URL
+        }?currentPage=1&countPerPage=10&keyword=${encodeURI(
           address
-        )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
+        )}&confmKey=${process.env.MAP_JUSO_CONFIRM_KEY}&resultType=json`
       );
       const { totalCount } = res.data.results.common;
       const pageCount = Math.ceil(totalCount / 100);
@@ -447,9 +458,11 @@ export class QuestsService {
   async getRoadAddress(curPage, address, idx) {
     try {
       const res = await axios.get(
-        `${JUSO_BASE_URL}?currentPage=${curPage}&countPerPage=100&keyword=${encodeURI(
+        `${
+          process.env.MAP_JUSO_BASE_URL
+        }?currentPage=${curPage}&countPerPage=100&keyword=${encodeURI(
           address
-        )}&confmKey=${JUSO_CONFIRM_KEY}&resultType=json`
+        )}&confmKey=${process.env.MAP_JUSO_CONFIRM_KEY}&resultType=json`
       );
       return res.data.results.juso[idx].roadAddr;
     } catch (error) {
@@ -465,10 +478,12 @@ export class QuestsService {
   async getCoords(roadAddr) {
     try {
       const res = await axios.get(
-        `${KAKAO_BASE_URL}/search/address.json?query=${encodeURI(roadAddr)}`,
+        `${
+          process.env.MAP_KAKAO_BASE_URL
+        }/search/address.json?query=${encodeURI(roadAddr)}`,
         {
           headers: {
-            Authorization: `KakaoAK ${REST_API_KEY}`,
+            Authorization: `KakaoAK ${process.env.MAP_KAKAO_API_KEY}`,
           },
         }
       );
