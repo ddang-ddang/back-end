@@ -3,10 +3,12 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
 
-describe('AppController (e2e)', () => {
+describe('commentsController E2E test', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  const playerId = 10;
+
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -15,10 +17,12 @@ describe('AppController (e2e)', () => {
     await app.init();
   });
 
-  it('/ (GET)', () => {
+  it('should create a new comment', () => {
     return request(app.getHttpServer())
-      .get('/')
-      .expect(200)
-      .expect('Hello World!');
+      .post('/api/feeds/2/comments')
+      .send({
+        comment: 'e2e test comment',
+      })
+      .expect(201);
   });
 });
