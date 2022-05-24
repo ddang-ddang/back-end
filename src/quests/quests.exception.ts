@@ -20,6 +20,20 @@ export class QuestsException {
     });
   }
 
+  notFoundKakaoAddress() {
+    return new NotFoundException({
+      ok: false,
+      message: '카카오 주소를 찾을 수 없습니다.',
+    });
+  }
+
+  notFoundPublicAddress() {
+    return new NotFoundException({
+      ok: false,
+      message: '공공API 주소를 찾을 수 없습니다.',
+    });
+  }
+
   alreadyCompleted() {
     throw new ConflictException({
       ok: false,
