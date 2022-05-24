@@ -10,7 +10,7 @@ import {
   Request,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiNotFoundResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { QuestsService } from './quests.service';
 import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
@@ -20,9 +20,12 @@ import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
 export class QuestsController {
   constructor(private readonly questsService: QuestsService) {}
 
-  /* 퀘스트 전체 조회 API */
   @Get()
-  @ApiOperation({ summary: '전체 퀘스트 조회 API' })
+  @ApiOperation({
+    summary: '전체 퀘스트 조회 API',
+    description: '현재 위치를 기반으로 퀘스트를 조회합니다.',
+  })
+  @ApiNotFoundResponse({ description: '퀘스트를 찾을 수 없음' })
   getAll(
     @Query('lat') lat: number,
     @Query('lng') lng: number,
@@ -46,9 +49,12 @@ export class QuestsController {
     return this.questsService.getAll(lat, lng);
   }
 
-  /* 특정 퀘스트 조회 API */
   @Get(':questId')
-  @ApiOperation({ summary: '특정 퀘스트 조회 API' })
+  @ApiOperation({
+    summary: '특정 퀘스트 조회 API',
+    description: '퀘스트 id 값을 통해 특정 퀘스트를 조회합니다.',
+  })
+  @ApiNotFoundResponse({ description: '퀘스트를 찾을 수 없음' })
   async getOne(@Param('questId') id: number, @Request() req: any) {
     try {
       if (req.headers.authorization) {
@@ -65,13 +71,13 @@ export class QuestsController {
     }
   }
 
-  /**
-   * 퀘스트 수행
-   * 유저 확인 필요
-   */
   @Post(':questId')
-  @ApiOperation({ summary: '퀘스트 수행 로직 API' })
   @UseGuards(AuthGuard('jwt'))
+  @ApiOperation({
+    summary: '퀘스트 수행 로직 API',
+    description: '퀘스트 id 값을 통해 퀘스트 완료 요청을 합니다.',
+  })
+  @ApiNotFoundResponse({ description: '퀘스트를 찾을 수 없음' })
   async questComplete(
     @Req() req: Request,
     @Param('questId') id: number,
