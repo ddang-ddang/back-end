@@ -14,6 +14,7 @@ describe('commentsController E2E test', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
