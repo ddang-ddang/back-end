@@ -50,11 +50,8 @@ export class FeedsController {
       const newFeeds = [];
       let sortedFeeds;
       const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
-
       const { lat, lng } = regionData;
-
       for (let i = 0; i < feeds.length; i++) {
-        // newFeeds = { ...feeds[i], ...dist[i] };
         const dist = await this.feedsService.measureDist(
           lat,
           lng,
@@ -63,8 +60,7 @@ export class FeedsController {
         );
 
         console.log(dist);
-        // newFeeds = [ {...feeds[i]}, dist: Number(dist) ];
-        newFeeds.push({ ...feeds[i], dist: dist });
+        newFeeds.push({ ...feeds[i], dist });
       }
       if (feedType === 'popularity') {
         sortedFeeds = newFeeds.sort((a, b) => b.likeCnt - a.likeCnt);

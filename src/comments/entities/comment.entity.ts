@@ -33,4 +33,7 @@ export class Comment extends BaseEntity {
 
   @ManyToOne((type) => Player, (player) => player.comments)
   player: Player;
+
+  @Column()
+  playerId: number;
 }
