@@ -90,7 +90,7 @@ describe('Player E2E test', () => {
         .withBody({ email: 'test@test.com', password: '123456' })
         .expectStatus(201);
 
-      console.log(response['req']);
+      // console.log(response['req']);
     });
   });
 });
