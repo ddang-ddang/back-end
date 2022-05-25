@@ -83,13 +83,14 @@ describe('Player E2E test', () => {
   // });
 
   describe('로그인', () => {
-    const dto = { email: 'test@test.com', password: '123456' };
     it('POST 로그인', async () => {
-      return pactum
+      const response = await pactum
         .spec()
         .post('/api/players/signin')
         .withBody({ email: 'test@test.com', password: '123456' })
         .expectStatus(201);
+
+      console.log(response['req']);
     });
   });
 });
