@@ -150,6 +150,7 @@ export class QuestsService {
         const achievement = this.achievements.create({ mission, playerId });
         await queryRunner.manager.save(achievement);
       }
+      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.exceptions.cantCompleteQuest();
