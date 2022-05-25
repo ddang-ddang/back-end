@@ -23,6 +23,7 @@ export class CommentRepository extends Repository<Comment> {
     await this.save(newComment);
 
     // return newComment;
+    console.log('newComment', newComment);
     return {
       id: newComment.id,
       comment: newComment.comment,
