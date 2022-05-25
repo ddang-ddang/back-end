@@ -109,26 +109,22 @@ export class QuestsService {
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number, questType: string) {
-    const quest = await this.quests.findOne({
-      where: { id: questId },
-      relations: ['region'],
-    });
+    const [quest, isCompleted] = await Promise.all([
+      this.quests.findOne({ id: questId }),
+      this.completes.findOne({ questId, playerId }),
+    ]);
     if (!quest) this.exceptions.notFoundQuest();
-
-    const player = await Player.findOne({ where: { id: playerId } });
-    if (!player) this.exceptions.notFoundPlayer();
-
-    const isCompleted = await this.completes.findOne({ quest, player });
-    if (isCompleted) return this.exceptions.alreadyCompleted();
+    if (isCompleted) this.exceptions.alreadyCompleted();
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.save(Complete, { quest, player });
+      const complete = this.completes.create({ questId, playerId });
+      await queryRunner.manager.save(complete);
 
-      /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
+      // 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여
       const completes = await getManager()
         .createQueryBuilder(Complete, 'complete')
         .leftJoinAndSelect('complete.quest', 'quest')
@@ -141,23 +137,26 @@ export class QuestsService {
         countFor[complete.quest.type] =
           (countFor[complete.quest.type] || 0) + 1;
       });
-      const setGoals = countFor[questType];
+      const goals = countFor[questType];
 
       // 해당하는 미션 찾아서 업적 추가
       const mission = await this.missions.findOne({
         where: {
-          setGoals,
+          setGoals: goals,
           type: `${questType}`,
         },
       });
-      if (mission)
-        await queryRunner.manager.save(Achievement, { mission, player });
+      if (mission) {
+        const achievement = this.achievements.create({ mission, playerId });
+        await queryRunner.manager.save(achievement);
+      }
+      await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.exceptions.cantCompleteQuest();
     } finally {
       await queryRunner.release();
     }
-
     return { ok: true };
   }
 
@@ -171,9 +170,11 @@ export class QuestsService {
   async getAll(lat: number, lng: number, playerId?: number) {
     let allQuests;
 
+    console.log("wlekjflkwjeflkwjekfjwkejfwef")
     console.time('getAll');
     console.time('카카오API - getAddressName');
     const kakaoAddress = await this.getAddressName(lat, lng);
+    console.log("+-------------------------------")
     console.timeEnd('카카오API - getAddressName');
     if (!kakaoAddress) this.exceptions.notFoundKakaoAddress();
 
@@ -238,6 +239,7 @@ export class QuestsService {
       ]);
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.exceptions.cantGetQuests();
     } finally {
       await queryRunner.release();
     }
@@ -260,14 +262,20 @@ export class QuestsService {
    */
   async getAddressName(lat, lng) {
     try {
+      console.log('here?');
       const res = await axios.get(
         `${process.env.MAP_KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
         {
           headers: {
+            // Accept: '/',
+            Accept: '*/*',
+            // 'content-type': 'application/json;charset=UTF-8',
+            // 'Access-Control-Allow-Origin': '*',
             Authorization: `KakaoAK ${process.env.MAP_KAKAO_API_KEY}`,
           },
         }
       );
+
       const { address } = res.data.documents[0];
       const regionSi: string = address.region_1depth_name;
       const regionGu: string = address.region_2depth_name;
