@@ -67,18 +67,29 @@ describe('Player E2E test', () => {
 
   afterAll(() => app.close());
 
+  // describe('로그인', () => {
+  //   const dto = { email: 'test@test.com', password: '123456' };
+  //   it('POST 로그인', async () => {
+  //     const response = await request
+  //       .agent(app.getHttpServer())
+  //       .post('/api/players/signin')
+  //       .set('Accept', 'application/json')
+  //       .send(dto)
+  //       .expect('Content-Type', /json/)
+  //       .expect(201);
+  //     console.log(response.body);
+  //     expect(response.body.accessToken).toBeDefined();
+  //   });
+  // });
+
   describe('로그인', () => {
     const dto = { email: 'test@test.com', password: '123456' };
     it('POST 로그인', async () => {
-      const response = await request
-        .agent(app.getHttpServer())
+      return pactum
+        .spec()
         .post('/api/players/signin')
-        .set('Accept', 'application/json')
-        .send(dto)
-        .expect('Content-Type', /json/)
-        .expect(201);
-      console.log(response.body);
-      expect(response.body.accessToken).toBeDefined();
+        .withBody({ email: 'test@test.com', password: '123456' })
+        .expectStatus(201);
     });
   });
 });
