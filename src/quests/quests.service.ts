@@ -264,10 +264,15 @@ export class QuestsService {
         `${process.env.MAP_KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
         {
           headers: {
+            // Accept: '/',
+            // 'content-type': 'application/json;charset=UTF-8',
+            // 'Access-Control-Allow-Origin': '*',
             Authorization: `KakaoAK ${process.env.MAP_KAKAO_API_KEY}`,
           },
         }
       );
+
+
       const { address } = res.data.documents[0];
       const regionSi: string = address.region_1depth_name;
       const regionGu: string = address.region_2depth_name;
