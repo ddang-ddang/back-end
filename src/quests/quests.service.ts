@@ -212,24 +212,35 @@ export class QuestsService {
     const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
     console.timeEnd('createQuests');
 
-    // 지역(동) 데이터 DB에 추가 및 조회
-    region = this.regions.create({
-      date,
-      ...kakaoAddress,
-      totalCount,
-      pageCount,
-    });
-    await this.regions.save(region);
+    const queryRunner = this.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    // 퀘스트 데이터 DB에 추가 및 조회
-    await Promise.all([
-      ...quests.map((quest) => {
-        return this.quests.save({
-          ...quest,
-          region,
-        });
-      }),
-    ]);
+    // region, quest 생성 트랜잭션 처리
+    try {
+      // 지역(동) 데이터 DB에 추가 및 조회
+      region = this.regions.create({
+        date,
+        ...kakaoAddress,
+        totalCount,
+        pageCount,
+      });
+      await this.regions.save(region);
+
+      // 퀘스트 데이터 DB에 추가 및 조회
+      await Promise.all([
+        ...quests.map((quest) => {
+          return this.quests.save({
+            ...quest,
+            region,
+          });
+        }),
+      ]);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+    } finally {
+      await queryRunner.release();
+    }
 
     const { regionSi, regionGu, regionDong } = region;
     allQuests = await this.quests.findAllWithCompletes(region, playerId);
