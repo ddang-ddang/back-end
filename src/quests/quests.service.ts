@@ -109,16 +109,11 @@ export class QuestsService {
 
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(questId: number, playerId: number, questType: string) {
-    const quest = await this.quests.findOne({
-      where: { id: questId },
-      relations: ['region'],
-    });
+    const [quest, isCompleted] = await Promise.all([
+      this.quests.findOne({ id: questId }),
+      this.completes.findOne({ questId, playerId }),
+    ]);
     if (!quest) this.exceptions.notFoundQuest();
-
-    const player = await Player.findOne({ where: { id: playerId } });
-    if (!player) this.exceptions.notFoundPlayer();
-
-    const isCompleted = await this.completes.findOne({ quest, player });
     if (isCompleted) this.exceptions.alreadyCompleted();
 
     const queryRunner = this.connection.createQueryRunner();
@@ -126,9 +121,10 @@ export class QuestsService {
     await queryRunner.startTransaction();
 
     try {
-      await queryRunner.manager.save(Complete, { quest, player });
+      const complete = this.completes.create({ questId, playerId });
+      await queryRunner.manager.save(complete);
 
-      /* 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여 */
+      // 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여
       const completes = await getManager()
         .createQueryBuilder(Complete, 'complete')
         .leftJoinAndSelect('complete.quest', 'quest')
@@ -141,17 +137,19 @@ export class QuestsService {
         countFor[complete.quest.type] =
           (countFor[complete.quest.type] || 0) + 1;
       });
-      const setGoals = countFor[questType];
+      const goals = countFor[questType];
 
       // 해당하는 미션 찾아서 업적 추가
       const mission = await this.missions.findOne({
         where: {
-          setGoals,
+          setGoals: goals,
           type: `${questType}`,
         },
       });
-      if (mission)
-        await queryRunner.manager.save(Achievement, { mission, player });
+      if (mission) {
+        const achievement = this.achievements.create({ mission, playerId });
+        await queryRunner.manager.save(achievement);
+      }
     } catch (error) {
       await queryRunner.rollbackTransaction();
       this.exceptions.cantCompleteQuest();
