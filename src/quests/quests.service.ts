@@ -119,7 +119,7 @@ export class QuestsService {
     if (!player) this.exceptions.notFoundPlayer();
 
     const isCompleted = await this.completes.findOne({ quest, player });
-    if (isCompleted) return this.exceptions.alreadyCompleted();
+    if (isCompleted) this.exceptions.alreadyCompleted();
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
@@ -154,10 +154,10 @@ export class QuestsService {
         await queryRunner.manager.save(Achievement, { mission, player });
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.exceptions.cantCompleteQuest();
     } finally {
       await queryRunner.release();
     }
-
     return { ok: true };
   }
 
@@ -238,6 +238,7 @@ export class QuestsService {
       ]);
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      this.exceptions.cantGetQuests();
     } finally {
       await queryRunner.release();
     }
