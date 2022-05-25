@@ -1,6 +1,7 @@
 import { Player } from 'src/players/entities/player.entity';
 import {
   BaseEntity,
+  Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
@@ -18,6 +19,12 @@ export class Achievement extends BaseEntity {
   @ManyToOne((type) => Player, (player) => player.achievements)
   player: Player;
 
+  @Column()
+  playerId: number;
+
   @ManyToOne((type) => Mission, (mission) => mission.achievements)
   mission: Mission;
+
+  @Column()
+  missionId: number;
 }

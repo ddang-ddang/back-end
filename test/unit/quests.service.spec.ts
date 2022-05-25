@@ -1,12 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Connection, Repository } from 'typeorm';
 import { QuestsService } from 'src/quests/quests.service';
 import { QuestRepository } from 'src/quests/repositories/quest.repository';
-import { Repository } from 'typeorm';
 import { Complete } from 'src/quests/entities/complete.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { Region } from 'src/quests/entities/region.entity';
 import { FeedRepository } from 'src/feeds/feeds.repository';
+import { Achievement } from '../../src/players/entities/achievement.entity';
+import { Mission } from '../../src/players/entities/mission.entity';
+import { QuestsException } from '../../src/quests/quests.exception';
 
 const mockRepository = () => ({
   create: jest.fn(),
@@ -25,6 +28,10 @@ const mockFeedRepository = {
   findOneBy: jest.fn(),
   findOneWithCompletes: jest.fn(),
 };
+const mockException = {
+  notFoundQuest: jest.fn(),
+};
+const mockConnection = {};
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 type MockQuestRepository = Partial<Record<keyof QuestRepository, jest.Mock>>;
@@ -34,8 +41,11 @@ describe('QuestsService', () => {
   let playersRepository: MockRepository<Player>;
   let completeRepository: MockRepository<Complete>;
   let regionRepository: MockRepository<Region>;
+  let achievementRepository: MockRepository<Achievement>;
+  let missionRepository: MockRepository<Mission>;
   let questsRepository: MockQuestRepository;
   let feedRepository;
+  let questsException;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -56,12 +66,28 @@ describe('QuestsService', () => {
           useValue: mockRepository(),
         },
         {
+          provide: getRepositoryToken(Achievement),
+          useValue: mockRepository(),
+        },
+        {
+          provide: getRepositoryToken(Mission),
+          useValue: mockRepository(),
+        },
+        {
           provide: QuestRepository,
           useValue: mockQuestsRepository,
         },
         {
           provide: FeedRepository,
           useValue: mockFeedRepository,
+        },
+        {
+          provide: QuestsException,
+          useValue: mockException,
+        },
+        {
+          provide: Connection,
+          useValue: mockConnection,
         },
       ],
     }).compile();
@@ -70,8 +96,11 @@ describe('QuestsService', () => {
     playersRepository = module.get(getRepositoryToken(Player));
     completeRepository = module.get(getRepositoryToken(Complete));
     regionRepository = module.get(getRepositoryToken(Region));
+    achievementRepository = module.get(getRepositoryToken(Achievement));
+    missionRepository = module.get(getRepositoryToken(Mission));
     questsRepository = module.get(QuestRepository);
     feedRepository = module.get(FeedRepository);
+    questsException = module.get(QuestsException);
   });
 
   it('should be defined', () => {
@@ -92,8 +121,12 @@ describe('QuestsService', () => {
     const playerId = 1;
 
     it('should fail if quest does not exist', async () => {
+      // 테스트 코드를 작성하면서 코드를 정리하게 되었다.
+      // 하지만...
       questsRepository.findOne.mockResolvedValue(undefined);
+
       const result = await service.questComplete(questId, playerId, '1');
+      expect(questsException.notFoundQuest()).toBeCalled();
 
       expect(result).toEqual({
         ok: false,

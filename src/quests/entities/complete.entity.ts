@@ -1,5 +1,6 @@
 import {
   BaseEntity,
+  Column,
   CreateDateColumn,
   Entity,
   ManyToOne,
@@ -19,6 +20,12 @@ export class Complete extends BaseEntity {
   @ManyToOne(() => Quest, (quest) => quest.completes)
   quest: Quest;
 
+  @Column()
+  questId: number;
+
   @ManyToOne(() => Player, (player) => player.completes)
   player: Player;
+
+  @Column()
+  playerId: number;
 }
