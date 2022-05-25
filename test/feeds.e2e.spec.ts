@@ -7,11 +7,13 @@ import { Repository } from 'typeorm';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { FeedsModule } from 'src/feeds/feeds.module';
 import * as dotenv from 'dotenv';
+import { FeedRepository } from 'src/feeds/feeds.repository';
 dotenv.config();
 
 describe('FeedsController E2E test', () => {
   let app: INestApplication;
   let repository: Repository<Feed>;
+  const mockFeedsRepository = {};
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -29,8 +31,8 @@ describe('FeedsController E2E test', () => {
         }),
       ],
     })
-      .overrideProvider(getRepositoryToken(PlayerRepository))
-      .useValue(mockPlayersRepository)
+      .overrideProvider(getRepositoryToken(FeedRepository))
+      .useValue(mockFeedsRepository)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -50,12 +52,13 @@ describe('FeedsController E2E test', () => {
         transform: true,
       })
     );
-    repository = moduleFixture.get('PlayerRepository');
+    repository = moduleFixture.get('FeedRepository');
     await app.init();
   });
 
   it('피드 조회', () => {
-    return request(app.getHttpServer())
+    return request
+      .agent(app.getHttpServer())
       .post('/api/feeds?type=distance')
       .send({
         regionSi: '서울시',

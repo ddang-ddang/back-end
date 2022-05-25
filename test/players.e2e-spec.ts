@@ -7,17 +7,25 @@ import { PlayerRepository } from 'src/players/players.repository';
 import { Player } from 'src/players/entities/player.entity';
 import { Repository } from 'typeorm';
 import * as dotenv from 'dotenv';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import * as pactum from 'pactum';
 dotenv.config();
 
-describe('FeedsController E2E test', () => {
+describe('Player E2E test', () => {
   let app: INestApplication;
   let repository: Repository<Player>;
-  const mockPlayersRepository = {};
+  // const mockPlayersRepository = {};
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         PlayersModule,
+        PassportModule.register({ defaultStrategy: 'local' }),
+        JwtModule.register({
+          secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+          signOptions: { expiresIn: process.env.JWT_ACCESS_TOKEN_EXP },
+        }),
         TypeOrmModule.forRoot({
           type: 'mysql',
           host: process.env.DB_HOST,
@@ -25,13 +33,14 @@ describe('FeedsController E2E test', () => {
           port: parseInt(process.env.DB_PORT),
           username: process.env.DB_USERNAME,
           database: process.env.DB_DATABASE,
+          // entities: ['../../dist/src/**/entities/*.entity.ts'],
           entities: ['./**/*.entity.ts'],
           synchronize: false,
         }),
       ],
     })
-      .overrideProvider(getRepositoryToken(PlayerRepository))
-      .useValue(mockPlayersRepository)
+      // .overrideProvider(getRepositoryToken(PlayerRepository))
+      // .useValue(mockPlayersRepository)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -53,43 +62,23 @@ describe('FeedsController E2E test', () => {
     );
     repository = moduleFixture.get('PlayerRepository');
     await app.init();
+    pactum.request.setBaseUrl('http://localhost:3000');
   });
 
-  it('POST 로그인', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/players/signin')
-      .set('Accept', 'application/json')
-      .send({ email: 'test@test.com', password: '123456' })
-      .expect('Content-Type', /json/)
-      .expect(201);
+  afterAll(() => app.close());
 
-    console.log(response.body);
-    // expect(response.body.accessToken).toBeDefined();
+  describe('로그인', () => {
+    const dto = { email: 'test@test.com', password: '123456' };
+    it('POST 로그인', async () => {
+      const response = await request
+        .agent(app.getHttpServer())
+        .post('/api/players/signin')
+        .set('Accept', 'application/json')
+        .send(dto)
+        .expect('Content-Type', /json/)
+        .expect(201);
+      console.log(response.body);
+      expect(response.body.accessToken).toBeDefined();
+    });
   });
-
-  // it('피드 조회', () => {
-  //   return request(app.getHttpServer())
-  //     .post('/api/feeds?type=distance')
-  //     .send({
-  //       regionSi: '서울시',
-  //       regionGu: '강남구',
-  //       regionDong: '삼성동',
-  //       lat: 36.233233,
-  //       lng: 127.342342,
-  //     })
-  //     .expect(200);
-  // });
-
-  // describe('Authentication', () => {
-  //   const URL = '/api/players/signin';
-  //   it('should login', () => {
-  //     return request(app.getHttpServer())
-  //       .post(URL)
-  //       .send({
-  //         email: 'test@test.com',
-  //         password: '123456',
-  //       })
-  //       .expect(201);
-  //   });
-  // });
 });
