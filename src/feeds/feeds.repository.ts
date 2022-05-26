@@ -21,7 +21,7 @@ export class FeedRepository extends Repository<Feed> {
     playerId: number,
     img: string[],
     feedText: string
-  ): Promise<Feed> {
+  ) {
     const [quest, player] = await Promise.all([
       Quest.findOne({
         where: {
@@ -37,10 +37,11 @@ export class FeedRepository extends Repository<Feed> {
     ]);
 
     if (quest.type !== 'feed') {
-      throw new BadRequestException({
-        ok: false,
-        message: 'feed타입의 퀘스트가 아닙니다.',
-      });
+      // throw new BadRequestException({
+      //   ok: false,
+      //   message: 'feed타입의 퀘스트가 아닙니다.',
+      // });
+      return 'feedNotMatch';
     }
 
     const region = await Region.findOne({

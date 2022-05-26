@@ -103,6 +103,11 @@ export class QuestsService {
       img,
       content
     );
+
+    if (newFeed === 'feedNotMatch') {
+      this.exceptions.FeedNotMatch();
+    }
+
     // const countFeedType = await this.createAchievement(playerId, questType);
     await this.createAchievement(playerId, questType);
     return newFeed;
