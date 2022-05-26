@@ -32,14 +32,14 @@ export class FeedRepository extends Repository<Feed> {
         image2_url: img[1],
         image3_url: img[2],
         playerId,
-        quest,
+        questId,
         region,
       });
     } else {
       newContent = this.create({
         content: feedText,
         playerId,
-        quest,
+        questId,
         region,
       });
     }
@@ -49,13 +49,7 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 피드 수정 */
-  async updateFeed(
-    playerId: number,
-    feedId: number,
-    img: string[],
-    content: string
-  ) {
-    console.log(playerId, feedId, img, content);
+  async updateFeed(feedId: number, img: string[], content: string) {
     return this.update(
       { id: feedId },
       {
@@ -73,7 +67,6 @@ export class FeedRepository extends Repository<Feed> {
     feedId: number,
     feed: Feed
   ): Promise<void> {
-    const player = await Player.findOne({ where: { id: playerId } });
     const quest = await Quest.findOne({
       where: {
         id: feed.quest.id,
@@ -81,7 +74,7 @@ export class FeedRepository extends Repository<Feed> {
     });
     await this.update({ id: feedId }, { deletedAt: new Date() });
     // complete 테이블 데이터 삭제
-    await Complete.delete({ player, quest }); // player quest
+    await Complete.delete({ playerId, quest }); // player quest
     return;
   }
 }

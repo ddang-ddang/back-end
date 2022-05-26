@@ -1,9 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
 import { PlayersModule } from 'src/players/players.module';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
-import { PlayerRepository } from 'src/players/players.repository';
 import { Player } from 'src/players/entities/player.entity';
 import { Repository } from 'typeorm';
 import * as dotenv from 'dotenv';

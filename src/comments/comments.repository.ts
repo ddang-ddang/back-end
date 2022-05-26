@@ -7,7 +7,7 @@ import { Player } from 'src/players/entities/player.entity';
 @EntityRepository(Comment)
 export class CommentRepository extends Repository<Comment> {
   /* 댓글 업로드 퀘스트 수행 */
-  async createComment(playerId: number, feed: Feed, comment: string) {
+  async createComment(playerId: number, feedId: number, comment: string) {
     const player = await Player.findOne({
       where: {
         id: playerId,
@@ -16,13 +16,11 @@ export class CommentRepository extends Repository<Comment> {
 
     const newComment = this.create({
       comment,
-      feed,
+      feedId,
       player,
     });
     await this.save(newComment);
 
-    // return newComment;
-    console.log('newComment', newComment);
     return {
       id: newComment.id,
       comment: newComment.comment,
@@ -45,13 +43,9 @@ export class CommentRepository extends Repository<Comment> {
     updateCommentDto: UpdateCommentDto
   ) {
     const { comment } = updateCommentDto;
-    return this.update(
-      { id: commentId },
-      {
-        comment,
-      }
-    );
+    return this.update({ id: commentId }, { comment });
   }
+
   /* 댓글 삭제 */
   async deleteComment(commentId: number) {
     await this.update({ id: commentId }, { deletedAt: new Date() });
