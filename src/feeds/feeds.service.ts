@@ -84,13 +84,13 @@ export class FeedsService {
         'player.mbti',
         'player.profileImg',
         'player.level',
-        'player.exp',
+        'player.expPoints',
         'commentWriter.email',
         'commentWriter.nickname',
         'commentWriter.mbti',
         'commentWriter.profileImg',
         'commentWriter.level',
-        'commentWriter.exp',
+        'commentWriter.expPoints',
       ])
       .where({ deletedAt: null })
       .leftJoinAndSelect('feed.quest', 'quest')
@@ -157,12 +157,7 @@ export class FeedsService {
     const match = await this.matchPlayerFeed(playerId, feed);
     if (feed) {
       if (match) {
-        return this.feedRepository.updateFeed(
-          playerId,
-          feedId,
-          img,
-          feedContent
-        );
+        return this.feedRepository.updateFeed(feedId, img, feedContent);
       }
       this.feedException.CannotEditFeed();
     }

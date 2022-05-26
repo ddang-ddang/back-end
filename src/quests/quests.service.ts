@@ -112,7 +112,6 @@ export class QuestsService {
     const feedsRepository =
       queryRunner.manager.getCustomRepository(FeedRepository);
     await queryRunner.startTransaction();
-
     try {
       if (questType === 'feed') {
         const { img, content } = createFeedDto;
@@ -144,7 +143,6 @@ export class QuestsService {
       });
       /* 플레이어 업적 부여 로직 */
       // 1. 현재 수행한 타입의 완료 횟수 조회
-      console.log(playerId, questType);
       const countCompletes = await getManager()
         .createQueryBuilder(Complete, 'complete')
         .select(['quest.type', 'count(quest.type) as cnt'])
