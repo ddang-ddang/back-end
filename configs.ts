@@ -14,7 +14,7 @@ export const typeORMConfig: TypeOrmModuleOptions = {
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
   entities: ['dist/**/*.entity.js'],
-  synchronize: false,
+  synchronize: true,
 };
 
 export const jwtConfig = {
