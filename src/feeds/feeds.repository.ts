@@ -47,6 +47,24 @@ export class FeedRepository extends Repository<Feed> {
     return newContent;
   }
 
+  /* 내가 쓴 피드 가져오기 */
+  async getMyFeeds(playerId: number) {
+    const feeds = await this.createQueryBuilder('feed')
+      .select([
+        'feed',
+        'player.id',
+        'player.email',
+        'player.nickname',
+        'player.mbti',
+        'player.profileImg',
+        'player.level',
+        'player.expPoints',
+      ])
+      .leftJoin('feed.player', 'player')
+      .getMany();
+    return feeds;
+  }
+
   /* 피드 수정 */
   async updateFeed(feedId: number, img: string[], content: string) {
     return this.update(

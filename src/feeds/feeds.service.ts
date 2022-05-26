@@ -123,6 +123,12 @@ export class FeedsService {
     });
   }
 
+  /* 내가 작성한 피드 가져오기 */
+  async getMyFeeds(playerId: number) {
+    const feeds = this.feedRepository.getMyFeeds(playerId);
+    return feeds;
+  }
+
   /* 특정 피드 가저오기 */
   async findOneFeed(feedId: number): Promise<Feed> {
     console.log(feedId);
