@@ -17,14 +17,21 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
+  //jwt 토큰에서 가져온거를 풀어서 보여준다.
   async validate(payload: any) {
     console.log(payload);
+
     return {
       ok: true,
       player: {
         playerId: payload.id,
         email: payload.email,
         nickname: payload.nickname,
+        mbti: payload.mbti,
+        profileImg: payload.profileImg,
+        expPoints: payload.expPoints,
+        points: payload.points,
+        level: payload.level,
       },
     };
   }
