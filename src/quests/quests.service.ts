@@ -35,68 +35,10 @@ export class QuestsService {
 
   private readonly logger = new Logger(QuestsService.name);
 
-  /* 플레이어 업적 부여 로직 */
-  async createAchievement(playerId: number, questType: string) {
-    /* 완료한 퀘스트 종류별 count */
-    const countFeedType = await Complete.createQueryBuilder('complete')
-      .select(['quest.type', 'count(quest.type) as cnt'])
-      .leftJoin('complete.quest', 'quest')
-      .where('complete.playerId = :playerId and quest.type = :questType', {
-        playerId,
-        questType,
-      })
-      .groupBy('quest.type')
-      .getRawOne();
-
-    const player = await this.players.findOne({ id: playerId });
-
-    let added = false;
-
-    /* mission list */
-    const missionList = await this.missions.find({
-      where: { type: questType },
-    });
-
-    /* 현재 사용자가 성공한 achievement list */
-    const achievementList = await this.achievements.find({
-      where: { player },
-    });
-
-    const userAchievement = [];
-    missionList.forEach((eachMission) => {
-      if (+countFeedType.cnt >= eachMission.setGoals) {
-        // achievements에 없는 mission의 경우 insert
-        userAchievement.push(eachMission);
-      }
-    });
-
-    userAchievement.map(async (achievement) => {
-      const mission = await this.missions.findOne({ id: achievement.id });
-
-      const search = await this.achievements.find({
-        where: {
-          mission,
-          player,
-        },
-      });
-
-      if (search.length === 0) {
-        const newAchieve = await this.achievements.insert({ mission, player });
-        console.log(newAchieve);
-        if (newAchieve.raw['affectedRows'] > 0) {
-          added = true;
-        }
-      }
-    });
-
-    return { countFeedType, missionList, userAchievement, added };
-  }
-
   /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
   async questComplete(
     questId: number,
     playerId: number,
-    questType: string,
     createFeedDto?: CreateFeedDto
   ) {
     const [quest, isCompleted] = await Promise.all([
@@ -106,6 +48,8 @@ export class QuestsService {
     if (!quest) this.exceptions.notFoundQuest();
     if (isCompleted) this.exceptions.alreadyCompleted();
 
+    const questType = quest.type;
+
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
 
@@ -113,10 +57,13 @@ export class QuestsService {
       queryRunner.manager.getCustomRepository(FeedRepository);
     await queryRunner.startTransaction();
 
+    if (questType === 'feed' && !createFeedDto.content)
+      this.exceptions.missingContent();
+
     try {
       if (questType === 'feed') {
-        const { img, content } = createFeedDto;
-        await feedsRepository.feedQuest(questId, playerId, img, content);
+        const { content, img } = createFeedDto;
+        await feedsRepository.feedQuest(questId, playerId, content, img);
       }
       const complete = this.completes.create({ questId, playerId });
       await queryRunner.manager.save(complete);
@@ -160,10 +107,11 @@ export class QuestsService {
       // 2. 해당하는 미션 찾아서 업적 추가
       const mission = await this.missions.findOne({
         where: {
-          setGoals: countCompletes.cnt + 1,
-          type: `${questType}`,
+          setGoals: countCompletes ? +countCompletes.cnt + 1 : 1,
+          type: questType,
         },
       });
+      console.log(mission);
       if (mission) {
         const achievement = this.achievements.create({ mission, playerId });
         await queryRunner.manager.save(achievement);
