@@ -81,15 +81,9 @@ export class QuestsController {
   async questComplete(
     @Req() req: Request,
     @Param('questId') id: number,
-    @Query('type') questType: string,
     @Body() createFeedDto: CreateFeedDto
   ) {
     const { playerId } = req['user'].player;
-    return this.questsService.questComplete(
-      id,
-      playerId,
-      questType,
-      createFeedDto
-    );
+    return this.questsService.questComplete(id, playerId, createFeedDto);
   }
 }
