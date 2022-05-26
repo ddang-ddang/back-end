@@ -38,6 +38,16 @@ export class FeedException {
     });
   }
 
+  // 퀘스트 타입 오류
+  FeedNotMatch() {
+    throw new BadRequestException({
+      statusCode: HttpStatus.BAD_REQUEST,
+      ok: false,
+      message: 'feed타입의 퀘스트가 아닙니다.',
+      error: 'Bad Request',
+    });
+  }
+
   // DB 트랜젝션 오류
   Transaction() {
     throw new InternalServerErrorException({

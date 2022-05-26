@@ -2,28 +2,24 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from 'src/app.module';
+import { Player } from 'src/players/entities/player.entity';
 
-describe('commentsController E2E test', () => {
+describe('AppController (e2e)', () => {
   let app: INestApplication;
 
-  const playerId = 10;
-
-  beforeAll(async () => {
+  beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api');
     await app.init();
   });
 
-  it('should create a new comment', () => {
+  it('/ (GET)', () => {
     return request(app.getHttpServer())
-      .post('/api/feeds/2/comments')
-      .send({
-        comment: 'e2e test comment',
-      })
-      .expect(201);
+      .get('/')
+      .expect(200)
+      .expect('Hello World!');
   });
 });

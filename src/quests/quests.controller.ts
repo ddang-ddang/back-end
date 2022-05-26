@@ -85,7 +85,6 @@ export class QuestsController {
     @Body() createFeedDto: CreateFeedDto
   ) {
     const { playerId } = req['user'].player;
-    console.log(req['user']);
     if (questType === 'feed') {
       return this.questsService.feedQuest(
         id,

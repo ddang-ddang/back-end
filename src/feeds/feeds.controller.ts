@@ -26,13 +26,19 @@ export class FeedsController {
   constructor(private readonly feedsService: FeedsService) {}
 
   /* 모든 피드에 대한 정보 */
-  @Post() // 여기에 AuthGuard넣으면 안될 듯
+  // @Post() // 여기에 AuthGuard넣으면 안될 듯
+  @Get()
   @ApiOperation({ summary: '주변 피드 조회 API' })
   // async findAllFeeds(@Body() playerId: number) {
   async findAllFeeds(
     @Request() req: any,
-    @Body() regionData: any,
-    @Query('type') feedType: string
+    // @Body() regionData: any,
+    @Query('type') feedType: string,
+    @Query('regionSi') regionSi: string,
+    @Query('regionGu') regionGu: string,
+    @Query('regionDong') regionDong: string,
+    @Query('lat') lat: number,
+    @Query('lng') lng: number
   ) {
     try {
       /* token 검사 */
@@ -49,12 +55,15 @@ export class FeedsController {
       }
       const newFeeds = [];
       let sortedFeeds;
-      const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
-
-      const { lat, lng } = regionData;
-
+      // const feeds = await this.feedsService.findAllFeeds(playerId, regionData);
+      const feeds = await this.feedsService.findAllFeeds(
+        playerId,
+        regionSi,
+        regionGu,
+        regionDong
+      );
+      // const { lat, lng } = regionData;
       for (let i = 0; i < feeds.length; i++) {
-        // newFeeds = { ...feeds[i], ...dist[i] };
         const dist = await this.feedsService.measureDist(
           lat,
           lng,
@@ -62,9 +71,7 @@ export class FeedsController {
           feeds[i].quest.lng
         );
 
-        console.log(dist);
-        // newFeeds = [ {...feeds[i]}, dist: Number(dist) ];
-        newFeeds.push({ ...feeds[i], dist: dist });
+        newFeeds.push({ ...feeds[i], dist });
       }
       if (feedType === 'popularity') {
         sortedFeeds = newFeeds.sort((a, b) => b.likeCnt - a.likeCnt);

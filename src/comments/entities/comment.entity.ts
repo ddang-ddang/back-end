@@ -31,6 +31,12 @@ export class Comment extends BaseEntity {
   @ManyToOne((type) => Feed, (feed) => feed.comments)
   feed: Feed;
 
+  @Column()
+  feedId: number;
+
   @ManyToOne((type) => Player, (player) => player.comments)
   player: Player;
+
+  @Column()
+  playerId: number;
 }
