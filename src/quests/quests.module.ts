@@ -11,6 +11,7 @@ import { QuestsController } from './quests.controller';
 import { QuestRepository } from './repositories/quest.repository';
 import { PlayerRepository } from '../players/players.repository';
 import { QuestsException } from './quests.exception';
+import { Player } from '../players/entities/player.entity';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { QuestsException } from './quests.exception';
       Notif,
       Achievement,
       Mission,
+      Player,
       QuestRepository,
       FeedRepository,
       PlayerRepository,
