@@ -78,6 +78,12 @@ export class Player extends BaseEntity {
   })
   exp: number;
 
+  @IsEmpty()
+  @Column({
+    default: 0,
+  })
+  points: number;
+
   /* 플레이어 프로바이더 (local, kakao, google) */
   @IsEmpty()
   @Column({

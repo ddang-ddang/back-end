@@ -5,9 +5,14 @@ import { CreateQuestDto } from 'src/quests/dto/create-quest.dto';
 import { Quest } from 'src/quests/entities/quest.entity';
 import { Player } from 'src/players/entities/player.entity';
 import { Complete } from 'src/quests/entities/complete.entity';
-import { ConflictException, ConsoleLogger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ConsoleLogger,
+  Injectable,
+} from '@nestjs/common';
 import { Region } from 'src/quests/entities/region.entity';
-
+import { FeedException } from './feeds.exception';
 @EntityRepository(Feed)
 export class FeedRepository extends Repository<Feed> {
   /* 피드 업로드 퀘스트 수행 */
@@ -30,6 +35,13 @@ export class FeedRepository extends Repository<Feed> {
         },
       }),
     ]);
+
+    if (quest.type !== 'feed') {
+      throw new BadRequestException({
+        ok: false,
+        message: 'feed타입의 퀘스트가 아닙니다.',
+      });
+    }
 
     const region = await Region.findOne({
       where: {
