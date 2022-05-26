@@ -50,21 +50,21 @@ export class AuthService {
   // jwt로 생성한 토큰은 (id, email, nickname)를 담고 있다.
   async signin(email: string, nickname: string, id: number): Promise<any> {
     try {
-      const getUserData = await this.playersRepository.findByEmail({
-        email: email,
-      });
-      const { mbti, profileImg, expPoints, points, level } = getUserData;
-      console.log(getUserData);
+      // const getUserData = await this.playersRepository.findByEmail({
+      //   email: email,
+      // });
+      // const { mbti, profileImg, expPoints, points, level } = getUserData;
+      // console.log(getUserData);
 
       const payload = {
         email,
         nickname,
         id,
-        mbti,
-        profileImg,
-        level,
-        expPoints,
-        points,
+        // mbti,
+        // profileImg,
+        // level,
+        // expPoints,
+        // points,
       };
 
       // 리프레쉬 토큰생성
@@ -202,6 +202,28 @@ export class AuthService {
     try {
       const result = await this.playersRepository.checkById(id);
       return result;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async additionalInfo(email: string) {
+    try {
+      // const result = await this.playersRepository.findByEmail({email:email});
+      const getUserData = await this.playersRepository.findByEmail({
+        email: email,
+      });
+      const { mbti, profileImg, expPoints, points, level } = getUserData;
+
+      const payload = {
+        mbti,
+        profileImg,
+        level,
+        expPoints,
+        points,
+      };
+
+      return payload;
     } catch (err) {
       console.log(err.message);
     }

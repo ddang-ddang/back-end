@@ -27,11 +27,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         playerId: payload.id,
         email: payload.email,
         nickname: payload.nickname,
-        mbti: payload.mbti,
-        profileImg: payload.profileImg,
-        expPoints: payload.expPoints,
-        points: payload.points,
-        level: payload.level,
+        // mbti: payload.mbti,
+        // profileImg: payload.profileImg,
+        // expPoints: payload.expPoints,
+        // points: payload.points,
+        // level: payload.level,
       },
     };
   }
