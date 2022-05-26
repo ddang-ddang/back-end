@@ -10,7 +10,6 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  RelationId,
   UpdateDateColumn,
 } from 'typeorm';
 import { Player } from 'src/players/entities/player.entity';
@@ -51,6 +50,9 @@ export class Feed extends BaseEntity {
 
   @ManyToOne((type) => Player, (player) => player.feeds)
   player: Player;
+
+  @Column()
+  playerId: number;
 
   @ManyToOne((type) => Quest, (quest) => quest.feeds)
   quest: Quest;
