@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Header, INestApplication, ValidationPipe } from '@nestjs/common';
 import { PlayersModule } from 'src/players/players.module';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { Player } from 'src/players/entities/player.entity';
@@ -9,6 +9,18 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import * as pactum from 'pactum';
 dotenv.config();
+
+const userList = {
+  user1: {
+    email: 'test@test.com',
+    password: 'Abcd1234',
+  },
+
+  user2: {
+    email: 'aaaaa',
+    password: 'bbbbb',
+  },
+};
 
 describe('Player E2E test', () => {
   let app: INestApplication;
@@ -65,30 +77,22 @@ describe('Player E2E test', () => {
 
   afterAll(() => app.close());
 
-  // describe('로그인', () => {
-  //   const dto = { email: 'test@test.com', password: '123456' };
-  //   it('POST 로그인', async () => {
-  //     const response = await request
-  //       .agent(app.getHttpServer())
-  //       .post('/api/players/signin')
-  //       .set('Accept', 'application/json')
-  //       .send(dto)
-  //       .expect('Content-Type', /json/)
-  //       .expect(201);
-  //     console.log(response.body);
-  //     expect(response.body.accessToken).toBeDefined();
-  //   });
-  // });
-
   describe('로그인', () => {
-    it('POST 로그인', async () => {
-      const response = await pactum
+    it('POST 로그인 성공', async () => {
+      await pactum
         .spec()
         .post('/api/players/signin')
-        .withBody({ email: 'test@test.com', password: '123456' })
+        // .withBody({ email: 'test@test.com', password: 'Abcd1234' })
+        .withBody(userList.user1)
         .expectStatus(201);
+    });
 
-      // console.log(response['req']);
+    it('POST 로그인 실패', async () => {
+      await pactum
+        .spec()
+        .post('/api/players/signin')
+        .withBody(userList.user2)
+        .expectStatus(401);
     });
   });
 });

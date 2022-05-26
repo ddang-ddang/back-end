@@ -1,18 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateFeedDto } from './dto/create-feed.dto';
-import { UpdateFeedDto } from './dto/update-feed.dto';
 import { Feed } from './entities/feed.entity';
 import { FeedRepository } from './feeds.repository';
-import { Likes } from '../likes/entities/like.entity';
 import { LikeRepository } from 'src/likes/likes.repository';
 import { CommentRepository } from 'src/comments/comments.repository';
-import { Region } from 'src/quests/entities/region.entity';
-import { Quest } from 'src/quests/entities/quest.entity';
 import { FeedException } from './feeds.exception';
 
 @Injectable()

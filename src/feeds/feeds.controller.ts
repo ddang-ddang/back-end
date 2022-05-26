@@ -25,30 +25,7 @@ export class FeedsController {
   private logger = new Logger('FeedController');
   constructor(private readonly feedsService: FeedsService) {}
 
-  /* 내가 작성한 피드에 대한 정보 */
-  @Get()
-  @ApiOperation({ summary: '내가 작성한 피드 조회 API' })
-  @UseGuards(JwtAuthGuard)
-  async getMyFeeds(@Req() req: Request) {
-    const { playerId } = req['user'].player;
-    this.logger.verbose(`trying to get own feeds player ${playerId}`);
-    try {
-      console.log('plid', playerId);
-      const feeds = await this.feedsService.getMyFeeds(playerId);
-      return {
-        ok: true,
-        rows: feeds,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        message: error.message,
-      };
-    }
-  }
-
   /* 모든 피드에 대한 정보 */
-  // @Post() // 여기에 AuthGuard넣으면 안될 듯
   @Get()
   @ApiOperation({ summary: '주변 피드 조회 API' })
   // async findAllFeeds(@Body() playerId: number) {
@@ -84,7 +61,6 @@ export class FeedsController {
         regionGu,
         regionDong
       );
-      // const { lat, lng } = regionData;
       for (let i = 0; i < feeds.length; i++) {
         const dist = await this.feedsService.measureDist(
           lat,
@@ -105,6 +81,27 @@ export class FeedsController {
       return {
         ok: true,
         rows: sortedFeeds,
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
+  }
+
+  /* 내가 작성한 피드에 대한 정보 */
+  @Get('/myfeed')
+  @ApiOperation({ summary: '내가 작성한 피드 조회 API' })
+  @UseGuards(JwtAuthGuard)
+  async getMyFeeds(@Req() req: Request) {
+    const { playerId } = req['user'].player;
+    this.logger.verbose(`trying to get own feeds player ${playerId}`);
+    try {
+      const feeds = await this.feedsService.getMyFeeds(playerId);
+      return {
+        ok: true,
+        rows: feeds,
       };
     } catch (error) {
       return {

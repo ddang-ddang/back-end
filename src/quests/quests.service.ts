@@ -487,7 +487,7 @@ export class QuestsService {
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
     const yesterdayDate = yesterday.toDateString();
-    let regions = await this.regions.find({ date: yesterdayDate });
+    const regions = await this.regions.find({ date: yesterdayDate });
 
     for (const region of regions) {
       const { regionSi, regionGu, regionDong } = region;
@@ -509,7 +509,7 @@ export class QuestsService {
         pageCount,
         kakaoAddress
       );
-      let newRegion = this.regions.create({
+      const newRegion = this.regions.create({
         date: todayDate,
         ...kakaoAddress,
         totalCount,

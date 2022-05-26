@@ -61,6 +61,7 @@ export class FeedRepository extends Repository<Feed> {
         'player.expPoints',
       ])
       .leftJoin('feed.player', 'player')
+      .orderBy('feed.createdAt', 'DESC')
       .getMany();
     return feeds;
   }
