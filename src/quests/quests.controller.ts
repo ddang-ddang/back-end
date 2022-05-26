@@ -85,15 +85,11 @@ export class QuestsController {
     @Body() createFeedDto: CreateFeedDto
   ) {
     const { playerId } = req['user'].player;
-    if (questType === 'feed') {
-      return this.questsService.feedQuest(
-        id,
-        playerId,
-        createFeedDto,
-        questType
-      );
-    } else {
-      return this.questsService.questComplete(id, playerId, questType);
-    }
+    return this.questsService.questComplete(
+      id,
+      playerId,
+      questType,
+      createFeedDto
+    );
   }
 }
