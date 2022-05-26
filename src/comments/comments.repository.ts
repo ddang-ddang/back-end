@@ -33,7 +33,7 @@ export class CommentRepository extends Repository<Comment> {
         mbti: newComment.player.mbti,
         profileImg: newComment.player.profileImg,
         level: newComment.player.level,
-        exp: newComment.player.exp,
+        expPoints: newComment.player.expPoints,
       },
     };
   }

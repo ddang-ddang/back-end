@@ -183,15 +183,28 @@ export class PlayersController {
   @Get('auth')
   async getHello(@Request() req): Promise<object> {
     try {
-      const { playerId, email, nickname } = req.user.player;
+      const { playerId, email, nickname, mbti, profileImg, expPoints, points } =
+        req.user.player;
 
       this.logger.verbose(`${email}님이 인증 하려고 합니다`);
 
       // const envData = this.configService.get('DB_PORT');
       // console.log(envData);
       // console.log('wlkejflkwjeflkjwef');
+      console.log(req.user);
 
-      return { ok: true, user: { playerId, email, nickname } };
+      return {
+        ok: true,
+        user: {
+          playerId,
+          email,
+          nickname,
+          mbti,
+          profileImg,
+          expPoints,
+          points,
+        },
+      };
     } catch (err) {
       return {
         ok: false,

@@ -1,3 +1,4 @@
+import { payloadDto, EmailDto } from './../players/dto/create-player.dto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -32,7 +33,11 @@ export class AuthService {
       const valid = await bcrypt.compare(password, player.password);
       if (email && valid) {
         const { id, email, nickname } = player;
-        return { id, email, nickname };
+        return {
+          id,
+          email,
+          nickname,
+        };
       }
       return null;
     } catch (err) {
@@ -45,12 +50,21 @@ export class AuthService {
   // jwt로 생성한 토큰은 (id, email, nickname)를 담고 있다.
   async signin(email: string, nickname: string, id: number): Promise<any> {
     try {
+      const getUserData = await this.playersRepository.findByEmail({
+        email: email,
+      });
+      const { mbti, profileImg, expPoints, points } = getUserData;
+      console.log(getUserData);
+
       const payload = {
-        id,
         email,
         nickname,
+        id,
+        mbti,
+        profileImg,
+        expPoints,
+        points,
       };
-      // console.log(res.user);
 
       // 리프레쉬 토큰생성
       const refreshToken = this.getJwtRefreshToken(payload);
@@ -59,10 +73,7 @@ export class AuthService {
       const accessToken = this.getJwtAccessToken(payload);
 
       // refresh 토큰을 DB에 저장한다.
-      const result = await this.playersRepository.saveRefreshToken(
-        id,
-        refreshToken
-      );
+      this.playersRepository.saveRefreshToken(id, refreshToken);
 
       return { refreshToken, accessToken };
     } catch (err) {
