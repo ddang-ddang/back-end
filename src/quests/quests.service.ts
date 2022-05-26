@@ -67,7 +67,6 @@ export class QuestsService {
       }
       const complete = this.completes.create({ questId, playerId });
       await queryRunner.manager.save(complete);
-
       /* 플레이어 레벨 달성 로직 */
       // 1. 플레이어 정보 찾기 (포인트 확인)
       const player = await this.players.findOne({
@@ -90,7 +89,6 @@ export class QuestsService {
         expPoints,
         points,
       });
-
       /* 플레이어 업적 부여 로직 */
       // 1. 현재 수행한 타입의 완료 횟수 조회
       const countCompletes = await getManager()
@@ -103,7 +101,6 @@ export class QuestsService {
         })
         .groupBy('quest.type')
         .getRawOne();
-
       // 2. 해당하는 미션 찾아서 업적 추가
       const mission = await this.missions.findOne({
         where: {

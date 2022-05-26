@@ -84,13 +84,13 @@ export class FeedsService {
         'player.mbti',
         'player.profileImg',
         'player.level',
-        'player.exp',
+        'player.expPoints',
         'commentWriter.email',
         'commentWriter.nickname',
         'commentWriter.mbti',
         'commentWriter.profileImg',
         'commentWriter.level',
-        'commentWriter.exp',
+        'commentWriter.expPoints',
       ])
       .where({ deletedAt: null })
       .leftJoinAndSelect('feed.quest', 'quest')
@@ -142,9 +142,7 @@ export class FeedsService {
 
   /* 현재 사용자와 피드 작성자가 일치하는지 확인 */
   async matchPlayerFeed(playerId: number, feed: Feed) {
-    if (feed && playerId === feed.player.id) {
-      return true;
-    }
+    if (feed && playerId === feed.player.id) return true;
     return false;
   }
 
@@ -159,22 +157,15 @@ export class FeedsService {
     const match = await this.matchPlayerFeed(playerId, feed);
     if (feed) {
       if (match) {
-        return this.feedRepository.updateFeed(
-          playerId,
-          feedId,
-          img,
-          feedContent
-        );
-      } else {
-        this.feedException.CannotEditFeed();
+        return this.feedRepository.updateFeed(feedId, img, feedContent);
       }
+      this.feedException.CannotEditFeed();
     }
     this.feedException.NotFoundFeed();
   }
 
   /* 피드 삭제 */
   async removeQuest(playerId: number, feedId: number): Promise<void | object> {
-    // const feed = await this.feedRepository.findOne(feedId);
     const feed = await this.feedRepository.findOne({
       where: {
         id: feedId,

@@ -1,6 +1,6 @@
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Player } from 'src/players/entities/player.entity';
-import { Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 @Entity()
 export class Likes {
   @PrimaryGeneratedColumn()
@@ -9,6 +9,12 @@ export class Likes {
   @ManyToOne((type) => Player, (player) => player.likes)
   player: Player;
 
+  @Column()
+  playerId: number;
+
   @ManyToOne((type) => Feed, (feed) => feed.likes)
   feed: Feed;
+
+  @Column()
+  feedId: number;
 }

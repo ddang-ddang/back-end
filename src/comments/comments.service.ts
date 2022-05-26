@@ -24,7 +24,11 @@ export class CommentsService {
     const commentText = createCommentDto.comment;
     const feed: Feed = await Feed.findOne(feedId);
     if (feed) {
-      return this.commentRepository.createComment(playerId, feed, commentText);
+      return this.commentRepository.createComment(
+        playerId,
+        feedId,
+        commentText
+      );
     }
     this.commentException.NotFoundFeed();
   }
@@ -41,7 +45,7 @@ export class CommentsService {
         'player.mbti',
         'player.profileImg',
         'player.level',
-        'player.exp',
+        'player.expPoints',
       ])
       .leftJoin('comment.player', 'player')
       .leftJoinAndSelect('comment.feed', 'feed')
@@ -69,10 +73,6 @@ export class CommentsService {
       relations: ['player'],
     });
     if (!comment) {
-      // throw new NotFoundException({
-      //   ok: false,
-      //   message: `댓글 id ${commentId}를 찾을 수 없습니다.`,
-      // });
       this.commentException.NotFoundComment();
     }
     return comment;
@@ -80,9 +80,7 @@ export class CommentsService {
 
   /* 댓글 작성자와 현재 유저 매칭 */
   async matchPlayerComment(playerId: number, comment: Comment) {
-    if (playerId === comment.player.id) {
-      return true;
-    }
+    if (playerId === comment.player.id) return true;
     return false;
   }
 
@@ -103,10 +101,6 @@ export class CommentsService {
           updateCommentDto
         );
       } else {
-        // throw new BadRequestException({
-        //   ok: false,
-        //   message: `댓글 작성자만 수정할 수 있습니다.`,
-        // });
         this.commentException.CannotEditComment();
       }
     } else {
