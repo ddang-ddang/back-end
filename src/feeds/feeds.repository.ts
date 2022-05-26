@@ -35,12 +35,10 @@ export class FeedRepository extends Repository<Feed> {
         },
       }),
     ]);
-
+    if (!quest) {
+      return 'noFeed';
+    }
     if (quest.type !== 'feed') {
-      // throw new BadRequestException({
-      //   ok: false,
-      //   message: 'feed타입의 퀘스트가 아닙니다.',
-      // });
       return 'feedNotMatch';
     }
 

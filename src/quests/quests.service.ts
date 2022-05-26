@@ -106,6 +106,8 @@ export class QuestsService {
 
     if (newFeed === 'feedNotMatch') {
       this.exceptions.FeedNotMatch();
+    } else if (newFeed === 'noFeed') {
+      this.exceptions.cantGetQuests();
     }
 
     // const countFeedType = await this.createAchievement(playerId, questType);
