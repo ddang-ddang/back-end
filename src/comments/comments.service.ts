@@ -45,7 +45,7 @@ export class CommentsService {
         'player.mbti',
         'player.profileImg',
         'player.level',
-        'player.exp',
+        'player.expPoints',
       ])
       .leftJoin('comment.player', 'player')
       .leftJoinAndSelect('comment.feed', 'feed')
