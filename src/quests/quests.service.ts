@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import { Connection, getManager, getRepository, Repository } from 'typeorm';
+import { Connection, Repository, getManager, getRepository } from 'typeorm';
 import { Player } from '../players/entities/player.entity';
 import { FeedRepository } from '../feeds/feeds.repository';
 import { Complete } from './entities/complete.entity';
@@ -24,6 +24,8 @@ export class QuestsService {
     private readonly achievements: Repository<Achievement>,
     @InjectRepository(Mission)
     private readonly missions: Repository<Mission>,
+    @InjectRepository(Player)
+    private readonly players: Repository<Player>,
     @InjectRepository(FeedRepository)
     private readonly feedRepository: FeedRepository,
     private readonly quests: QuestRepository,
@@ -33,6 +35,7 @@ export class QuestsService {
 
   private readonly logger = new Logger(QuestsService.name);
 
+  /* 플레이어 업적 부여 로직 */
   async createAchievement(playerId: number, questType: string) {
     /* 완료한 퀘스트 종류별 count */
     const countFeedType = await Complete.createQueryBuilder('complete')
@@ -45,32 +48,32 @@ export class QuestsService {
       .groupBy('quest.type')
       .getRawOne();
 
-    const player = await Player.findOne({ id: playerId });
+    const player = await this.players.findOne({ id: playerId });
 
     let added = false;
 
     /* mission list */
-    const missionList = await Mission.find({
+    const missionList = await this.missions.find({
       where: { type: questType },
     });
 
     /* 현재 사용자가 성공한 achievement list */
-    const achievementList = await Achievement.find({
+    const achievementList = await this.achievements.find({
       where: { player },
     });
 
     const userAchievement = [];
-    missionList.map((eachMission) => {
-      if (Number(countFeedType.cnt) >= eachMission.setGoals) {
+    missionList.forEach((eachMission) => {
+      if (+countFeedType.cnt >= eachMission.setGoals) {
         // achievements에 없는 mission의 경우 insert
         userAchievement.push(eachMission);
       }
     });
 
     userAchievement.map(async (achievement) => {
-      const mission = await Mission.findOne({ id: achievement.id });
+      const mission = await this.missions.findOne({ id: achievement.id });
 
-      const search = await Achievement.find({
+      const search = await this.achievements.find({
         where: {
           mission,
           player,
@@ -78,7 +81,7 @@ export class QuestsService {
       });
 
       if (search.length === 0) {
-        const newAchieve = await Achievement.insert({ mission, player });
+        const newAchieve = await this.achievements.insert({ mission, player });
         console.log(newAchieve);
         if (newAchieve.raw['affectedRows'] > 0) {
           added = true;
@@ -89,26 +92,13 @@ export class QuestsService {
     return { countFeedType, missionList, userAchievement, added };
   }
 
-  /* 피드작성 퀘스트 완료 요청 */
-  async feedQuest(
+  /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
+  async questComplete(
     questId: number,
     playerId: number,
-    createFeedDto: CreateFeedDto,
-    questType: string
+    questType: string,
+    createFeedDto?: CreateFeedDto
   ) {
-    const { img, content } = createFeedDto;
-    const newFeed = await this.feedRepository.feedQuest(
-      questId,
-      playerId,
-      img,
-      content
-    );
-    const countFeedType = await this.createAchievement(playerId, questType);
-    return newFeed;
-  }
-
-  /* 타임어택 또는 몬스터 대결 퀘스트 완료 요청 */
-  async questComplete(questId: number, playerId: number, questType: string) {
     const [quest, isCompleted] = await Promise.all([
       this.quests.findOne({ id: questId }),
       this.completes.findOne({ questId, playerId }),
@@ -118,31 +108,59 @@ export class QuestsService {
 
     const queryRunner = this.connection.createQueryRunner();
     await queryRunner.connect();
+
+    const feedsRepository =
+      queryRunner.manager.getCustomRepository(FeedRepository);
     await queryRunner.startTransaction();
 
     try {
+      if (questType === 'feed') {
+        const { img, content } = createFeedDto;
+        await feedsRepository.feedQuest(questId, playerId, img, content);
+      }
       const complete = this.completes.create({ questId, playerId });
       await queryRunner.manager.save(complete);
 
-      // 플레이어가 완료한 퀘스트 type별 횟수 조회 후 업적 부여
-      const completes = await getManager()
-        .createQueryBuilder(Complete, 'complete')
-        .leftJoinAndSelect('complete.quest', 'quest')
-        .where('playerId = :id', { id: playerId })
-        .getMany();
-
-      // 현재 완료한 퀘스트 타입의 횟수 확인
-      const countFor = {};
-      completes.forEach((complete) => {
-        countFor[complete.quest.type] =
-          (countFor[complete.quest.type] || 0) + 1;
+      /* 플레이어 레벨 달성 로직 */
+      // 1. 플레이어 정보 찾기 (포인트 확인)
+      const player = await this.players.findOne({
+        select: ['points'],
+        where: { id: playerId },
       });
-      const goals = countFor[questType];
+      // 2. 플레이어 포인트에 획득한 포인트 추가
+      const points = player.points + quest.reward;
+      // 3. 전체 포인트로 레벨 계산
+      let level = 1;
+      let expPoints = points;
+      while (expPoints >= level * 100) {
+        expPoints -= level * 100;
+        level += 1;
+      }
+      expPoints = Math.round(expPoints / level);
+      // 4. 플레이어 포인트, 레벨, 경험치 업데이트
+      await queryRunner.manager.update(Player, playerId, {
+        level,
+        expPoints,
+        points,
+      });
 
-      // 해당하는 미션 찾아서 업적 추가
+      /* 플레이어 업적 부여 로직 */
+      // 1. 현재 수행한 타입의 완료 횟수 조회
+      const countCompletes = await getManager()
+        .createQueryBuilder(Complete, 'complete')
+        .select(['quest.type', 'count(quest.type) as cnt'])
+        .leftJoin('complete.quest', 'quest')
+        .where('complete.playerId = :playerId and quest.type = :questType', {
+          playerId,
+          questType,
+        })
+        .groupBy('quest.type')
+        .getRawOne();
+
+      // 2. 해당하는 미션 찾아서 업적 추가
       const mission = await this.missions.findOne({
         where: {
-          setGoals: goals,
+          setGoals: countCompletes.cnt + 1,
           type: `${questType}`,
         },
       });
@@ -150,6 +168,7 @@ export class QuestsService {
         const achievement = this.achievements.create({ mission, playerId });
         await queryRunner.manager.save(achievement);
       }
+
       await queryRunner.commitTransaction();
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -170,11 +189,9 @@ export class QuestsService {
   async getAll(lat: number, lng: number, playerId?: number) {
     let allQuests;
 
-    console.log("wlekjflkwjeflkwjekfjwkejfwef")
     console.time('getAll');
     console.time('카카오API - getAddressName');
     const kakaoAddress = await this.getAddressName(lat, lng);
-    console.log("+-------------------------------")
     console.timeEnd('카카오API - getAddressName');
     if (!kakaoAddress) this.exceptions.notFoundKakaoAddress();
 
@@ -381,7 +398,7 @@ export class QuestsService {
           title = '2시까지 땅땅!';
           hour = category * 7;
           description = '2시까지 도착해서 땅땅 도장을 받으세요!';
-          difficulty = 1;
+          difficulty = 2;
           reward = 250;
           timeUntil = new Date(year, month, date, hour);
           break;
@@ -390,7 +407,7 @@ export class QuestsService {
           title = '밤 9시가 되면 문이 땅!';
           hour = category * 7;
           description = '문이 땅 닫히기 전까지 땅땅 도장을 찍어주세요!';
-          difficulty = 1;
+          difficulty = 3;
           reward = 300;
           timeUntil = new Date(year, month, date, hour);
           break;
@@ -398,7 +415,7 @@ export class QuestsService {
           description = '이 땅에 남겨질 여러분의 흔적을 환영합니다!';
           type = 'feed';
           title = '땅에 대한 이야기 만땅';
-          difficulty = 2;
+          difficulty = 1;
           reward = 400;
           timeUntil = null;
           break;
@@ -414,7 +431,7 @@ export class QuestsService {
           description = '주변의 무채색 장소를 여러분의 생각으로 채워주세요!';
           type = 'feed';
           title = '땅땅한 오늘의 기분';
-          difficulty = 2;
+          difficulty = 3;
           reward = 600;
           timeUntil = null;
           break;
@@ -422,7 +439,7 @@ export class QuestsService {
           type = 'mob';
           title = '땅개비를 이겨라';
           description = '땅개비와의 짜릿한 한판승 어때요?';
-          difficulty = 3;
+          difficulty = 1;
           reward = 900;
           timeUntil = null;
           break;
@@ -430,7 +447,7 @@ export class QuestsService {
           type = 'mob';
           title = '땅어가 나타났다';
           description = '땅어를 물리치고 우리 동네를 지켜주세요!';
-          difficulty = 3;
+          difficulty = 2;
           reward = 1200;
           timeUntil = null;
           break;
