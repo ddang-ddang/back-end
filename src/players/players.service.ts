@@ -133,7 +133,7 @@ export class PlayersService {
           'player.mbti',
           'player.profileImg',
           'player.level',
-          'player.exp',
+          'player.expPoints',
         ])
         .leftJoinAndSelect('player.completes', 'completes')
         .leftJoinAndSelect('completes.quest', 'quest')
