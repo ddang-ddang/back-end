@@ -185,13 +185,25 @@ export class PlayersController {
     try {
       const { playerId, email, nickname } = req.user.player;
 
+      const response = await this.authService.additionalInfo(email);
+
+      const { mbti, profileImg, expPoints, points, level } = response;
+
       this.logger.verbose(`${email}님이 인증 하려고 합니다`);
 
-      // const envData = this.configService.get('DB_PORT');
-      // console.log(envData);
-      // console.log('wlkejflkwjeflkjwef');
-
-      return { ok: true, user: { playerId, email, nickname } };
+      return {
+        ok: true,
+        user: {
+          playerId,
+          email,
+          nickname,
+          mbti,
+          profileImg,
+          expPoints,
+          points,
+          level,
+        },
+      };
     } catch (err) {
       return {
         ok: false,

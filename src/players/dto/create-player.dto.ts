@@ -21,6 +21,12 @@ export class CreatePlayerDto {
   profileImg: string;
 
   @IsNotEmpty()
+  expPoints: number;
+
+  @IsNotEmpty()
+  points: number;
+
+  @IsNotEmpty()
   provider: string;
 
   @IsNotEmpty()
@@ -77,6 +83,16 @@ export class SigninDto extends PickType(CreatePlayerDto, [
   'id',
   'email',
   'nickname',
+] as const) {}
+
+export class payloadDto extends PickType(CreatePlayerDto, [
+  'id',
+  'email',
+  'nickname',
+  'mbti',
+  'profileImg',
+  'expPoints',
+  'points',
 ] as const) {}
 
 export class UpdateInfoDto extends PickType(CreatePlayerDto, [

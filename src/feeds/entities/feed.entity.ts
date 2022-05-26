@@ -49,15 +49,28 @@ export class Feed extends BaseEntity {
   @JoinColumn({ name: 'id' })
   comments: Comment[];
 
+  /* Player */
   @ManyToOne((type) => Player, (player) => player.feeds)
   player: Player;
 
+  @Column()
+  playerId: number;
+
+  /* Quest */
   @ManyToOne((type) => Quest, (quest) => quest.feeds)
   quest: Quest;
 
+  @Column()
+  questId: number;
+
+  /* Likes */
   @OneToMany((type) => Likes, (like) => like.feed)
   likes: Likes[];
 
+  /* Region */
   @ManyToOne((type) => Region, (region) => region.feeds)
   region: Region;
+
+  @Column()
+  regionId: number;
 }

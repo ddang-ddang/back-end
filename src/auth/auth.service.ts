@@ -1,3 +1,4 @@
+import { payloadDto, EmailDto } from './../players/dto/create-player.dto';
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -32,7 +33,11 @@ export class AuthService {
       const valid = await bcrypt.compare(password, player.password);
       if (email && valid) {
         const { id, email, nickname } = player;
-        return { id, email, nickname };
+        return {
+          id,
+          email,
+          nickname,
+        };
       }
       return null;
     } catch (err) {
@@ -46,11 +51,10 @@ export class AuthService {
   async signin(email: string, nickname: string, id: number): Promise<any> {
     try {
       const payload = {
-        id,
         email,
         nickname,
+        id,
       };
-      // console.log(res.user);
 
       // 리프레쉬 토큰생성
       const refreshToken = this.getJwtRefreshToken(payload);
@@ -59,10 +63,7 @@ export class AuthService {
       const accessToken = this.getJwtAccessToken(payload);
 
       // refresh 토큰을 DB에 저장한다.
-      const result = await this.playersRepository.saveRefreshToken(
-        id,
-        refreshToken
-      );
+      this.playersRepository.saveRefreshToken(id, refreshToken);
 
       return { refreshToken, accessToken };
     } catch (err) {
@@ -190,6 +191,28 @@ export class AuthService {
     try {
       const result = await this.playersRepository.checkById(id);
       return result;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async additionalInfo(email: string) {
+    try {
+      // const result = await this.playersRepository.findByEmail({email:email});
+      const getUserData = await this.playersRepository.findByEmail({
+        email: email,
+      });
+      const { mbti, profileImg, expPoints, points, level } = getUserData;
+
+      const payload = {
+        mbti,
+        profileImg,
+        level,
+        expPoints,
+        points,
+      };
+
+      return payload;
     } catch (err) {
       console.log(err.message);
     }
