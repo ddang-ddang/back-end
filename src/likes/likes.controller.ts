@@ -8,11 +8,12 @@ import {
   Request,
   Logger,
 } from '@nestjs/common';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
 import { LikesService } from './likes.service';
 
 @Controller('/api/feeds/:feedId/like')
+@ApiTags('좋아요 API')
 export class LikesController {
   private logger = new Logger('LikesController');
   constructor(private readonly likesService: LikesService) {}
