@@ -25,6 +25,7 @@ export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
+  @ApiOperation({ summary: '댓글 작성 API' })
   @UseGuards(JwtAuthGuard)
   async createComment(
     @Req() req: Request,
