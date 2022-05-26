@@ -3,6 +3,8 @@ import {
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
+  BadRequestException,
+  HttpStatus,
 } from '@nestjs/common';
 
 @Injectable()
@@ -53,6 +55,16 @@ export class QuestsException {
     throw new InternalServerErrorException({
       ok: false,
       message: '퀘스트를 찾을 수 없습니다.',
+    });
+  }
+
+  // 퀘스트 타입 오류
+  FeedNotMatch() {
+    throw new BadRequestException({
+      statusCode: HttpStatus.BAD_REQUEST,
+      ok: false,
+      message: 'feed타입의 퀘스트가 아닙니다.',
+      error: 'Bad Request',
     });
   }
 }

@@ -60,14 +60,14 @@ export class QuestsService {
     });
 
     const userAchievement = [];
-    missionList.map((eachMission) => {
+    missionList.forEach((eachMission) => {
       if (Number(countFeedType.cnt) >= eachMission.setGoals) {
         // achievements에 없는 mission의 경우 insert
         userAchievement.push(eachMission);
       }
     });
 
-    userAchievement.map(async (achievement) => {
+    userAchievement.forEach(async (achievement) => {
       const mission = await Mission.findOne({ id: achievement.id });
 
       const search = await Achievement.find({
@@ -103,7 +103,13 @@ export class QuestsService {
       img,
       content
     );
-    const countFeedType = await this.createAchievement(playerId, questType);
+
+    if (newFeed === 'feedNotMatch') {
+      this.exceptions.FeedNotMatch();
+    }
+
+    // const countFeedType = await this.createAchievement(playerId, questType);
+    await this.createAchievement(playerId, questType);
     return newFeed;
   }
 

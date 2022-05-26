@@ -52,8 +52,14 @@ export class FeedsService {
   }
 
   /* 모든 피드 가져오기 */
-  async findAllFeeds(playerId: number, regionData: any) {
-    const { regionSi, regionGu, regionDong, lat, lng } = regionData;
+  // async findAllFeeds(playerId: number, regionData: any) {
+  async findAllFeeds(
+    playerId: number,
+    regionSi: string,
+    regionGu: string,
+    regionDong: string
+  ) {
+    // const { regionSi, regionGu, regionDong, lat, lng } = regionData;
     console.log(regionSi, regionGu, regionDong);
     // const feeds = await Feed.find({
     //   where: {
