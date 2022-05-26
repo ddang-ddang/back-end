@@ -16,10 +16,10 @@ export class QuestsException {
     });
   }
 
-  notFoundPlayer() {
-    throw new NotFoundException({
+  missingContent() {
+    throw new BadRequestException({
       ok: false,
-      message: '플레이어님의 정보를 찾을 수 없습니다.',
+      message: '피드의 내용이 누락되었습니다.',
     });
   }
 
@@ -59,7 +59,7 @@ export class QuestsException {
   }
 
   // 퀘스트 타입 오류
-  FeedNotMatch() {
+  feedNotMatch() {
     throw new BadRequestException({
       statusCode: HttpStatus.BAD_REQUEST,
       ok: false,

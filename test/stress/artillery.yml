@@ -7,10 +7,10 @@ config:
     - duration: 20
       arrivalRate: 5
       rampTo: 10
-      name: Ramp up load
+      name: Ramp up road
     - duration: 30
       arrivalRate: 10
-      name: Sustained load
+      name: Sustained road
 #  payload:
 #    path: "keywords.csv"
 #    fields:
