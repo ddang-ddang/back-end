@@ -76,7 +76,13 @@ export class Player extends BaseEntity {
   @Column({
     default: 0,
   })
-  exp: number;
+  expPoints: number;
+
+  @IsEmpty()
+  @Column({
+    default: 0,
+  })
+  points: number;
 
   @IsEmpty()
   @Column({
