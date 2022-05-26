@@ -183,8 +183,16 @@ export class PlayersController {
   @Get('auth')
   async getHello(@Request() req): Promise<object> {
     try {
-      const { playerId, email, nickname, mbti, profileImg, expPoints, points } =
-        req.user.player;
+      const {
+        playerId,
+        email,
+        nickname,
+        mbti,
+        profileImg,
+        expPoints,
+        points,
+        level,
+      } = req.user.player;
 
       this.logger.verbose(`${email}님이 인증 하려고 합니다`);
 
@@ -203,6 +211,7 @@ export class PlayersController {
           profileImg,
           expPoints,
           points,
+          level,
         },
       };
     } catch (err) {

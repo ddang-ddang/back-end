@@ -31,6 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         profileImg: payload.profileImg,
         expPoints: payload.expPoints,
         points: payload.points,
+        level: payload.level,
       },
     };
   }

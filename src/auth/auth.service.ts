@@ -53,7 +53,7 @@ export class AuthService {
       const getUserData = await this.playersRepository.findByEmail({
         email: email,
       });
-      const { mbti, profileImg, expPoints, points } = getUserData;
+      const { mbti, profileImg, expPoints, points, level } = getUserData;
       console.log(getUserData);
 
       const payload = {
@@ -62,6 +62,7 @@ export class AuthService {
         id,
         mbti,
         profileImg,
+        level,
         expPoints,
         points,
       };
