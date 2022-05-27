@@ -108,7 +108,6 @@ export class QuestsService {
           type: questType,
         },
       });
-      console.log(mission);
       if (mission) {
         const achievement = this.achievements.create({ mission, playerId });
         await queryRunner.manager.save(achievement);
@@ -175,36 +174,25 @@ export class QuestsService {
     const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
     console.timeEnd('createQuests');
 
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    // region, quest 생성 트랜잭션 처리 (promise.all 트랜잭션 처리 추가 학습 필요)
+    // 지역(동) 데이터 DB에 추가
+    region = this.regions.create({
+      date,
+      ...kakaoAddress,
+      totalCount,
+      pageCount,
+    });
+    await this.regions.save(region);
 
-    // region, quest 생성 트랜잭션 처리
-    try {
-      // 지역(동) 데이터 DB에 추가 및 조회
-      region = this.regions.create({
-        date,
-        ...kakaoAddress,
-        totalCount,
-        pageCount,
-      });
-      await this.regions.save(region);
-
-      // 퀘스트 데이터 DB에 추가 및 조회
-      await Promise.all([
-        ...quests.map((quest) => {
-          return this.quests.save({
-            ...quest,
-            region,
-          });
-        }),
-      ]);
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.exceptions.cantGetQuests();
-    } finally {
-      await queryRunner.release();
-    }
+    // 퀘스트 데이터 DB에 추가
+    await Promise.all([
+      ...quests.map((quest) => {
+        return this.quests.save({
+          ...quest,
+          region,
+        });
+      }),
+    ]);
 
     const { regionSi, regionGu, regionDong } = region;
     allQuests = await this.quests.findAllWithCompletes(region, playerId);
@@ -224,7 +212,6 @@ export class QuestsService {
    */
   async getAddressName(lat, lng) {
     try {
-      console.log('here?');
       const res = await axios.get(
         `${process.env.MAP_KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
         {
@@ -473,13 +460,20 @@ export class QuestsService {
     return { ok: true, row: quest };
   }
 
+  @Cron('30 * * * * *', { timeZone: 'Asia/Seoul' })
+  async testCron() {
+    this.logger.verbose('매분 30초에 Cron 실행 테스트');
+  }
+
+  @Cron('0 0 22 * * *', { timeZone: 'Asia/Seoul' })
+  async testCronNight() {
+    this.logger.verbose('22시: Cron 실행 테스트');
+  }
+
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 0 1 * * *', {
-    name: 'createQuests',
-    timeZone: 'Asia/Seoul',
-  })
+  @Cron('0 0 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
-    this.logger.verbose('퀘스트 사전 생성');
+    this.logger.verbose('새벽 1시: 퀘스트 사전 생성');
 
     const today = new Date();
     const todayDate = today.toDateString();
