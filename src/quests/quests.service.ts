@@ -134,9 +134,9 @@ export class QuestsService {
     let allQuests;
 
     console.time('getAll');
-    console.time('카카오API - getAddressName');
+    console.time('Kakao API - getAddressName');
     const kakaoAddress = await this.getAddressName(lat, lng);
-    console.timeEnd('카카오API - getAddressName');
+    console.timeEnd('Kakao API - getAddressName');
     if (!kakaoAddress) this.exceptions.notFoundKakaoAddress();
 
     const date = new Date().toDateString();
@@ -165,11 +165,11 @@ export class QuestsService {
     }
 
     // 지역(동), 좌표 값으로 퀘스트 만들기
-    console.time('주소API - getRegionData');
+    console.time('Juso API - getRegionData');
     const regionData = await this.getRegionData(kakaoAddress);
     if (!regionData) this.exceptions.notFoundPublicAddress();
     const { totalCount, pageCount } = regionData;
-    console.timeEnd('주소API - getRegionData');
+    console.timeEnd('Juso API - getRegionData');
     console.time('createQuests');
     const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
     console.timeEnd('createQuests');
@@ -232,7 +232,7 @@ export class QuestsService {
 
       return { regionSi, regionGu, regionDong };
     } catch (error) {
-      console.log(error.message);
+      this.logger.error(error.message);
     }
   }
 
@@ -255,7 +255,7 @@ export class QuestsService {
       const pageCount = Math.ceil(totalCount / 100);
       return { totalCount, pageCount };
     } catch (error) {
-      console.log(error.message);
+      this.logger.error(error.message);
     }
   }
 
@@ -278,21 +278,21 @@ export class QuestsService {
     }
 
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-    console.time('주소API - 한번에 불러오기');
+    console.time('Juso API - Get all at once');
     const rawRoadAddrs = await Promise.all([
       ...addrIndex.map(({ curPage, idx }) =>
         this.getRoadAddress(curPage, address, idx)
       ),
     ]);
     const roadAddrs = rawRoadAddrs.filter((addr) => addr);
-    console.timeEnd('주소API - 한번에 불러오기');
+    console.timeEnd('Juso API - Get all at once');
 
     let questsCoords = [];
     const limits = 20; // kakaoAPI 429 에러(Too Many Requests) 방지를 위해 요청당 호출수 제한
 
     /* 상세주소에 해당하는 좌표값 얻기 */
     for (let begin = 0; begin < pageCount; begin += limits) {
-      console.time('카카오API - getCoords');
+      console.time('Kakao API - getCoords');
       const end = begin + limits < pageCount ? begin + limits : pageCount;
       const roadAddrsSubset = roadAddrs.slice(begin, end);
       questsCoords = [
@@ -301,7 +301,7 @@ export class QuestsService {
           ...roadAddrsSubset.map((roadAddr) => this.getCoords(roadAddr)),
         ])),
       ];
-      console.timeEnd('카카오API - getCoords');
+      console.timeEnd('Kakao API - getCoords');
     }
 
     const today = new Date();
@@ -448,7 +448,7 @@ export class QuestsService {
       const lng = res.data.documents[0].x;
       return { lat, lng };
     } catch (error) {
-      console.log(`getCoords: ${error.message}`);
+      this.logger.error(`getCoords: ${error.message}`);
     }
   }
 
@@ -461,25 +461,19 @@ export class QuestsService {
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 5 2 * * *', { timeZone: 'Asia/Seoul' })
+  @Cron('0 0 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
-    this.logger.verbose('AM 1:35, Create Todays Quests');
+    this.logger.verbose('AM 1:00, Create Todays Quests');
     const curr = new Date();
     const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
     const today = new Date(utc + 9 * 60 * 60 * 1000);
-
-    // const today = new Date();
-    this.logger.verbose(`today: ${today}`);
     const todayDate = today.toDateString();
-    this.logger.verbose(`todayDate: ${todayDate}`);
 
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
-    this.logger.verbose(`yesterday: ${yesterday}`);
     const yesterdayDate = yesterday.toDateString();
-    this.logger.verbose(`yesterdayDate: ${yesterdayDate}`);
+
     const regions = await this.regions.find({ date: yesterdayDate });
-    this.logger.verbose(`regions: ${regions}`);
 
     for (const region of regions) {
       const { regionSi, regionGu, regionDong } = region;
