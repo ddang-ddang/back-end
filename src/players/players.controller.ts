@@ -307,14 +307,16 @@ export class PlayersController {
   @Get('mypage')
   async loadMypage(@Request() req): Promise<object> {
     try {
+      const { playerId } = req['user'].player;
+      this.logger.verbose(
+        `유저 id ${playerId}님이 마이페이지를 이용 하려고 합니다`
+      );
 
-      this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
-
-      const test = await this.playersService.mypageInfo(3);
+      const myInfo = await this.playersService.mypageInfo(playerId);
 
       return {
         ok: true,
-        rows: test,
+        rows: myInfo,
       };
     } catch (err) {
       console.log(err);
