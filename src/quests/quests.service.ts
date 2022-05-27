@@ -460,6 +460,11 @@ export class QuestsService {
     return { ok: true, row: quest };
   }
 
+  @Cron('30 * * * * *', { timeZone: 'Asia/Seoul' })
+  async testCron() {
+    this.logger.verbose('Cron 실행 테스트');
+  }
+
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
   @Cron('0 0 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
