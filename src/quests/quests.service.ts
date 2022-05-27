@@ -461,20 +461,23 @@ export class QuestsService {
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 50 1 * * *', { timeZone: 'Asia/Seoul' })
+  @Cron('0 5 2 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
     this.logger.verbose('AM 1:35, Create Todays Quests');
+    const curr = new Date();
+    const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+    const today = new Date(utc + 9 * 60 * 60 * 1000);
 
-    const today = new Date();
+    // const today = new Date();
     this.logger.verbose(`today: ${today}`);
     const todayDate = today.toDateString();
     this.logger.verbose(`todayDate: ${todayDate}`);
 
     const yesterday = new Date();
-    this.logger.verbose(`yesterday: ${yesterday}`);
     yesterday.setDate(today.getDate() - 1);
+    this.logger.verbose(`yesterday: ${yesterday}`);
     const yesterdayDate = yesterday.toDateString();
-    this.logger.verbose(`yesterday: ${yesterdayDate}`);
+    this.logger.verbose(`yesterdayDate: ${yesterdayDate}`);
     const regions = await this.regions.find({ date: yesterdayDate });
     this.logger.verbose(`regions: ${regions}`);
 
