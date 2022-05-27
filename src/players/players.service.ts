@@ -154,7 +154,13 @@ export class PlayersService {
       });
       const achievedMission = [];
       const notAchievedMission = [];
-      let feedCnt = 0;
+
+      let feedCnt: number;
+      countEachType.forEach((questCnt) => {
+        if (questCnt.quest_type === 'feed') {
+          feedCnt = parseInt(questCnt.cnt);
+        }
+      });
 
       // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
       countEachType.forEach(async (cntItems) => {
@@ -164,9 +170,6 @@ export class PlayersService {
             parseInt(cntItems.cnt) >= mission.setGoals
           ) {
             achievedMission.push(mission);
-            if (mission.type === 'feed') {
-              feedCnt += 1;
-            }
           }
         });
       });
