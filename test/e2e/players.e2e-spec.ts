@@ -82,7 +82,6 @@ describe('Player E2E test', () => {
       await pactum
         .spec()
         .post('/api/players/signin')
-        // .withBody({ email: 'test@test.com', password: 'Abcd1234' })
         .withBody(userList.user1)
         .expectStatus(201);
     });

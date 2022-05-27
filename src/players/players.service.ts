@@ -133,7 +133,7 @@ export class PlayersService {
           'player.mbti',
           'player.profileImg',
           'player.level',
-          'player.exp',
+          'player.expPoints',
         ])
         .leftJoinAndSelect('player.completes', 'completes')
         .leftJoinAndSelect('completes.quest', 'quest')
@@ -154,15 +154,19 @@ export class PlayersService {
       });
       const achievedMission = [];
       const notAchievedMission = [];
+      let feedCnt = 0;
 
       // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
       countEachType.map(async (cntItems) => {
         missionList.map(async (mission) => {
           if (
             cntItems.quest_type === mission.type &&
-            cntItems.cnt >= mission.setGoals
+            parseInt(cntItems.cnt) >= mission.setGoals
           ) {
             achievedMission.push(mission);
+            if (mission.type === 'feed') {
+              feedCnt += 1;
+            }
           }
         });
       });
@@ -179,6 +183,7 @@ export class PlayersService {
         profile,
         achievedMission,
         notAchievedMission,
+        feedCnt,
       };
     } catch (err) {
       return err.message;
