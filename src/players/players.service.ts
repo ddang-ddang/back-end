@@ -157,8 +157,8 @@ export class PlayersService {
       let feedCnt = 0;
 
       // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
-      countEachType.map(async (cntItems) => {
-        missionList.map(async (mission) => {
+      countEachType.forEach(async (cntItems) => {
+        missionList.forEach(async (mission) => {
           if (
             cntItems.quest_type === mission.type &&
             parseInt(cntItems.cnt) >= mission.setGoals
@@ -171,7 +171,7 @@ export class PlayersService {
         });
       });
 
-      missionList.map((mission) => {
+      missionList.forEach((mission) => {
         if (!achievedMission.includes(mission)) {
           notAchievedMission.push(mission);
         }
