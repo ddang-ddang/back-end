@@ -137,34 +137,28 @@ export class PlayersService {
         ])
         .leftJoinAndSelect('player.completes', 'completes')
         .leftJoinAndSelect('completes.quest', 'quest')
-        .where('player.playerId = :playerId', { playerId: playerId })
+        .where('player.playerId = :playerId', { playerId })
         .getMany();
 
       const countEachType = await Complete.createQueryBuilder('complete')
         .select(['quest.type', 'count(quest.type) as cnt'])
         .leftJoin('complete.quest', 'quest')
-        .where('complete.playerId = :playerId', { playerId: playerId })
+        .where('complete.playerId = :playerId', { playerId })
         .groupBy('quest.type')
         .getRawMany();
 
       const missionList = await Mission.find({
-        order: {
-          createdAt: 'DESC',
-        },
+        order: { createdAt: 'DESC' },
       });
       const achievedMission = [];
       const notAchievedMission = [];
 
-      /* feed count */
-      let feedCnt: number;
-      countEachType.forEach((questCnt) => {
-        if (questCnt.quest_type === 'feed') {
-          feedCnt = parseInt(questCnt.cnt);
-        }
-      });
-
       // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
+      let feedCnt: number;
       countEachType.forEach(async (cntItems) => {
+        /* feed count */
+        if (cntItems.quest_type === 'feed') feedCnt = parseInt(cntItems.cnt);
+
         missionList.forEach(async (mission) => {
           if (
             cntItems.quest_type === mission.type &&
