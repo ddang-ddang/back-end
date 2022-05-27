@@ -1,3 +1,4 @@
+import { JwtRefreshTokenGuard } from './../auth/jwt/jwt-refresh-token.guard'
 import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
@@ -212,7 +213,7 @@ export class PlayersController {
     }
   }
   // 엑세스 토큰 발급해주는 라우터
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtRefreshTokenGuard)
   @Get('auth/getToken')
   async test(@Request() req) {
     try {
