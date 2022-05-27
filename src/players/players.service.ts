@@ -155,6 +155,7 @@ export class PlayersService {
       const achievedMission = [];
       const notAchievedMission = [];
 
+      /* feed count */
       let feedCnt: number;
       countEachType.forEach((questCnt) => {
         if (questCnt.quest_type === 'feed') {
@@ -179,8 +180,6 @@ export class PlayersService {
           notAchievedMission.push(mission);
         }
       });
-
-      // console.log(profile, missionList, achievedMission, notAchievedMission);
 
       return {
         profile,
