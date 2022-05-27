@@ -462,13 +462,18 @@ export class QuestsService {
 
   @Cron('30 * * * * *', { timeZone: 'Asia/Seoul' })
   async testCron() {
-    this.logger.verbose('Cron 실행 테스트');
+    this.logger.verbose('매분 30초에 Cron 실행 테스트');
+  }
+
+  @Cron('0 0 22 * * *', { timeZone: 'Asia/Seoul' })
+  async testCronNight() {
+    this.logger.verbose('22시: Cron 실행 테스트');
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
   @Cron('0 0 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
-    this.logger.verbose('퀘스트 사전 생성');
+    this.logger.verbose('새벽 1시: 퀘스트 사전 생성');
 
     const today = new Date();
     const todayDate = today.toDateString();
