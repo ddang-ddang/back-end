@@ -341,7 +341,7 @@ export class PlayersController {
       };
       this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
 
-      const test = await this.playersService.mypageInfo(2);
+      const test = await this.playersService.mypageInfo(3);
 
       return {
         ok: true,
