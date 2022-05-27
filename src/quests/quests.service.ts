@@ -460,28 +460,23 @@ export class QuestsService {
     return { ok: true, row: quest };
   }
 
-  @Cron('0 * * * * *', { timeZone: 'Asia/Seoul' })
-  async testCron() {
-    this.logger.verbose('Every minutes, Cron Test');
-  }
-
-  @Cron('0 30 1 * * *', { timeZone: 'Asia/Seoul' })
-  async testCronNight() {
-    this.logger.verbose('AM 1:30, Cron Test');
-  }
-
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 35 1 * * *', { timeZone: 'Asia/Seoul' })
+  @Cron('0 50 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
     this.logger.verbose('AM 1:35, Create Todays Quests');
 
     const today = new Date();
+    this.logger.verbose(`today: ${today}`);
     const todayDate = today.toDateString();
+    this.logger.verbose(`todayDate: ${todayDate}`);
 
     const yesterday = new Date();
+    this.logger.verbose(`yesterday: ${yesterday}`);
     yesterday.setDate(today.getDate() - 1);
     const yesterdayDate = yesterday.toDateString();
+    this.logger.verbose(`yesterday: ${yesterdayDate}`);
     const regions = await this.regions.find({ date: yesterdayDate });
+    this.logger.verbose(`regions: ${regions}`);
 
     for (const region of regions) {
       const { regionSi, regionGu, regionDong } = region;
