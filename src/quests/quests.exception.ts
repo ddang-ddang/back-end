@@ -59,7 +59,7 @@ export class QuestsException {
   }
 
   // 퀘스트 타입 오류
-  FeedNotMatch() {
+  feedNotMatch() {
     throw new BadRequestException({
       statusCode: HttpStatus.BAD_REQUEST,
       ok: false,

@@ -3,11 +3,12 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
-import { Repository } from 'typeorm';
+import { PrimaryGeneratedColumn, Repository } from 'typeorm';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { FeedsModule } from 'src/feeds/feeds.module';
 import * as dotenv from 'dotenv';
 import { FeedRepository } from 'src/feeds/feeds.repository';
+import * as pactum from 'pactum';
 dotenv.config();
 
 describe('FeedsController E2E test', () => {
@@ -54,19 +55,30 @@ describe('FeedsController E2E test', () => {
     );
     repository = moduleFixture.get('FeedRepository');
     await app.init();
+    pactum.request.setBaseUrl('http://localhost:3000');
   });
 
-  it('피드 조회', () => {
-    return request
-      .agent(app.getHttpServer())
-      .post('/api/feeds?type=distance')
-      .send({
-        regionSi: '서울시',
-        regionGu: '강남구',
-        regionDong: '삼성동',
-        lat: 36.233233,
-        lng: 127.342342,
-      })
-      .expect(200);
+  afterAll(() => app.close());
+
+  describe('피드', () => {
+    it('내가 작성한 피드 조회', async () => {
+      const token = 'accessToken';
+
+      await pactum
+        .spec()
+        .get('/api/feeds/myfeed')
+        .withHeaders('Authorization', `Bearer ${token}`)
+        .expectStatus(200);
+    });
+
+    it('우리 동네 전체 피드 조회', async () => {
+      const token = 'fakeToken';
+
+      await pactum
+        .spec()
+        .get('/api/feeds/myfeed')
+        .withHeaders('Authorization', `Bearer ${token}`)
+        .expectStatus(200);
+    });
   });
 });
