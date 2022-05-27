@@ -306,46 +306,16 @@ export class PlayersController {
   @Get('mypage')
   async loadMypage(@Request() req): Promise<object> {
     try {
-      const mockdata = {
-        nickname: '강윤지',
-        mbti: 'ENTP',
-        badges: [
-          {
-            badge1: 'imageUrl', //
-            badge2: 'imageUrl',
-            badge3: 'imageUrl',
-          },
-        ],
-        occupiedPlaces: [
-          {
-            lat: '222.333',
-            lng: '333.444',
-          },
-        ],
-        missions: [
-          {
-            title: '동네 길냥이',
-            description: '개의 땅문서를 작성했어요.',
-            setGoalds: 20,
-            badge: 'imageUrl',
-          },
-        ],
-        achievements: [
-          {
-            title: '동네 길냥이',
-            description: '개의 땅문서를 작성했어요.',
-            setGoalds: 20,
-            badge: 'imageUrl',
-          },
-        ],
-      };
-      this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
+      const { playerId } = req['user'].player;
+      this.logger.verbose(
+        `유저 id ${playerId}님이 마이페이지를 이용 하려고 합니다`
+      );
 
-      const test = await this.playersService.mypageInfo(3);
+      const myInfo = await this.playersService.mypageInfo(playerId);
 
       return {
         ok: true,
-        rows: test,
+        rows: myInfo,
       };
     } catch (err) {
       console.log(err);
