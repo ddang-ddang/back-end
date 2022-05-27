@@ -48,7 +48,7 @@ export class FeedRepository extends Repository<Feed> {
   }
 
   /* 내가 쓴 피드 가져오기 */
-  async getMyFeeds(playerId: number) {
+  async getMyFeeds(playerId: number): Promise<Feed[]> {
     const feeds = await this.createQueryBuilder('feed')
       .select([
         'feed',
@@ -61,6 +61,7 @@ export class FeedRepository extends Repository<Feed> {
         'player.expPoints',
       ])
       .leftJoin('feed.player', 'player')
+      .where('player.id = :playerId', { playerId })
       .orderBy('feed.createdAt', 'DESC')
       .getMany();
     return feeds;
