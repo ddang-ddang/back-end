@@ -461,7 +461,7 @@ export class QuestsService {
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 35 1 * * *', { timeZone: 'Asia/Seoul' })
+  @Cron('0 50 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
     this.logger.verbose('AM 1:35, Create Todays Quests');
 
