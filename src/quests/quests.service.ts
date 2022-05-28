@@ -311,7 +311,9 @@ export class QuestsService {
       console.timeEnd('Kakao API - getCoords');
     }
 
-    const today = new Date();
+    const curr = new Date();
+    const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+    const today = new Date(utc + 9 * 60 * 60 * 1000);
     const year = today.getFullYear();
     const month = today.getMonth();
     const date = today.getDate();
