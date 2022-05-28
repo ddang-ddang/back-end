@@ -32,6 +32,7 @@ import { typeORMConfig, jwtConfig } from '../configs';
 import { HttpExceptionFilter } from './utils/http-exception.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { FeedException } from './feeds/feeds.exception';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { FeedException } from './feeds/feeds.exception';
     QuestsModule,
     NotifsModule,
     RanksModule,
+    MailModule,
   ],
   controllers: [AppController, PlayersController],
   providers: [

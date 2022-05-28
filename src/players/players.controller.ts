@@ -325,10 +325,14 @@ export class PlayersController {
     }
   }
 
-
+  /* 비밀번호 찾기 시 이메일 인증 */
   @Get('email')
   async mail(@Request() req, @Res() res): Promise<any> {
-    const authNum = Math.random().toString().substr(2, 6);
+    // const authNum = Math.random().toString().substr(2, 6);
+    let authNum = '';
+    for (let i = 0; i < 6; i++) {
+      authNum += Math.floor(Math.random() * 10);
+    }
     const emailTemplete = '<h1>러버덕 인증번호입니다</h1>';
     // ejs.renderFile(
     //   appDir + '/template/authMail.ejs',
@@ -343,7 +347,7 @@ export class PlayersController {
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
-      host: 'smtp.gmail.com',
+      host: process.env.NODEMAILER_HOST,
       port: 587,
       secure: false,
       auth: {
@@ -353,7 +357,7 @@ export class PlayersController {
     });
 
     const mailOptions = await transporter.sendMail({
-      from: `곰방`,
+      from: process.env.NODEMAILER_USER,
       to: req.body.mail,
       subject: '회원가입을 위한 인증번호를 입력해주세요.',
       html: emailTemplete,
