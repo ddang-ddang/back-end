@@ -60,7 +60,7 @@ describe('FeedsController E2E test', () => {
 
   afterAll(() => app.close());
 
-  describe('피드', () => {
+  describe('Feed API', () => {
     const token = 'accesstoken';
 
     const feedId = 44;
