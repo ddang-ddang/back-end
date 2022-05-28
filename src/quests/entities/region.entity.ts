@@ -1,15 +1,18 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm';
 import { Quest } from 'src/quests/entities/quest.entity';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { Notif } from 'src/notifs/entities/notif.entity';
 
 @Entity()
+@Unique(['date', 'regionGu', 'regionDong'])
 export class Region extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'regionId' })
   id: number;
@@ -32,12 +35,15 @@ export class Region extends BaseEntity {
   @Column()
   pageCount: number;
 
-  @OneToMany((type) => Quest, (quest) => quest.region)
+  @CreateDateColumn({})
+  createdAt: Date;
+
+  @OneToMany((_) => Quest, (quest) => quest.region)
   quests: Quest[];
 
-  @OneToMany((type) => Feed, (feed) => feed.region)
+  @OneToMany((_) => Feed, (feed) => feed.region)
   feeds: Feed[];
 
-  @OneToMany((type) => Notif, (notif) => notif.region)
+  @OneToMany((_) => Notif, (notif) => notif.region)
   notifs: Notif[];
 }
