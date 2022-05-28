@@ -1,6 +1,7 @@
 import {
   BaseEntity,
   Column,
+  CreateDateColumn,
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -33,6 +34,9 @@ export class Region extends BaseEntity {
 
   @Column()
   pageCount: number;
+
+  @CreateDateColumn({})
+  createdAt: Date;
 
   @OneToMany((_) => Quest, (quest) => quest.region)
   quests: Quest[];
