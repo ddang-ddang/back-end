@@ -6,9 +6,9 @@ import { PlayerRepository } from 'src/players/players.repository';
 import { PrimaryGeneratedColumn, Repository } from 'typeorm';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { FeedsModule } from 'src/feeds/feeds.module';
-import * as dotenv from 'dotenv';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import * as pactum from 'pactum';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 describe('FeedsController E2E test', () => {
@@ -63,7 +63,7 @@ describe('FeedsController E2E test', () => {
   describe('Feed API', () => {
     const token = 'accesstoken';
 
-    const feedId = 44;
+    const feedId = 45;
 
     const feedList = {
       feedOne: {
@@ -80,7 +80,7 @@ describe('FeedsController E2E test', () => {
       await pactum
         .spec()
         .get('/api/feeds/myfeed')
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .expectStatus(200);
     });
 
@@ -88,7 +88,7 @@ describe('FeedsController E2E test', () => {
       await pactum
         .spec()
         .get('/api/feeds/myfeed')
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .expectStatus(200);
     });
 
@@ -96,7 +96,7 @@ describe('FeedsController E2E test', () => {
       await pactum
         .spec()
         .patch(`/api/feeds/${feedId}`)
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .withBody(feedList.feedOne)
         .expectStatus(200);
     });
@@ -105,7 +105,7 @@ describe('FeedsController E2E test', () => {
       await pactum
         .spec()
         .patch(`/api/feeds/${feedId}`)
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .withBody({})
         .expectStatus(204);
     });

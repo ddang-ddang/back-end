@@ -7,6 +7,8 @@ import { CommentsModule } from 'src/comments/comments.module';
 import { getRepositoryToken, TypeOrmModule } from '@nestjs/typeorm';
 import { CommentRepository } from 'src/comments/comments.repository';
 import * as pactum from 'pactum';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 describe('commentsController E2E test', () => {
   let app: INestApplication;
@@ -73,7 +75,7 @@ describe('commentsController E2E test', () => {
       await pactum
         .spec()
         .post(`/api/feeds/${feedId}/comments`)
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .withBody(commentList.commentOne)
         .expectStatus(201);
     });
