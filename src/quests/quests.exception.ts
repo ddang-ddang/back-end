@@ -49,4 +49,11 @@ export class QuestsException {
       message: '퀘스트를 완료할 수 없습니다.',
     });
   }
+
+  cantCreateRegion() {
+    throw new ConflictException({
+      ok: false,
+      message: '잠시 뒤 다시 시도해 주시기 바랍니다.',
+    });
+  }
 }
