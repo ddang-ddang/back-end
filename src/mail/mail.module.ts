@@ -6,10 +6,13 @@ import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { MailController } from './mail.controller';
 import * as dotenv from 'dotenv';
+import { PlayerRepository } from 'src/players/players.repository';
+import { TypeOrmModule } from '@nestjs/typeorm';
 dotenv.config();
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([PlayerRepository]),
     MailerModule.forRootAsync({
       useFactory: async () => ({
         transport: {
