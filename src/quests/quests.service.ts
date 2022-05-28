@@ -175,14 +175,18 @@ export class QuestsService {
     console.timeEnd('createQuests');
 
     // region, quest 생성 트랜잭션 처리 (promise.all 트랜잭션 처리 추가 학습 필요)
-    // 지역(동) 데이터 DB에 추가
-    region = this.regions.create({
-      date,
-      ...kakaoAddress,
-      totalCount,
-      pageCount,
-    });
-    await this.regions.save(region);
+    try {
+      // 지역(동) 데이터 DB에 추가
+      region = this.regions.create({
+        date,
+        ...kakaoAddress,
+        totalCount,
+        pageCount,
+      });
+      await this.regions.save(region);
+    } catch (error) {
+      this.exceptions.cantCreateRegion();
+    }
 
     // 퀘스트 데이터 DB에 추가
     await Promise.all([
