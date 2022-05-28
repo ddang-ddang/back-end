@@ -52,7 +52,7 @@ describe('commentsController E2E test', () => {
         transform: true,
       })
     );
-    repository = moduleFixture.get('CommentRepository');
+    // repository = moduleFixture.get('CommentRepository');
     await app.init();
     pactum.request.setBaseUrl('http://localhost:3000');
   });
@@ -60,14 +60,15 @@ describe('commentsController E2E test', () => {
   afterAll(() => app.close());
 
   describe('Comment API', () => {
-    const token = 'accesstoken';
-
     const feedId = 44;
     const commentId = 1;
 
     const commentList = {
       commentOne: {
         comment: 'jest comment one',
+      },
+      commentTwo: {
+        comment: 'jest comment two',
       },
     };
 
@@ -78,6 +79,23 @@ describe('commentsController E2E test', () => {
         .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .withBody(commentList.commentOne)
         .expectStatus(201);
+    });
+
+    it('댓글 수정', async () => {
+      await pactum
+        .spec()
+        .patch(`/api/feeds/${feedId}/comments/${commentId}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
+        .withBody(commentList.commentTwo)
+        .expectStatus(200);
+    });
+
+    it('댓글 삭제', async () => {
+      await pactum
+        .spec()
+        .delete(`/api/feeds/${feedId}/comments/${commentId}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
+        .expectStatus(200);
     });
   });
 });

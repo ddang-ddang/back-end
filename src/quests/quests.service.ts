@@ -63,6 +63,9 @@ export class QuestsService {
     try {
       if (questType === 'feed') {
         const { content, img } = createFeedDto;
+        if (img.length > 3) {
+          this.exceptions.imageLengthExceed();
+        }
         await feedsRepository.feedQuest(questId, playerId, content, img);
       }
       const complete = this.completes.create({ questId, playerId });
