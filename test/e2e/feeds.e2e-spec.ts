@@ -61,9 +61,22 @@ describe('FeedsController E2E test', () => {
   afterAll(() => app.close());
 
   describe('피드', () => {
-    it('내가 작성한 피드 조회', async () => {
-      const token = 'accessToken';
+    const token = 'accesstoken';
 
+    const feedId = 44;
+
+    const feedList = {
+      feedOne: {
+        content: 'jest content one',
+        img: ['image_one', 'image_two', 'image_three'],
+      },
+      feedTwo: {
+        content: 'jest content two',
+        img: ['image_four', 'image_five', 'image_six'],
+      },
+    };
+
+    it('내가 작성한 피드 조회', async () => {
       await pactum
         .spec()
         .get('/api/feeds/myfeed')
@@ -72,13 +85,29 @@ describe('FeedsController E2E test', () => {
     });
 
     it('우리 동네 전체 피드 조회', async () => {
-      const token = 'fakeToken';
-
       await pactum
         .spec()
         .get('/api/feeds/myfeed')
         .withHeaders('Authorization', `Bearer ${token}`)
         .expectStatus(200);
+    });
+
+    it('피드 수정 PASS', async () => {
+      await pactum
+        .spec()
+        .patch(`/api/feeds/${feedId}`)
+        .withHeaders('Authorization', `Bearer ${token}`)
+        .withBody(feedList.feedOne)
+        .expectStatus(200);
+    });
+
+    it('피드 수정 FAIL', async () => {
+      await pactum
+        .spec()
+        .patch(`/api/feeds/${feedId}`)
+        .withHeaders('Authorization', `Bearer ${token}`)
+        .withBody({})
+        .expectStatus(204);
     });
   });
 });
