@@ -1,4 +1,4 @@
-import { JwtRefreshTokenGuard } from './../auth/jwt/jwt-refresh-token.guard'
+import { JwtRefreshTokenGuard } from './../auth/jwt/jwt-refresh-token.guard';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
@@ -19,11 +19,13 @@ import {
   BadRequestException,
   UnauthorizedException,
   HttpCode,
+  Res,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
 import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
+import nodemailer from 'nodemailer';
 
 // 인증관련 모듈
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
@@ -321,5 +323,54 @@ export class PlayersController {
     } catch (err) {
       console.log(err);
     }
+  }
+
+
+  @Get('email')
+  async mail(@Request() req, @Res() res): Promise<any> {
+    const authNum = Math.random().toString().substr(2, 6);
+    const emailTemplete = '<h1>러버덕 인증번호입니다</h1>';
+    // ejs.renderFile(
+    //   appDir + '/template/authMail.ejs',
+    //   { authCode: authNum },
+    //   function (err, data) {
+    //     if (err) {
+    //       console.log(err);
+    //     }
+    //     emailTemplete = data;
+    //   }
+    // );
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASS,
+      },
+    });
+
+    const mailOptions = await transporter.sendMail({
+      from: `곰방`,
+      to: req.body.mail,
+      subject: '회원가입을 위한 인증번호를 입력해주세요.',
+      html: emailTemplete,
+    });
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      }
+      console.log('Finish sending email : ' + info.response);
+      res.send(authNum);
+      transporter.close();
+    });
+
+    return {
+      ok: true,
+      authcode: authNum,
+    };
   }
 }
