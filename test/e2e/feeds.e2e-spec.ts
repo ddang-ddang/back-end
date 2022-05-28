@@ -6,9 +6,9 @@ import { PlayerRepository } from 'src/players/players.repository';
 import { PrimaryGeneratedColumn, Repository } from 'typeorm';
 import { Feed } from 'src/feeds/entities/feed.entity';
 import { FeedsModule } from 'src/feeds/feeds.module';
-import * as dotenv from 'dotenv';
 import { FeedRepository } from 'src/feeds/feeds.repository';
 import * as pactum from 'pactum';
+import * as dotenv from 'dotenv';
 dotenv.config();
 
 describe('FeedsController E2E test', () => {
@@ -60,25 +60,54 @@ describe('FeedsController E2E test', () => {
 
   afterAll(() => app.close());
 
-  describe('피드', () => {
-    it('내가 작성한 피드 조회', async () => {
-      const token = 'accessToken';
+  describe('Feed API', () => {
+    const token = 'accesstoken';
 
+    const feedId = 45;
+
+    const feedList = {
+      feedOne: {
+        content: 'jest content one',
+        img: ['image_one', 'image_two', 'image_three'],
+      },
+      feedTwo: {
+        content: 'jest content two',
+        img: ['image_four', 'image_five', 'image_six'],
+      },
+    };
+
+    it('내가 작성한 피드 조회', async () => {
       await pactum
         .spec()
         .get('/api/feeds/myfeed')
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .expectStatus(200);
     });
 
     it('우리 동네 전체 피드 조회', async () => {
-      const token = 'fakeToken';
-
       await pactum
         .spec()
         .get('/api/feeds/myfeed')
-        .withHeaders('Authorization', `Bearer ${token}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
         .expectStatus(200);
+    });
+
+    it('피드 수정 PASS', async () => {
+      await pactum
+        .spec()
+        .patch(`/api/feeds/${feedId}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
+        .withBody(feedList.feedOne)
+        .expectStatus(200);
+    });
+
+    it('피드 수정 FAIL', async () => {
+      await pactum
+        .spec()
+        .patch(`/api/feeds/${feedId}`)
+        .withHeaders('Authorization', `Bearer ${process.env.TEST_ACCESSTOKEN}`)
+        .withBody({})
+        .expectStatus(204);
     });
   });
 });

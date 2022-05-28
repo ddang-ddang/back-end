@@ -56,4 +56,11 @@ export class QuestsException {
       message: '잠시 뒤 다시 시도해 주시기 바랍니다.',
     });
   }
+
+  imageLengthExceed() {
+    throw new BadRequestException({
+      ok: false,
+      message: '이미지 개수가 너무 많습니다.',
+    });
+  }
 }
