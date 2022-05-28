@@ -11,12 +11,20 @@ import * as pactum from 'pactum';
 dotenv.config();
 
 const userList = {
-  user1: {
+  newUser: {
+    email: 'test2@test.com',
+    nickname: 'testnick',
+    password: 'Abcd1234',
+    mbti: 'esfj',
+    profileImg: 'image',
+  },
+
+  userOne: {
     email: 'test@test.com',
     password: 'Abcd1234',
   },
 
-  user2: {
+  userTwo: {
     email: 'aaaaa',
     password: 'bbbbb',
   },
@@ -77,12 +85,22 @@ describe('Player E2E test', () => {
 
   afterAll(() => app.close());
 
+  describe('회원가입', () => {
+    it('POST 회원가입 성공', async () => {
+      await pactum
+        .spec()
+        .post('/api/players/signup')
+        .withBody(userList.newUser)
+        .expectStatus(201);
+    });
+  });
+
   describe('로그인', () => {
     it('POST 로그인 성공', async () => {
       await pactum
         .spec()
         .post('/api/players/signin')
-        .withBody(userList.user1)
+        .withBody(userList.userOne)
         .expectStatus(201);
     });
 
@@ -90,7 +108,7 @@ describe('Player E2E test', () => {
       await pactum
         .spec()
         .post('/api/players/signin')
-        .withBody(userList.user2)
+        .withBody(userList.userTwo)
         .expectStatus(401);
     });
   });

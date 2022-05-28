@@ -63,6 +63,9 @@ export class QuestsService {
     try {
       if (questType === 'feed') {
         const { content, img } = createFeedDto;
+        if (img.length > 3) {
+          this.exceptions.imageLengthExceed();
+        }
         await feedsRepository.feedQuest(questId, playerId, content, img);
       }
       const complete = this.completes.create({ questId, playerId });
@@ -308,7 +311,9 @@ export class QuestsService {
       console.timeEnd('Kakao API - getCoords');
     }
 
-    const today = new Date();
+    const curr = new Date();
+    const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+    const today = new Date(utc + 9 * 60 * 60 * 1000);
     const year = today.getFullYear();
     const month = today.getMonth();
     const date = today.getDate();
