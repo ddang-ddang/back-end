@@ -71,19 +71,19 @@ export class AuthService {
     }
   }
 
-  async logout(id: number) {
-    try {
-      const result = await this.playersRepository.deleteToken(id);
-      console.log(result);
-      const deleteCookie = [
-        'authorization=; HttpOnly; Path=/; Max-Age=0',
-        'Refresh=; HttpOnly; Path=/; Max-Age=0',
-      ];
-      return deleteCookie;
-    } catch (err) {
-      console.log(err.message);
-    }
-  }
+  // async logout(id: number) {
+  //   try {
+  //     const result = await this.playersRepository.deleteToken(id);
+  //     console.log(result);
+  //     const deleteCookie = [
+  //       'authorization=; HttpOnly; Path=/; Max-Age=0',
+  //       'Refresh=; HttpOnly; Path=/; Max-Age=0',
+  //     ];
+  //     return deleteCookie;
+  //   } catch (err) {
+  //     console.log(err.message);
+  //   }
+  // }
 
   // 토큰을 생성하는 함수
   getJwtAccessToken(payload: object) {
