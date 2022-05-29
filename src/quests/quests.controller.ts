@@ -9,6 +9,7 @@ import {
   Req,
   Request,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { ApiNotFoundResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -19,6 +20,8 @@ import { CreateFeedDto } from '../feeds/dto/create-feed.dto';
 @ApiTags('퀘스트 API')
 export class QuestsController {
   constructor(private readonly questsService: QuestsService) {}
+
+  private readonly logger = new Logger(QuestsController.name);
 
   @Get()
   @ApiOperation({
@@ -39,12 +42,27 @@ export class QuestsController {
     }
 
     if (req.headers.authorization) {
+      this.logger.verbose(
+        'Client request with headers containing authorization.'
+      );
+      this.logger.verbose(
+        `req.headers.authorization: ${req.headers.authorization}`
+      );
       const token = req.headers.authorization.split(' ')[1];
+      this.logger.verbose(`token: ${token}`);
       const encodedPayload = token.split('.')[1];
+      this.logger.verbose(`encodedPayload: ${encodedPayload}`);
       const payload = Buffer.from(encodedPayload, 'base64');
+      this.logger.verbose(`payload: ${payload}`);
       const playerId = JSON.parse(payload.toString()).id;
+      this.logger.verbose(`playerId: ${playerId}`);
       return this.questsService.getAll(lat, lng, playerId);
     }
+
+    this.logger.verbose('Client request without headers.');
+    this.logger.verbose(
+      `req.headers.authorization: ${req.headers.authorization}`
+    );
 
     return this.questsService.getAll(lat, lng);
   }
