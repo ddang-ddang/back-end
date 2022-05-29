@@ -1,3 +1,4 @@
+import { JwtRefreshTokenGuard } from './../auth/jwt/jwt-refresh-token.guard';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
@@ -18,11 +19,13 @@ import {
   BadRequestException,
   UnauthorizedException,
   HttpCode,
+  Res,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
 import { AuthService } from 'src/auth/auth.service';
 import { PlayersService } from './players.service';
+import nodemailer from 'nodemailer';
 
 // 인증관련 모듈
 import { JwtAuthGuard } from 'src/auth/jwt/jwt-auth.guard';
@@ -219,7 +222,7 @@ export class PlayersController {
     }
   }
   // 엑세스 토큰 발급해주는 라우터
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtRefreshTokenGuard)
   @Get('auth/getToken')
   async test(@Request() req) {
     try {
@@ -313,49 +316,68 @@ export class PlayersController {
   @Get('mypage')
   async loadMypage(@Request() req): Promise<object> {
     try {
-      const mockdata = {
-        nickname: '강윤지',
-        mbti: 'ENTP',
-        badges: [
-          {
-            badge1: 'imageUrl', //
-            badge2: 'imageUrl',
-            badge3: 'imageUrl',
-          },
-        ],
-        occupiedPlaces: [
-          {
-            lat: '222.333',
-            lng: '333.444',
-          },
-        ],
-        missions: [
-          {
-            title: '동네 길냥이',
-            description: '개의 땅문서를 작성했어요.',
-            setGoalds: 20,
-            badge: 'imageUrl',
-          },
-        ],
-        achievements: [
-          {
-            title: '동네 길냥이',
-            description: '개의 땅문서를 작성했어요.',
-            setGoalds: 20,
-            badge: 'imageUrl',
-          },
-        ],
-      };
-      this.logger.verbose(`님이 마이페이지를 이용 하려고 합니다`);
+      const { playerId } = req['user'].player;
+      this.logger.verbose(
+        `유저 id ${playerId}님이 마이페이지를 이용 하려고 합니다`
+      );
 
-      const test = await this.playersService.mypageInfo(2);
+      const myInfo = await this.playersService.mypageInfo(playerId);
 
       return {
         ok: true,
-        rows: test,
+        rows: myInfo,
       };
     } catch (err) {
       console.log(err);
     }
+  }
+
+
+  @Get('email')
+  async mail(@Request() req, @Res() res): Promise<any> {
+    const authNum = Math.random().toString().substr(2, 6);
+    const emailTemplete = '<h1>러버덕 인증번호입니다</h1>';
+    // ejs.renderFile(
+    //   appDir + '/template/authMail.ejs',
+    //   { authCode: authNum },
+    //   function (err, data) {
+    //     if (err) {
+    //       console.log(err);
+    //     }
+    //     emailTemplete = data;
+    //   }
+    // );
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASS,
+      },
+    });
+
+    const mailOptions = await transporter.sendMail({
+      from: `곰방`,
+      to: req.body.mail,
+      subject: '회원가입을 위한 인증번호를 입력해주세요.',
+      html: emailTemplete,
+    });
+
+    transporter.sendMail(mailOptions, function (error, info) {
+      if (error) {
+        console.log(error);
+      }
+      console.log('Finish sending email : ' + info.response);
+      res.send(authNum);
+      transporter.close();
+    });
+
+    return {
+      ok: true,
+      authcode: authNum,
+    };
   }
 }

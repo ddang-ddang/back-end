@@ -10,6 +10,7 @@ import { FeedRepository } from 'src/feeds/feeds.repository';
 import { Achievement } from '../../src/players/entities/achievement.entity';
 import { Mission } from '../../src/players/entities/mission.entity';
 import { QuestsException } from '../../src/quests/quests.exception';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 const mockRepository = () => ({
   create: jest.fn(),
@@ -30,8 +31,11 @@ const mockFeedRepository = {
 };
 const mockException = {
   notFoundQuest: jest.fn(),
+  alreadyCompleted: jest.fn(),
 };
-const mockConnection = {};
+const mockConnection = {
+  createQueryRunner: jest.fn(),
+};
 
 type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
 type MockQuestRepository = Partial<Record<keyof QuestRepository, jest.Mock>>;
@@ -117,56 +121,33 @@ describe('QuestsService', () => {
       difficulty: 3,
       reward: 100,
     };
-    const questId = 1;
-    const playerId = 1;
 
     it('should fail if quest does not exist', async () => {
-      // 테스트 코드를 작성하면서 코드를 정리하게 되었다.
-      // 하지만...
       questsRepository.findOne.mockResolvedValue(undefined);
-
-      const result = await service.questComplete(questId, playerId, '1');
-      expect(questsException.notFoundQuest()).toBeCalled();
-
-      expect(result).toEqual({
-        ok: false,
-        message: '요청하신 퀘스트를 찾을 수 없습니다.',
-      });
-    });
-
-    it('should fail if player does not exist', async () => {
-      questsRepository.findOne.mockResolvedValue(true);
-      playersRepository.findOne.mockResolvedValue(undefined);
-      const result = await service.questComplete(questId, playerId, '1');
-
-      expect(result).toEqual({
-        ok: false,
-        message: '플레이어님의 정보를 찾을 수 없습니다.',
-      });
+      await expect(service.questComplete(-1, 1)).rejects.toEqual(
+        new NotFoundException({ date: '', error: 'foo' })
+      );
     });
 
     it('should fail if quest is already completed', async () => {
       questsRepository.findOne.mockResolvedValue({ quest: {} });
-      completeRepository.findOne.mockResolvedValue({ quest: {}, player: {} });
-      const result = await service.questComplete(1, 1, '1');
-
-      expect(result).toEqual({
-        ok: false,
-        message: '퀘스트를 이미 완료하였습니다.',
-      });
+      completeRepository.findOne.mockResolvedValue(true);
+      await expect(service.questComplete(1, 1)).rejects.toEqual(
+        new ConflictException({ date: '', error: 'bar' })
+      );
     });
 
     it('should complete the quest', async () => {
       questsRepository.findOne.mockResolvedValue({ quest: {} });
       completeRepository.findOne.mockResolvedValue({ quest: {}, player: {} });
-      const result = await service.questComplete(1, 1, '1');
+      const result = await service.questComplete(1, 1);
 
       expect(result).toEqual({ ok: true });
     });
 
     it('should fail on exception', async () => {
       questsRepository.findOne.mockRejectedValue(new Error());
-      const result = await service.questComplete(questId, playerId, '1');
+      const result = await service.questComplete(1, 1);
 
       expect(result).toEqual({
         ok: false,

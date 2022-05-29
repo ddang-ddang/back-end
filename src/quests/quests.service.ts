@@ -63,6 +63,9 @@ export class QuestsService {
     try {
       if (questType === 'feed') {
         const { content, img } = createFeedDto;
+        if (img.length > 3) {
+          this.exceptions.imageLengthExceed();
+        }
         await feedsRepository.feedQuest(questId, playerId, content, img);
       }
       const complete = this.completes.create({ questId, playerId });
@@ -108,7 +111,6 @@ export class QuestsService {
           type: questType,
         },
       });
-      console.log(mission);
       if (mission) {
         const achievement = this.achievements.create({ mission, playerId });
         await queryRunner.manager.save(achievement);
@@ -135,9 +137,9 @@ export class QuestsService {
     let allQuests;
 
     console.time('getAll');
-    console.time('카카오API - getAddressName');
+    console.time('Kakao API - getAddressName');
     const kakaoAddress = await this.getAddressName(lat, lng);
-    console.timeEnd('카카오API - getAddressName');
+    console.timeEnd('Kakao API - getAddressName');
     if (!kakaoAddress) this.exceptions.notFoundKakaoAddress();
 
     const date = new Date().toDateString();
@@ -166,22 +168,18 @@ export class QuestsService {
     }
 
     // 지역(동), 좌표 값으로 퀘스트 만들기
-    console.time('주소API - getRegionData');
+    console.time('Juso API - getRegionData');
     const regionData = await this.getRegionData(kakaoAddress);
     if (!regionData) this.exceptions.notFoundPublicAddress();
     const { totalCount, pageCount } = regionData;
-    console.timeEnd('주소API - getRegionData');
+    console.timeEnd('Juso API - getRegionData');
     console.time('createQuests');
     const quests = await this.createQuests(totalCount, pageCount, kakaoAddress);
     console.timeEnd('createQuests');
 
-    const queryRunner = this.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    // region, quest 생성 트랜잭션 처리
+    // region, quest 생성 트랜잭션 처리 (promise.all 트랜잭션 처리 추가 학습 필요)
     try {
-      // 지역(동) 데이터 DB에 추가 및 조회
+      // 지역(동) 데이터 DB에 추가
       region = this.regions.create({
         date,
         ...kakaoAddress,
@@ -189,22 +187,19 @@ export class QuestsService {
         pageCount,
       });
       await this.regions.save(region);
-
-      // 퀘스트 데이터 DB에 추가 및 조회
-      await Promise.all([
-        ...quests.map((quest) => {
-          return this.quests.save({
-            ...quest,
-            region,
-          });
-        }),
-      ]);
     } catch (error) {
-      await queryRunner.rollbackTransaction();
-      this.exceptions.cantGetQuests();
-    } finally {
-      await queryRunner.release();
+      this.exceptions.cantCreateRegion();
     }
+
+    // 퀘스트 데이터 DB에 추가
+    await Promise.all([
+      ...quests.map((quest) => {
+        return this.quests.save({
+          ...quest,
+          region,
+        });
+      }),
+    ]);
 
     const { regionSi, regionGu, regionDong } = region;
     allQuests = await this.quests.findAllWithCompletes(region, playerId);
@@ -224,7 +219,6 @@ export class QuestsService {
    */
   async getAddressName(lat, lng) {
     try {
-      console.log('here?');
       const res = await axios.get(
         `${process.env.MAP_KAKAO_BASE_URL}/geo/coord2address.json?x=${lng}&y=${lat}&input_coord=WGS84`,
         {
@@ -245,7 +239,7 @@ export class QuestsService {
 
       return { regionSi, regionGu, regionDong };
     } catch (error) {
-      console.log(error.message);
+      this.logger.error(error.message);
     }
   }
 
@@ -268,7 +262,7 @@ export class QuestsService {
       const pageCount = Math.ceil(totalCount / 100);
       return { totalCount, pageCount };
     } catch (error) {
-      console.log(error.message);
+      this.logger.error(error.message);
     }
   }
 
@@ -291,21 +285,21 @@ export class QuestsService {
     }
 
     /* 각 페이지마다 랜덤 idx로 상세주소 얻기 */
-    console.time('주소API - 한번에 불러오기');
+    console.time('Juso API - Get all at once');
     const rawRoadAddrs = await Promise.all([
       ...addrIndex.map(({ curPage, idx }) =>
         this.getRoadAddress(curPage, address, idx)
       ),
     ]);
     const roadAddrs = rawRoadAddrs.filter((addr) => addr);
-    console.timeEnd('주소API - 한번에 불러오기');
+    console.timeEnd('Juso API - Get all at once');
 
     let questsCoords = [];
     const limits = 20; // kakaoAPI 429 에러(Too Many Requests) 방지를 위해 요청당 호출수 제한
 
     /* 상세주소에 해당하는 좌표값 얻기 */
     for (let begin = 0; begin < pageCount; begin += limits) {
-      console.time('카카오API - getCoords');
+      console.time('Kakao API - getCoords');
       const end = begin + limits < pageCount ? begin + limits : pageCount;
       const roadAddrsSubset = roadAddrs.slice(begin, end);
       questsCoords = [
@@ -314,10 +308,12 @@ export class QuestsService {
           ...roadAddrsSubset.map((roadAddr) => this.getCoords(roadAddr)),
         ])),
       ];
-      console.timeEnd('카카오API - getCoords');
+      console.timeEnd('Kakao API - getCoords');
     }
 
-    const today = new Date();
+    const curr = new Date();
+    const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+    const today = new Date(utc + 9 * 60 * 60 * 1000);
     const year = today.getFullYear();
     const month = today.getMonth();
     const date = today.getDate();
@@ -461,7 +457,7 @@ export class QuestsService {
       const lng = res.data.documents[0].x;
       return { lat, lng };
     } catch (error) {
-      console.log(`getCoords: ${error.message}`);
+      this.logger.error(`getCoords: ${error.message}`);
     }
   }
 
@@ -474,20 +470,19 @@ export class QuestsService {
   }
 
   /* 어제의 지역(동) 데이터 기반으로 오늘의 새로운 퀘스트 만들기 */
-  @Cron('0 0 1 * * *', {
-    name: 'createQuests',
-    timeZone: 'Asia/Seoul',
-  })
+  @Cron('0 0 1 * * *', { timeZone: 'Asia/Seoul' })
   async preCreateQuests() {
-    this.logger.verbose('퀘스트 사전 생성');
-
-    const today = new Date();
+    this.logger.verbose('AM 1:00, Create Todays Quests');
+    const curr = new Date();
+    const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+    const today = new Date(utc + 9 * 60 * 60 * 1000);
     const todayDate = today.toDateString();
 
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
     const yesterdayDate = yesterday.toDateString();
-    let regions = await this.regions.find({ date: yesterdayDate });
+
+    const regions = await this.regions.find({ date: yesterdayDate });
 
     for (const region of regions) {
       const { regionSi, regionGu, regionDong } = region;
@@ -509,7 +504,7 @@ export class QuestsService {
         pageCount,
         kakaoAddress
       );
-      let newRegion = this.regions.create({
+      const newRegion = this.regions.create({
         date: todayDate,
         ...kakaoAddress,
         totalCount,

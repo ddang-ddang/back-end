@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import nodemailer from 'nodemailer';
+
 import {
   CreateBodyDto,
   EmailDto,
@@ -137,49 +139,76 @@ export class PlayersService {
         ])
         .leftJoinAndSelect('player.completes', 'completes')
         .leftJoinAndSelect('completes.quest', 'quest')
-        .where('player.playerId = :playerId', { playerId: playerId })
+        .where('player.playerId = :playerId', { playerId })
         .getMany();
 
       const countEachType = await Complete.createQueryBuilder('complete')
         .select(['quest.type', 'count(quest.type) as cnt'])
         .leftJoin('complete.quest', 'quest')
-        .where('complete.playerId = :playerId', { playerId: playerId })
+        .where('complete.playerId = :playerId', { playerId })
         .groupBy('quest.type')
         .getRawMany();
 
       const missionList = await Mission.find({
-        order: {
-          createdAt: 'DESC',
-        },
+        order: { createdAt: 'DESC' },
       });
       const achievedMission = [];
       const notAchievedMission = [];
 
       // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
-      countEachType.map(async (cntItems) => {
-        missionList.map(async (mission) => {
+      let feedCnt: number;
+      countEachType.forEach(async (cntItems) => {
+        /* feed count */
+        if (cntItems.quest_type === 'feed') feedCnt = parseInt(cntItems.cnt);
+
+        missionList.forEach(async (mission) => {
           if (
             cntItems.quest_type === mission.type &&
-            cntItems.cnt >= mission.setGoals
+            parseInt(cntItems.cnt) >= mission.setGoals
           ) {
             achievedMission.push(mission);
           }
         });
       });
 
-      missionList.map((mission) => {
+      missionList.forEach((mission) => {
         if (!achievedMission.includes(mission)) {
           notAchievedMission.push(mission);
         }
       });
 
-      // console.log(profile, missionList, achievedMission, notAchievedMission);
-
       return {
         profile,
         achievedMission,
         notAchievedMission,
+        feedCnt,
       };
+    } catch (err) {
+      return err.message;
+    }
+  }
+
+  // 랜덤숫자 발생
+  generateRandom(min, max) {
+    const ranNum = Math.floor(Math.random() * (max - min + 1)) + min;
+    return ranNum;
+  }
+
+  async emailCheckandUpdate(): Promise<any> {
+    try {
+      // 아이디 비빔번호로 메일 보내기
+      const smtpTransport = nodemailer.createTransport({
+        service: 'Naver',
+        auth: {
+          user: 'YourEmail@naver.com',
+          pass: 'YourPasswor',
+        },
+        tls: {
+          rejectUnauthorized: false,
+        },
+      });
+
+      return smtpTransport;
     } catch (err) {
       return err.message;
     }

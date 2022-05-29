@@ -4,7 +4,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
   BadRequestException,
-  HttpStatus,
 } from '@nestjs/common';
 
 @Injectable()
@@ -51,20 +50,17 @@ export class QuestsException {
     });
   }
 
-  cantGetQuests() {
-    throw new InternalServerErrorException({
+  cantCreateRegion() {
+    throw new ConflictException({
       ok: false,
-      message: '퀘스트를 찾을 수 없습니다.',
+      message: '잠시 뒤 다시 시도해 주시기 바랍니다.',
     });
   }
 
-  // 퀘스트 타입 오류
-  FeedNotMatch() {
+  imageLengthExceed() {
     throw new BadRequestException({
-      statusCode: HttpStatus.BAD_REQUEST,
       ok: false,
-      message: 'feed타입의 퀘스트가 아닙니다.',
-      error: 'Bad Request',
+      message: '이미지 개수가 너무 많습니다.',
     });
   }
 }

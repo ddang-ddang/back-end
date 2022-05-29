@@ -54,7 +54,7 @@ async function bootstrap() {
   };
   SwaggerModule.setup('/', app, document, customOptions);
 
-  const port = serverConfig.port;
+  const port = serverConfig.port || 8080;
   await app.listen(port);
   logger.log(`Application running on port:: ${port}`);
 }
