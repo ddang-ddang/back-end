@@ -8,6 +8,7 @@ import { MailController } from './mail.controller';
 import * as dotenv from 'dotenv';
 import { PlayerRepository } from 'src/players/players.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MailException } from './mail.exception';
 dotenv.config();
 
 @Module({
@@ -37,7 +38,7 @@ dotenv.config();
       inject: [ConfigService],
     }),
   ],
-  providers: [MailService],
+  providers: [MailService, MailException],
   exports: [MailService],
   controllers: [MailController],
 })
