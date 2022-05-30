@@ -164,4 +164,9 @@ export class PlayerRepository extends Repository<Player> {
       return false;
     }
   }
+
+  /* mail */
+  async updatePassword(email: string, password: string) {
+    await this.update({ email }, { password });
+  }
 }

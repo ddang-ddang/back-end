@@ -23,7 +23,10 @@ export class CommentRepository extends Repository<Comment> {
 
     return {
       id: newComment.id,
-      comment: newComment.comment,
+      comment: {
+        comment: newComment.comment,
+        createdAt: newComment.createdAt,
+      },
       player: {
         id: newComment.player.id,
         email: newComment.player.email,
