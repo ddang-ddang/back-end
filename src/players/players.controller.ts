@@ -180,7 +180,7 @@ export class PlayersController {
 
       return {
         ok: true,
-        row: { email, nickname, mbti, profileImg, expPoints, points, level },
+        row: {playerId:id, email, nickname, mbti, profileImg, expPoints, points, level },
       };
     } catch (err) {
       throw new UnauthorizedException('refreshToken is invalid');
