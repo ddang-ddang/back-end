@@ -167,6 +167,10 @@ export class PlayersController {
 
       this.logger.verbose(`${email}님이 로그인하려고 합니다`);
 
+      const response = await this.authService.additionalInfo(email);
+
+      const { mbti, profileImg, expPoints, points, level } = response;
+
       const tokens = await this.authService.signin(email, nickname, id);
 
       const { accessToken, refreshToken } = tokens;
@@ -174,7 +178,10 @@ export class PlayersController {
       req.res.setHeader('accessToken', accessToken);
       req.res.setHeader('refreshToken', refreshToken);
 
-      return { ok: true, row: { email, nickname } };
+      return {
+        ok: true,
+        row: { email, nickname, mbti, profileImg, expPoints, points, level },
+      };
     } catch (err) {
       throw new UnauthorizedException('refreshToken is invalid');
     }
@@ -250,12 +257,12 @@ export class PlayersController {
       // 엑세스 토큰을 삭제
       // DB에서 리프레쉬 삭제
       // 클라이언트에서는 localstorage에서 삭제따로 해줘야함
-      console.log(playerId);
-      const result = await this.authService.logout(playerId);
-      req.res.setHeader('Set-Cookie', result);
-      console.log(result);
+      // console.log(playerId);
+      // const result = await this.authService.logout(playerId);
+      // req.res.setHeader('Set-Cookie', result);
+      // console.log(result);
 
-      return { ok: true, row: result };
+      return { ok: true, row: null };
     } catch (err) {
       return { ok: false, message: err.message };
     }
