@@ -187,30 +187,4 @@ export class PlayersService {
       return err.message;
     }
   }
-
-  // 랜덤숫자 발생
-  generateRandom(min, max) {
-    const ranNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    return ranNum;
-  }
-
-  async emailCheckandUpdate(): Promise<any> {
-    try {
-      // 아이디 비빔번호로 메일 보내기
-      const smtpTransport = nodemailer.createTransport({
-        service: 'Naver',
-        auth: {
-          user: 'YourEmail@naver.com',
-          pass: 'YourPasswor',
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
-
-      return smtpTransport;
-    } catch (err) {
-      return err.message;
-    }
-  }
 }
