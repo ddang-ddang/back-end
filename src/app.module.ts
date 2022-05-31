@@ -38,12 +38,12 @@ import { FeedException } from './feeds/feeds.exception';
     ConfigModule.forRoot({ envFilePath: './config/.env', isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: jwtConfig.accessTokenSecret,
-      signOptions: { expiresIn: `${jwtConfig.accessTokenSecret}s` },
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      signOptions: { expiresIn: `${process.env.JWT_ACCESS_TOKEN_SECRET}s` },
     }),
     JwtModule.register({
       secret: jwtConfig.refreshTokenSecret,
-      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
+      signOptions: { expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXP}s` },
     }),
     TypeOrmModule.forRoot(typeORMConfig),
     TypeOrmModule.forFeature([

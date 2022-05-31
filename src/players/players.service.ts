@@ -136,7 +136,7 @@ export class PlayersService {
           'player.profileImg',
           'player.level',
           'player.expPoints',
-          'player.points'
+          'player.points',
         ])
         .leftJoinAndSelect('player.completes', 'completes')
         .leftJoinAndSelect('completes.quest', 'quest')
