@@ -143,6 +143,8 @@ export class PlayersService {
         .where('player.playerId = :playerId', { playerId })
         .getMany();
 
+      console.log(profile);
+
       const countEachType = await Complete.createQueryBuilder('complete')
         .select(['quest.type', 'count(quest.type) as cnt'])
         .leftJoin('complete.quest', 'quest')

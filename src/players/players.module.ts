@@ -14,12 +14,12 @@ import { jwtConfig } from '../../configs';
     ConfigModule,
     TypeOrmModule.forFeature([Player, PlayerRepository]),
     JwtModule.register({
-      secret: jwtConfig.accessTokenSecret,
-      signOptions: { expiresIn: `${jwtConfig.accessTokenExp}s` },
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      signOptions: { expiresIn: `${process.env.JWT_ACCESS_TOKEN_EXP}s` },
     }),
     JwtModule.register({
       secret: jwtConfig.refreshTokenSecret,
-      signOptions: { expiresIn: `${jwtConfig.refreshTokenExp}s` },
+      signOptions: { expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXP}s` },
     }),
   ],
   providers: [PlayersService, AuthService],
