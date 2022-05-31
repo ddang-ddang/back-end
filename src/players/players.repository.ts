@@ -84,7 +84,6 @@ export class PlayerRepository extends Repository<Player> {
       const token = refreshToken.split(' ')[1];
       const currentHashedRefreshToken = await bcrypt.hash(token, 10);
 
-
       if (id < 10000) {
         const result = await this.update(id, {
           currentHashedRefreshToken,
@@ -182,9 +181,10 @@ export class PlayerRepository extends Repository<Player> {
     }
   }
 
-  async providerIdByEmail(providerId: number): Promise<any> {
+  async checkIdByProviderId(providerId: number): Promise<any> {
     try {
       const result = await this.findOne({
+        select: ['id'],
         where: { providerId },
       });
 

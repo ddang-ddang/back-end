@@ -387,11 +387,14 @@ export class PlayersController {
   async loadMypage(@Request() req): Promise<object> {
     try {
       const { playerId } = req['user'].player;
+
+      const data = await this.authService.checkIdByProviderId(playerId);
+
       this.logger.verbose(
         `유저 id ${playerId}님이 마이페이지를 이용 하려고 합니다`
       );
 
-      const myInfo = await this.playersService.mypageInfo(playerId);
+      const myInfo = await this.playersService.mypageInfo(data.id);
 
       return {
         ok: true,

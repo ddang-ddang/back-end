@@ -4,12 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
-import {
-  LoginDto,
-  // PlayerIdDto,
-  SigninDto,
-} from 'src/players/dto/create-player.dto';
-import { jwtConfig } from '../../configs';
+import { LoginDto, SigninDto } from 'src/players/dto/create-player.dto';
 
 @Injectable()
 export class AuthService {
@@ -148,7 +143,7 @@ export class AuthService {
       // id가 10000이상이면 소셜 로그이다.
       if (id > 10000) {
         console.log('소셜로그인');
-        const encryptToken = await this.playersRepository.providerIdByEmail(id);
+        const encryptToken = await this.playersRepository.checkIdByProviderId(id);
 
         const { currentHashedRefreshToken } = encryptToken;
 
@@ -158,7 +153,7 @@ export class AuthService {
         // 리프레쉬 토큰을 구조분해한 값과 비교한다.
         const result = await bcrypt.compare(
           `Bearer ` + refreshToken,
-           currentHashedRefreshToken
+          currentHashedRefreshToken
         );
         // 리프레쉬 토큰을 구조분해한 값과 비교한다.
 
@@ -265,7 +260,7 @@ export class AuthService {
   async checkIdByProviderId(providerId: number) {
     try {
       // const result = await this.playersRepository.findByEmail({email:email});
-      const resultId = await this.playersRepository.providerIdByEmail(
+      const resultId = await this.playersRepository.checkIdByProviderId(
         providerId
       );
 
