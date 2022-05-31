@@ -84,8 +84,8 @@ export class PlayerRepository extends Repository<Player> {
       const token = refreshToken.split(' ')[1];
       const currentHashedRefreshToken = await bcrypt.hash(token, 10);
 
-      console.log('respotiroy--------------------------------')
-      console.log(token, currentHashedRefreshToken)
+      console.log('respotiroy--------------------------------');
+      console.log(token, currentHashedRefreshToken);
 
       if (id < 10000) {
         const result = await this.update(id, {
@@ -190,7 +190,7 @@ export class PlayerRepository extends Repository<Player> {
         where: { providerId },
       });
 
-      console.log(result)
+      console.log(result);
       if (!result) {
         return false;
       }
@@ -199,5 +199,9 @@ export class PlayerRepository extends Repository<Player> {
       console.log(err.message);
       return false;
     }
+  }
+  /* mail */
+  async updatePassword(email: string, password: string) {
+    await this.update({ email }, { password });
   }
 }

@@ -150,17 +150,28 @@ export class PlayersService {
         .groupBy('quest.type')
         .getRawMany();
 
+      /* [
+        { feed: 3 },
+        { mob: 5 },
+        { time: 8 }
+      ] */
+
       const missionList = await Mission.find({
-        order: { createdAt: 'DESC' },
+        order: { id: 'ASC' },
       });
       const achievedMission = [];
       const notAchievedMission = [];
 
       // feed, mob, time으로 구별해서 mission에 저장되어있는 setGoals을 비교해서 결과값이 true이면 Achievement를 생성한다.
-      let feedCnt: number;
+      let feedCnt = 0;
+      let mobCnt = 0;
+      let timeCnt = 0;
       countEachType.forEach(async (cntItems) => {
         /* feed count */
         if (cntItems.quest_type === 'feed') feedCnt = parseInt(cntItems.cnt);
+        else if (cntItems.quest_type === 'mob') mobCnt = parseInt(cntItems.cnt);
+        else if (cntItems.quest_type === 'time')
+          timeCnt = parseInt(cntItems.cnt);
 
         missionList.forEach(async (mission) => {
           if (
@@ -178,38 +189,62 @@ export class PlayersService {
         }
       });
 
+      let feedBadge: string = null;
+      let mobBadge: string = null;
+      let timeBadge: string = null;
+      if (feedCnt >= 1 && feedCnt < 3) {
+        feedBadge = 'iron';
+      } else if (feedCnt < 5) {
+        feedBadge = 'bronze';
+      } else if (feedCnt < 10) {
+        feedBadge = 'silver';
+      } else if (feedCnt < 20) {
+        feedBadge = 'gold';
+      } else if (feedCnt < 30) {
+        feedBadge = 'platinum';
+      } else if (feedCnt >= 30) {
+        feedBadge = 'dia';
+      }
+
+      if (mobCnt >= 1 && mobCnt < 3) {
+        mobBadge = 'iron';
+      } else if (mobCnt < 5) {
+        mobBadge = 'bronze';
+      } else if (mobCnt < 10) {
+        mobBadge = 'silver';
+      } else if (mobCnt < 20) {
+        mobBadge = 'gold';
+      } else if (mobCnt < 30) {
+        mobBadge = 'platinum';
+      } else if (mobCnt >= 30) {
+        mobBadge = 'dia';
+      }
+
+      if (timeCnt >= 1 && timeCnt < 3) {
+        timeBadge = 'iron';
+      } else if (timeCnt < 5) {
+        timeBadge = 'bronze';
+      } else if (timeCnt < 10) {
+        timeBadge = 'silver';
+      } else if (timeCnt < 20) {
+        timeBadge = 'gold';
+      } else if (timeCnt < 30) {
+        timeBadge = 'platinum';
+      } else if (timeCnt >= 30) {
+        timeBadge = 'dia';
+      }
+
       return {
         profile,
+        badge: {
+          feed: feedBadge,
+          mob: mobBadge,
+          time: timeBadge,
+        },
         achievedMission,
         notAchievedMission,
         feedCnt,
       };
-    } catch (err) {
-      return err.message;
-    }
-  }
-
-  // 랜덤숫자 발생
-  generateRandom(min, max) {
-    const ranNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    return ranNum;
-  }
-
-  async emailCheckandUpdate(): Promise<any> {
-    try {
-      // 아이디 비빔번호로 메일 보내기
-      const smtpTransport = nodemailer.createTransport({
-        service: 'Naver',
-        auth: {
-          user: 'YourEmail@naver.com',
-          pass: 'YourPasswor',
-        },
-        tls: {
-          rejectUnauthorized: false,
-        },
-      });
-
-      return smtpTransport;
     } catch (err) {
       return err.message;
     }

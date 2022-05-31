@@ -55,15 +55,16 @@ export class CommentsService {
 
   /* 특정 댓글 조회 */
   async findOneComment(commentId: number, feedId?: number) {
-    const feed = await Feed.findOne({
-      where: {
-        id: feedId,
-        deletedAt: null,
-      },
-    });
-    if (!feed) {
-      this.commentException.NotFoundFeed();
-    }
+    // console.log(feedId, commentId)
+    // const feed = await Feed.findOne({
+    //   where: {
+    //     id: feedId,
+    //     deletedAt: null,
+    //   },
+    // });
+    // if (!feed) {
+    //   this.commentException.NotFoundFeed();
+    // }
 
     const comment = await this.commentRepository.findOne({
       where: {
@@ -116,10 +117,6 @@ export class CommentsService {
       if (match) {
         return this.commentRepository.deleteComment(commentId);
       } else {
-        // throw new BadRequestException({
-        //   ok: false,
-        //   message: `댓글 작성자만 삭제할 수 있습니다.`,
-        // });
         this.commentException.CannotDeleteComment();
       }
     } else {
