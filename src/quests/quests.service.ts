@@ -142,7 +142,9 @@ export class QuestsService {
     console.timeEnd('Kakao API - getAddressName');
     if (!kakaoAddress) this.exceptions.notFoundKakaoAddress();
 
-    const date = new Date().toDateString();
+    const curr = new Date();
+    const utc = curr.getTime() + curr.getTimezoneOffset() * 60 * 1000;
+    const date = new Date(utc + 9 * 60 * 60 * 1000).toDateString();
     /* 오늘 우리 지역(동) 퀘스트가 있으면 조회, 없으면 생성해서 조회 */
     let region = await getRepository(Region)
       .createQueryBuilder('region')
