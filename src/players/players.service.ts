@@ -136,7 +136,7 @@ export class PlayersService {
           'player.profileImg',
           'player.level',
           'player.expPoints',
-          'player.points'
+          'player.points',
         ])
         .leftJoinAndSelect('player.completes', 'completes')
         .leftJoinAndSelect('completes.quest', 'quest')
@@ -157,7 +157,7 @@ export class PlayersService {
       ] */
 
       const missionList = await Mission.find({
-        order: { createdAt: 'DESC' },
+        order: { id: 'ASC' },
       });
       const achievedMission = [];
       const notAchievedMission = [];
