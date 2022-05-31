@@ -84,14 +84,12 @@ export class PlayerRepository extends Repository<Player> {
       const token = refreshToken.split(' ')[1];
       const currentHashedRefreshToken = await bcrypt.hash(token, 10);
 
-      console.log('respotiroy--------------------------------');
-      console.log(token, currentHashedRefreshToken);
 
       if (id < 10000) {
         const result = await this.update(id, {
           currentHashedRefreshToken,
         });
-        console.log(`saved refresh token ${result}`);
+        console.log(`saved refresh local token ${result}`);
         return result;
       } else {
         const providerId = id;
@@ -99,7 +97,7 @@ export class PlayerRepository extends Repository<Player> {
           currentHashedRefreshToken,
         });
 
-        console.log(`saved refresh token ${result}`);
+        console.log(`saved refresh social token ${result}`);
         return result;
       }
     } catch (err) {

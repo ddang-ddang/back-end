@@ -1,4 +1,5 @@
 import { JwtRefreshTokenGuard } from './../auth/jwt/jwt-refresh-token.guard';
+import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
 import {
   ApiCreatedResponse,
@@ -305,6 +306,7 @@ export class PlayersController {
     );
   }
 
+  //카카오 로그인 시작 1.단계
   @UseGuards(KakaoAuthGuard)
   @Get('kakao')
   async kakao() {
@@ -313,23 +315,71 @@ export class PlayersController {
   }
 
   /* 카카오 로그인 부분 */
+  // 카카오 전략에 의해서 들어온 페이로더가 이쪽 req.user로 들어온다.
   @ApiOperation({ summary: '카카오 로그인' })
   @UseGuards(KakaoAuthGuard)
   @Get('kakaoauth')
   async kakaopage(@Request() req) {
-    const { id, username, email, refreshToken } = req.user;
-    console.log(req.user);
+    //정리된 개인정보를 구조분해 할당해준다.
+    const { id, username, email, profileImg } = req.user;
 
-    this.logger.verbose(`${email}님이 카카오로 로그인하려고 합니다`);
+    console.log(id, username, email, profileImg);
 
-    req.res.setHeader('refreshToken', refreshToken);
+    this.logger.verbose('카카오 로그인 시작');
 
+    //새로운 토큰을 발급 및 서버에 저장
+    // 저장은 Beaerer 에다가 토큰을 붙이고 DB currentRefreshToken에 저장한다.
+    const tokens = this.authService.updateToken(id, email, username);
+    // 생성된 refresh토큰을 저장한다.
+    const refreshToken = (await tokens).refreshToken;
     console.log(refreshToken);
 
+    //페이로드에 저장
+    const player = {
+      id,
+      username,
+      email,
+      profileImg,
+      access_token: (await tokens).accessToken,
+      refreshToken: refreshToken,
+    };
+
+    //가입여부 확인
+    const isJoin = await this.playersService.findByEmail({
+      email,
+    });
+
+    //가입 되어있으면 가입진행
+    if (!isJoin) {
+      console.log('가입해야합니다.');
+      this.logger.verbose(
+        `${player.email}님이 카카오로 회원가입을 진행합니다.`
+      );
+
+      //가입
+      //DB에 개인정보 가입
+      const joinGame = await this.playersService.signup({
+        email: player.email,
+        password: id + username,
+        nickname: username,
+        mbti: 'mbti',
+        profileImg,
+        provider: 'kakao',
+        providerId: id,
+        currentHashedRefreshToken: await bcrypt.hash(refreshToken, 10),
+      });
+
+      this.logger.verbose(`kakao strategy 가입완료 ${joinGame}`);
+    }
+
+    // 파라미터로 받은 페이로드에 보낸다.
+    //이후 클라이언트에서는 refreshtoken을 받아서 auth/getToken을 통해 accessToken을 받아서 사용한다.
+    // 이후는 jwt-refresh-strategy로 간다.
     return req.res.redirect(
       `http://localhost:3000/kakaoauth?code=${refreshToken}`
     );
   }
+
   // mypage
   @UseGuards(JwtAuthGuard)
   @Get('mypage')
