@@ -13,7 +13,8 @@ import { Logger } from '@nestjs/common';
 // 이 트큰은 카카오와 백에서만 사용할 것이다.
 export class KakaoStrategy extends PassportStrategy(Strategy) {
   private logger = new Logger('KakoStrategy');
-  constructor() {
+
+  constructor(private readonly authService: AuthService) {
     super({
       clientID: process.env.KAKAO_CLIENT_ID,
       clientSecret: process.env.KAKAO_CLIENT_SECRET,
@@ -33,8 +34,10 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     const { profile_image } = profile._json.properties;
     const email = profile._json.kakao_account.email;
 
+    const data = await this.authService.checkIdByProviderId(id);
+
     const player = {
-      id,
+      id: data,
       username,
       email,
       profileImg: profile_image,
