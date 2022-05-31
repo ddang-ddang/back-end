@@ -4,12 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PlayerRepository } from 'src/players/players.repository';
-import {
-  LoginDto,
-  // PlayerIdDto,
-  SigninDto,
-} from 'src/players/dto/create-player.dto';
-import { jwtConfig } from '../../configs';
+import { LoginDto, SigninDto } from 'src/players/dto/create-player.dto';
 
 @Injectable()
 export class AuthService {
@@ -88,11 +83,11 @@ export class AuthService {
   // 토큰을 생성하는 함수
   getJwtAccessToken(payload: object) {
     const token = this.jwtService.sign(payload, {
-      secret: jwtConfig.accessTokenSecret,
-      expiresIn: `${jwtConfig.accessTokenExp}s`,
+      secret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_ACCESS_TOKEN_EXP}s`,
     });
 
-    // const accessCookie = `authorization=Bearer ${accessToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.accessTokenExp}`;
+    // const accessCookie = `authorization=Bearer ${accessToken}; HttpOnly; Path=/; Max-Age=${process.env.JWT_ACCESS_TOKEN_EXP}`;
     const accessToken = `Bearer ${token}`;
     return accessToken;
   }
@@ -100,11 +95,22 @@ export class AuthService {
   // 리프레쉬 토큰을 생성하는 함수
   getJwtRefreshToken(payload: object) {
     const token = this.jwtService.sign(payload, {
-      secret: jwtConfig.refreshTokenSecret,
-      expiresIn: `${jwtConfig.refreshTokenExp}s`,
+      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXP}s`,
     });
-    // const refreshCookie = `Refresh=${refreshToken}; HttpOnly; Path=/; Max-Age=${jwtConfig.refreshTokenExp}`;
+    // const refreshCookie = =${refreshToken}; HttpOnly; Path=/; Max-Age=${process.env.JWT_REFRESH_TOKEN_EXP}`;
     const refreshToken = `Bearer ${token}`;
+    return refreshToken;
+  }
+
+  // 리프레쉬 토큰을 생성하는 함수
+  getJwtRefreshTokenForKakao(payload: object) {
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+      expiresIn: `${process.env.JWT_REFRESH_TOKEN_EXP}s`,
+    });
+    // const refreshCookie = =${refreshToken}; HttpOnly; Path=/; Max-Age=${process.env.JWT_REFRESH_TOKEN_EXP}`;
+    const refreshToken = token;
     return refreshToken;
   }
 
@@ -112,22 +118,55 @@ export class AuthService {
   async checkRefreshToken(id: number, refreshToken: string): Promise<boolean> {
     try {
       // 리프레쉬 토큰을 DB에서 검색한다.
-      const encryptToken = await this.playersRepository.checkRefreshToken(id);
-      // 리프레쉬 토큰이 일치하면 true, 아니면 false
-      if (!encryptToken) {
-        console.log('리프레쉬 토큰이 없다면 실행');
-        return false;
+
+      //10000이하는 아이디가 local이고
+      if (id < 10000) {
+        console.log('로컬 로그인');
+        const encryptToken = await this.playersRepository.checkRefreshToken(id);
+
+        const { currentHashedRefreshToken } = encryptToken;
+
+        // 리프레쉬 토큰을 구조분해한 값과 비교한다.
+        const result = await bcrypt.compare(
+          refreshToken,
+          currentHashedRefreshToken
+        );
+        console.log(result);
+
+        if (!result) {
+          return false;
+        }
+
+        return result;
       }
-      // 리프레쉬토큰 구조분해 할당
-      const { currentHashedRefreshToken } = encryptToken;
 
-      // 리프레쉬 토큰을 구조분해한 값과 비교한다.
-      const result = await bcrypt.compare(
-        refreshToken,
-        currentHashedRefreshToken
-      );
+      // id가 10000이상이면 소셜 로그이다.
+      if (id > 10000) {
+        console.log('소셜로그인');
+        const encryptToken = await this.playersRepository.checkIdByProviderId(id);
 
-      return result;
+        const { currentHashedRefreshToken } = encryptToken;
+
+        console.log('------------------------------------------------');
+        console.log(refreshToken);
+        // console.log(data);
+        // 리프레쉬 토큰을 구조분해한 값과 비교한다.
+        const result = await bcrypt.compare(
+          `Bearer ` + refreshToken,
+          currentHashedRefreshToken
+        );
+        // 리프레쉬 토큰을 구조분해한 값과 비교한다.
+
+        console.log(result);
+        if (!result) {
+          return false;
+        }
+        return true;
+      }
+
+      // // 리프레쉬 토큰을 DB에서 검색한다.
+      // const encryptToken = await this.playersRepository.checkRefreshToken(id);
+      // // 리프레쉬 토큰이 일치하면 true, 아니면 false
     } catch (err) {
       console.log(err.message);
     }
@@ -213,6 +252,19 @@ export class AuthService {
       };
 
       return payload;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async checkIdByProviderId(providerId: number) {
+    try {
+      // const result = await this.playersRepository.findByEmail({email:email});
+      const resultId = await this.playersRepository.checkIdByProviderId(
+        providerId
+      );
+
+      return resultId;
     } catch (err) {
       console.log(err.message);
     }
