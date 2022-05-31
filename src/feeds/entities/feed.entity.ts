@@ -22,13 +22,13 @@ export class Feed extends BaseEntity {
   @PrimaryGeneratedColumn({ name: 'feedId' })
   id: number;
 
-  @Column({ default: null })
+  @Column({ default: null, type: 'text' })
   image1_url: string;
 
-  @Column({ default: null })
+  @Column({ default: null, type: 'text' })
   image2_url: string;
 
-  @Column({ default: null })
+  @Column({ default: null, type: 'text' })
   image3_url: string;
 
   @Column()
