@@ -37,7 +37,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     const data = await this.authService.checkIdByProviderId(id);
 
     const player = {
-      id: data,
+      id: data.id,
       username,
       email,
       profileImg: profile_image,
