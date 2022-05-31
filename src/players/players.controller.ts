@@ -20,6 +20,7 @@ import {
   UnauthorizedException,
   HttpCode,
   Res,
+  Param,
 } from '@nestjs/common';
 
 // 서비스 관련 모듈
@@ -180,7 +181,16 @@ export class PlayersController {
 
       return {
         ok: true,
-        row: {playerId:id, email, nickname, mbti, profileImg, expPoints, points, level },
+        row: {
+          playerId: id,
+          email,
+          nickname,
+          mbti,
+          profileImg,
+          expPoints,
+          points,
+          level,
+        },
       };
     } catch (err) {
       throw new UnauthorizedException('refreshToken is invalid');
@@ -290,26 +300,35 @@ export class PlayersController {
     req.res.setHeader('refreshToken', refreshToken);
 
     // return req.res.redirect('http://localhost:3005');
+    return req.res.redirect(
+      `http://localhost:3000/googleauth?code=${refreshToken}`
+    );
+  }
+
+  @UseGuards(KakaoAuthGuard)
+  @Get('kakao')
+  async kakao() {
+    this.logger.verbose('카카오로 로그인하려고 합니다');
+    return 'hello';
   }
 
   /* 카카오 로그인 부분 */
   @ApiOperation({ summary: '카카오 로그인' })
   @UseGuards(KakaoAuthGuard)
-  @Get('kakaoAuth')
+  @Get('kakaoauth')
   async kakaopage(@Request() req) {
-    const { id, username, email } = req.user;
+    const { id, username, email, refreshToken } = req.user;
+    console.log(req.user);
 
     this.logger.verbose(`${email}님이 카카오로 로그인하려고 합니다`);
 
-    const tokens = await this.authService.signin(email, username, id);
-
-    const { accessToken, refreshToken } = tokens;
-
-    req.res.setHeader('accessToken', accessToken);
     req.res.setHeader('refreshToken', refreshToken);
-    return { ok: 'ok' };
 
-    // return req.res.redirect('http://localhost:3005');
+    console.log(refreshToken);
+
+    return req.res.redirect(
+      `http://localhost:3000/kakaoauth?code=${refreshToken}`
+    );
   }
   // mypage
   @UseGuards(JwtAuthGuard)
@@ -331,7 +350,6 @@ export class PlayersController {
       console.log(err);
     }
   }
-
 
   @Get('email')
   async mail(@Request() req, @Res() res): Promise<any> {

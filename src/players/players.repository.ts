@@ -19,6 +19,7 @@ export class PlayerRepository extends Repository<Player> {
     const { email } = emailDto;
     return this.findOne({ where: { email } });
   }
+
   async findByNickname(nicknameDto: NicknameDto): Promise<Player> {
     try {
       const { nickname } = nicknameDto;
@@ -82,10 +83,25 @@ export class PlayerRepository extends Repository<Player> {
     try {
       const token = refreshToken.split(' ')[1];
       const currentHashedRefreshToken = await bcrypt.hash(token, 10);
-      const result = await this.update(id, {
-        currentHashedRefreshToken,
-      });
-      return result;
+
+      console.log('respotiroy--------------------------------')
+      console.log(token, currentHashedRefreshToken)
+
+      if (id < 10000) {
+        const result = await this.update(id, {
+          currentHashedRefreshToken,
+        });
+        console.log(`saved refresh token ${result}`);
+        return result;
+      } else {
+        const providerId = id;
+        const result = await this.update(providerId, {
+          currentHashedRefreshToken,
+        });
+
+        console.log(`saved refresh token ${result}`);
+        return result;
+      }
     } catch (err) {
       return err.message;
     }
@@ -97,6 +113,9 @@ export class PlayerRepository extends Repository<Player> {
         select: ['currentHashedRefreshToken'],
         where: { id },
       });
+
+      console.log(result);
+
       return result;
     } catch (err) {
       return err.message;
@@ -159,6 +178,23 @@ export class PlayerRepository extends Repository<Player> {
         return false;
       }
       return true;
+    } catch (err) {
+      console.log(err.message);
+      return false;
+    }
+  }
+
+  async providerIdByEmail(providerId: number): Promise<any> {
+    try {
+      const result = await this.findOne({
+        where: { providerId },
+      });
+
+      console.log(result)
+      if (!result) {
+        return false;
+      }
+      return result;
     } catch (err) {
       console.log(err.message);
       return false;
