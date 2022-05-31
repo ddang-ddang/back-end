@@ -375,8 +375,9 @@ export class PlayersController {
     // 파라미터로 받은 페이로드에 보낸다.
     //이후 클라이언트에서는 refreshtoken을 받아서 auth/getToken을 통해 accessToken을 받아서 사용한다.
     // 이후는 jwt-refresh-strategy로 간다.
+    // https://ddangddanaag.site/kakaoauth?code=${refreshToken}
     return req.res.redirect(
-      `http://localhost:3000/kakaoauth?code=${refreshToken}`
+      `${process.env.KAKAO_REDIRECT_URI_LOCAL}/kakaoauth?code=${refreshToken}`
     );
   }
 
