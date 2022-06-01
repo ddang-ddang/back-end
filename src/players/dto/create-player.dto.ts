@@ -107,6 +107,11 @@ export class NicknameDto extends PickType(CreatePlayerDto, [
   'nickname',
 ] as const) {}
 
+export class MbtiDto extends PickType(CreatePlayerDto, [
+  'mbti',
+  'id',
+] as const) {}
+
 export class PlayerIdDto extends PickType(CreatePlayerDto, ['id'] as const) {}
 
 export class TokenPayloadDto extends PickType(CreatePlayerDto, [

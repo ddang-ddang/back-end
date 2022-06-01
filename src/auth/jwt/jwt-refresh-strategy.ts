@@ -25,9 +25,9 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
           // auth에는 클라이언트가 refreshtoken 헤더 key로 토큰을 받는다.
           const token = request.headers['refreshtoken'];
           // console.log(token);
-          
+
           let refreshToken = '';
-          // beaerer를 분리해준다. 
+          // beaerer를 분리해준다.
           if (typeof token === 'string') refreshToken = token.split(' ')[1];
           console.log(refreshToken);
 
@@ -45,7 +45,6 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
   async validate(request: Request, payload: TokenPayloadDto) {
     this.logger.verbose('JWT REFREST strategy에서 인증을 넘겨 줍니다.');
 
-    console.log(payload);
     const { id } = payload;
 
     // 위에서 받아온 헤더의 refreshtoken을 받아와서 저장한다.
