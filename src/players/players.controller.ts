@@ -335,7 +335,7 @@ export class PlayersController {
     // 이후는 jwt-refresh-strategy로 간다.
     // https://ddangddanaag.site/kakaoauth?code=${refreshToken}
     return req.res.redirect(
-      `${process.env.KAKAO_REDIRECT_URI_LOCAL}/kakaoauth?code=${refreshToken}`
+      `${process.env.KAKAO_REDIRECT_URI_DEV}/kakaoauth?code=${refreshToken}`
     );
   }
 
