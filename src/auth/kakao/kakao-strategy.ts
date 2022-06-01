@@ -41,7 +41,9 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
       providerId: profile.id,
       username: profile.username,
       profile_image: profile._json.properties.profile_image,
-      email: profile._json.kakao_account.email,
+      email: !profile._json.kakao_account.email
+        ? `${profile.id}@ddangddang.site`
+        : profile._json.kakao_account.email,
       refreshToken: '',
     };
     console.log(info);
@@ -100,7 +102,9 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
     }
     //새로운 토큰을 발급 및 서버에 저장
     // 저장은 Beaerer 에다가 토큰을 붙이고 DB currentRefreshToken에 저장한다.
+    console.log(info.providerId);
     const id = await this.authService.checkIdByProviderId(info.providerId);
+    console.log(id);
 
     // 저장
     info.id = id.id;

@@ -41,6 +41,9 @@ export const kakaoConfig = {
   clientId: process.env.KAKAO_CLIENT_ID,
   clientSecret: process.env.KAKAO_CLIENT_SECRET,
   callbackUrl: process.env.KAKAO_CALLBACK_URL,
+  // redirectUri: process.env.KAKAO_REDIRECT_URI,
+  // redirectUri: process.env.KAKAO_REDIRECT_URI_DEV,
+  redirectUri: process.env.KAKAO_REDIRECT_URI_LOCAL,
 };
 
 export const configs = {

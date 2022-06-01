@@ -370,7 +370,7 @@ export class PlayersController {
 
       this.logger.verbose(`유저 id ${id}님이 MBTI를 변경하려 고합니다. `);
 
-      const result = await this.playersService.editMbti({id, mbti});
+      const result = await this.playersService.editMbti({ id, mbti });
 
       return {
         ok: true,
