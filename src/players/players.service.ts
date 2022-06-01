@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import {
   CreateBodyDto,
   EmailDto,
+  MbtiDto,
   NicknameDto,
   UpdateInfoDto,
 } from './dto/create-player.dto';
@@ -117,6 +118,20 @@ export class PlayersService {
         email,
         profileImg,
         nickname,
+      });
+      return result;
+    } catch (err) {
+      console.log(err.message);
+    }
+  }
+
+  async editMbti(mbtiDto: MbtiDto): Promise<object> {
+    try {
+      const { mbti, id } = mbtiDto;
+
+      const result = await this.playersRepository.updateMbti({
+        mbti,
+        id,
       });
       return result;
     } catch (err) {

@@ -119,50 +119,23 @@ export class AuthService {
     try {
       // 리프레쉬 토큰을 DB에서 검색한다.
 
-      //10000이하는 아이디가 local이고
-      if (id < 10000) {
-        console.log('로컬 로그인');
-        const encryptToken = await this.playersRepository.checkRefreshToken(id);
+      console.log('로컬 로그인');
+      const encryptToken = await this.playersRepository.checkRefreshToken(id);
 
-        const { currentHashedRefreshToken } = encryptToken;
+      const { currentHashedRefreshToken } = encryptToken;
 
-        // 리프레쉬 토큰을 구조분해한 값과 비교한다.
-        const result = await bcrypt.compare(
-          refreshToken,
-          currentHashedRefreshToken
-        );
-        console.log(result);
+      // 리프레쉬 토큰을 구조분해한 값과 비교한다.
+      const result = await bcrypt.compare(
+        refreshToken,
+        currentHashedRefreshToken
+      );
+      console.log(result);
 
-        if (!result) {
-          return false;
-        }
-
-        return result;
+      if (!result) {
+        return false;
       }
 
-      // id가 10000이상이면 소셜 로그이다.
-      if (id > 10000) {
-        console.log('소셜로그인');
-        const encryptToken = await this.playersRepository.checkIdByProviderId(id);
-
-        const { currentHashedRefreshToken } = encryptToken;
-
-        console.log('------------------------------------------------');
-        console.log(refreshToken);
-        // console.log(data);
-        // 리프레쉬 토큰을 구조분해한 값과 비교한다.
-        const result = await bcrypt.compare(
-          `Bearer ` + refreshToken,
-          currentHashedRefreshToken
-        );
-        // 리프레쉬 토큰을 구조분해한 값과 비교한다.
-
-        console.log(result);
-        if (!result) {
-          return false;
-        }
-        return true;
-      }
+      return result;
 
       // // 리프레쉬 토큰을 DB에서 검색한다.
       // const encryptToken = await this.playersRepository.checkRefreshToken(id);
