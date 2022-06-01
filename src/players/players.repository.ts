@@ -3,6 +3,7 @@ import {
   CreateBodyDto,
   CreateLocalDto,
   EmailDto,
+  MbtiDto,
   NicknameDto,
   UpdateInfoDto,
 } from './dto/create-player.dto';
@@ -59,7 +60,7 @@ export class PlayerRepository extends Repository<Player> {
       } = createBodyDto;
 
       console.log(createBodyDto);
-      const result = this.create({
+      const payload = this.create({
         email,
         password,
         nickname,
@@ -71,7 +72,7 @@ export class PlayerRepository extends Repository<Player> {
       });
 
       // console.log(result);
-      await this.save(result);
+      const result = await this.save(payload);
       return result;
     } catch (err) {
       return err.message;
@@ -201,5 +202,16 @@ export class PlayerRepository extends Repository<Player> {
   /* mail */
   async updatePassword(email: string, password: string) {
     await this.update({ email }, { password });
+  }
+
+  async updateMbti(mbtiDto: MbtiDto): Promise<any> {
+    try {
+      const { mbti, id } = mbtiDto;
+      const result = await this.update({ id: id }, { mbti });
+
+      return result;
+    } catch (err) {
+      return err.message;
+    }
   }
 }
