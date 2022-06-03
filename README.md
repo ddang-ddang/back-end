@@ -84,7 +84,7 @@
 
 ## Architecture
 
-<img src="https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/2a4b78b8-59d4-451f-8aca-dcfb8fcce020" width="1000px" />
+[https://figma-alpha-api.s3.us-west-2.amazonaws.com/images/2a4b78b8-59d4-451f-8aca-dcfb8fcce020](https://media.discordapp.net/attachments/968689976877400134/982164694825582602/unknown.png)
 
 <br/>
 <br/>
